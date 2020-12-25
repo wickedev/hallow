@@ -1,0 +1,15 @@
+{
+  "name": "suited",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "yarn workspace @suited/generator run start",
+    "build": "yarn workspaces foreach run build"
+  },
+  "devDependencies": {
+    "typescript": "^3.9.7"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@suited/generator",
+  "ts": "src/index.ts",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "license": "MIT",
+  "scripts": {
+    "start": "node dist/index.mjs",
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@suited/parser": "workspace:packages/parser",
+    "antlr4ts": "^0.5.0-alpha.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^11.0.1",
+    "rollup": "^2.35.1",
+    "rollup-plugin-exclude-dependencies-from-bundle": "^1.1.16",
+    "rollup-plugin-ts": "^1.3.7",
+    "tslib": "^2.0.3",
+    "typescript": "^3.9.7"
+  }
+}
