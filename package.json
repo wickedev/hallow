@@ -1,13 +1,16 @@
 {
-  "name": "suited",
+  "name": "suited-grpc",
   "private": true,
+  "version": "0.2.0",
   "license": "MIT",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "start": "yarn workspace @suited/generator run start",
-    "build": "yarn workspaces foreach run build"
+    "start": "yarn workspace @suited-grpc/generator run start",
+    "build": "yarn workspaces foreach run build",
+    "test": "yarn workspaces foreach run test",
+    "publish": "yarn workspaces foreach npm publish --access public"
   },
   "devDependencies": {
     "typescript": "^3.9.7"

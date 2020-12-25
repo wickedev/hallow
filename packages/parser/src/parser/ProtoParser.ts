@@ -1,27 +1,27 @@
 // Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
-import { ATN } from "antlr4ts";
-import { ATNDeserializer } from "antlr4ts";
-import { FailedPredicateException } from "antlr4ts";
-import { NotNull } from "antlr4ts";
-import { NoViableAltException } from "antlr4ts";
-import { Override } from "antlr4ts";
-import { Parser } from "antlr4ts";
-import { ParserRuleContext } from "antlr4ts";
-import { ParserATNSimulator } from "antlr4ts";
-import { ParseTreeListener } from "antlr4ts";
-import { ParseTreeVisitor } from "antlr4ts";
-import { RecognitionException } from "antlr4ts";
-import { RuleContext } from "antlr4ts";
-//import { RuleVersion } from "antlr4ts";
-import { TerminalNode } from "antlr4ts";
-import { Token } from "antlr4ts";
-import { TokenStream } from "antlr4ts";
-import { Vocabulary } from "antlr4ts";
-import { VocabularyImpl } from "antlr4ts";
+import { ATN } from "antlr4ts/atn/ATN";
+import { ATNDeserializer } from "antlr4ts/atn/ATNDeserializer";
+import { FailedPredicateException } from "antlr4ts/FailedPredicateException";
+import { NotNull } from "antlr4ts/Decorators";
+import { NoViableAltException } from "antlr4ts/NoViableAltException";
+import { Override } from "antlr4ts/Decorators";
+import { Parser } from "antlr4ts/Parser";
+import { ParserRuleContext } from "antlr4ts/ParserRuleContext";
+import { ParserATNSimulator } from "antlr4ts/atn/ParserATNSimulator";
+import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
+import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
+import { RecognitionException } from "antlr4ts/RecognitionException";
+import { RuleContext } from "antlr4ts/RuleContext";
+//import { RuleVersion } from "antlr4ts/RuleVersion";
+import { TerminalNode } from "antlr4ts/tree/TerminalNode";
+import { Token } from "antlr4ts/Token";
+import { TokenStream } from "antlr4ts/TokenStream";
+import { Vocabulary } from "antlr4ts/Vocabulary";
+import { VocabularyImpl } from "antlr4ts/VocabularyImpl";
 
-import * as Utils from "antlr4ts";
+import * as Utils from "antlr4ts/misc/Utils";
 
 import { ProtoParserListener } from "./ProtoParserListener";
 import { ProtoParserVisitor } from "./ProtoParserVisitor";
@@ -527,18 +527,21 @@ export class ProtoParser extends Parser {
 					this.enumField();
 					}
 					break;
+
 				case 2:
 					{
 					this.state = 153;
 					this.optionEntry();
 					}
 					break;
+
 				case 3:
 					{
 					this.state = 154;
 					this.reservedFieldRanges();
 					}
 					break;
+
 				case 4:
 					{
 					this.state = 155;
@@ -767,6 +770,7 @@ export class ProtoParser extends Parser {
 				this.field();
 				}
 				break;
+
 			case 2:
 				this.enterOuterAlt(_localctx, 2);
 				{
@@ -1051,60 +1055,70 @@ export class ProtoParser extends Parser {
 					this.field();
 					}
 					break;
+
 				case 2:
 					{
 					this.state = 245;
 					this.optionEntry();
 					}
 					break;
+
 				case 3:
 					{
 					this.state = 246;
 					this.messageBlock();
 					}
 					break;
+
 				case 4:
 					{
 					this.state = 247;
 					this.enumBlock();
 					}
 					break;
+
 				case 5:
 					{
 					this.state = 248;
 					this.extensions();
 					}
 					break;
+
 				case 6:
 					{
 					this.state = 249;
 					this.extendBlock();
 					}
 					break;
+
 				case 7:
 					{
 					this.state = 250;
 					this.groupBlock();
 					}
 					break;
+
 				case 8:
 					{
 					this.state = 251;
 					this.oneof();
 					}
 					break;
+
 				case 9:
 					{
 					this.state = 252;
 					this.map();
 					}
 					break;
+
 				case 10:
 					{
 					this.state = 253;
 					this.reservedFieldRanges();
 					}
 					break;
+
 				case 11:
 					{
 					this.state = 254;
@@ -1198,12 +1212,14 @@ export class ProtoParser extends Parser {
 					this.field();
 					}
 					break;
+
 				case 2:
 					{
 					this.state = 270;
 					this.groupBlock();
 					}
 					break;
+
 				case 3:
 					{
 					this.state = 271;
@@ -1451,36 +1467,42 @@ export class ProtoParser extends Parser {
 					this.field();
 					}
 					break;
+
 				case 2:
 					{
 					this.state = 312;
 					this.optionEntry();
 					}
 					break;
+
 				case 3:
 					{
 					this.state = 313;
 					this.messageBlock();
 					}
 					break;
+
 				case 4:
 					{
 					this.state = 314;
 					this.enumBlock();
 					}
 					break;
+
 				case 5:
 					{
 					this.state = 315;
 					this.extensions();
 					}
 					break;
+
 				case 6:
 					{
 					this.state = 316;
 					this.extendBlock();
 					}
 					break;
+
 				case 7:
 					{
 					this.state = 317;
@@ -1944,6 +1966,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.DOUBLE);
 				}
 				break;
+
 			case 2:
 				this.enterOuterAlt(_localctx, 2);
 				{
@@ -1951,6 +1974,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.FLOAT);
 				}
 				break;
+
 			case 3:
 				this.enterOuterAlt(_localctx, 3);
 				{
@@ -1958,6 +1982,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.INT32);
 				}
 				break;
+
 			case 4:
 				this.enterOuterAlt(_localctx, 4);
 				{
@@ -1965,6 +1990,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.INT64);
 				}
 				break;
+
 			case 5:
 				this.enterOuterAlt(_localctx, 5);
 				{
@@ -1972,6 +1998,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.UINT32);
 				}
 				break;
+
 			case 6:
 				this.enterOuterAlt(_localctx, 6);
 				{
@@ -1979,6 +2006,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.UINT64);
 				}
 				break;
+
 			case 7:
 				this.enterOuterAlt(_localctx, 7);
 				{
@@ -1986,6 +2014,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.SINT32);
 				}
 				break;
+
 			case 8:
 				this.enterOuterAlt(_localctx, 8);
 				{
@@ -1993,6 +2022,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.SINT64);
 				}
 				break;
+
 			case 9:
 				this.enterOuterAlt(_localctx, 9);
 				{
@@ -2000,6 +2030,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.FIXED32);
 				}
 				break;
+
 			case 10:
 				this.enterOuterAlt(_localctx, 10);
 				{
@@ -2007,6 +2038,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.FIXED64);
 				}
 				break;
+
 			case 11:
 				this.enterOuterAlt(_localctx, 11);
 				{
@@ -2014,6 +2046,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.SFIXED32);
 				}
 				break;
+
 			case 12:
 				this.enterOuterAlt(_localctx, 12);
 				{
@@ -2021,6 +2054,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.SFIXED64);
 				}
 				break;
+
 			case 13:
 				this.enterOuterAlt(_localctx, 13);
 				{
@@ -2028,6 +2062,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.BOOL);
 				}
 				break;
+
 			case 14:
 				this.enterOuterAlt(_localctx, 14);
 				{
@@ -2035,6 +2070,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.STRING);
 				}
 				break;
+
 			case 15:
 				this.enterOuterAlt(_localctx, 15);
 				{
@@ -2042,6 +2078,7 @@ export class ProtoParser extends Parser {
 				this.match(ProtoParser.BYTES);
 				}
 				break;
+
 			case 16:
 				this.enterOuterAlt(_localctx, 16);
 				{
@@ -2619,6 +2656,7 @@ export class ProtoParser extends Parser {
 				this.textFormatOptionValue();
 				}
 				break;
+
 			case 2:
 				this.enterOuterAlt(_localctx, 2);
 				{

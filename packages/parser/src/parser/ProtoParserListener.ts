@@ -1,7 +1,7 @@
 // Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
-import { ParseTreeListener } from "antlr4ts";
+import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { ProtoContext } from "./ProtoParser";
 import { SyntaxStatementContext } from "./ProtoParser";
@@ -73,6 +73,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitProto?: (ctx: ProtoContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.syntaxStatement`.
 	 * @param ctx the parse tree
@@ -83,6 +84,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSyntaxStatement?: (ctx: SyntaxStatementContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.syntaxName`.
 	 * @param ctx the parse tree
@@ -93,6 +95,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSyntaxName?: (ctx: SyntaxNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.packageStatement`.
 	 * @param ctx the parse tree
@@ -103,6 +106,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitPackageStatement?: (ctx: PackageStatementContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.packageName`.
 	 * @param ctx the parse tree
@@ -113,6 +117,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitPackageName?: (ctx: PackageNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.importStatement`.
 	 * @param ctx the parse tree
@@ -123,6 +128,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitImportStatement?: (ctx: ImportStatementContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.fileReference`.
 	 * @param ctx the parse tree
@@ -133,6 +139,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFileReference?: (ctx: FileReferenceContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.optionEntry`.
 	 * @param ctx the parse tree
@@ -143,6 +150,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitOptionEntry?: (ctx: OptionEntryContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.enumBlock`.
 	 * @param ctx the parse tree
@@ -153,6 +161,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEnumBlock?: (ctx: EnumBlockContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.enumName`.
 	 * @param ctx the parse tree
@@ -163,6 +172,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEnumName?: (ctx: EnumNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.enumField`.
 	 * @param ctx the parse tree
@@ -173,6 +183,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEnumField?: (ctx: EnumFieldContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.enumFieldName`.
 	 * @param ctx the parse tree
@@ -183,6 +194,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEnumFieldName?: (ctx: EnumFieldNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.enumFieldValue`.
 	 * @param ctx the parse tree
@@ -193,6 +205,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEnumFieldValue?: (ctx: EnumFieldValueContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.extendBlock`.
 	 * @param ctx the parse tree
@@ -203,6 +216,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExtendBlock?: (ctx: ExtendBlockContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.extendBlockEntry`.
 	 * @param ctx the parse tree
@@ -213,6 +227,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExtendBlockEntry?: (ctx: ExtendBlockEntryContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.serviceBlock`.
 	 * @param ctx the parse tree
@@ -223,6 +238,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitServiceBlock?: (ctx: ServiceBlockContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.serviceName`.
 	 * @param ctx the parse tree
@@ -233,6 +249,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitServiceName?: (ctx: ServiceNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.rpcMethod`.
 	 * @param ctx the parse tree
@@ -243,6 +260,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRpcMethod?: (ctx: RpcMethodContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.rpcName`.
 	 * @param ctx the parse tree
@@ -253,6 +271,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRpcName?: (ctx: RpcNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.rpcType`.
 	 * @param ctx the parse tree
@@ -263,6 +282,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRpcType?: (ctx: RpcTypeContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.messageBlock`.
 	 * @param ctx the parse tree
@@ -273,6 +293,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitMessageBlock?: (ctx: MessageBlockContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.messageName`.
 	 * @param ctx the parse tree
@@ -283,6 +304,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitMessageName?: (ctx: MessageNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.oneof`.
 	 * @param ctx the parse tree
@@ -293,6 +315,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitOneof?: (ctx: OneofContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.oneofName`.
 	 * @param ctx the parse tree
@@ -303,6 +326,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitOneofName?: (ctx: OneofNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.map`.
 	 * @param ctx the parse tree
@@ -313,6 +337,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitMap?: (ctx: MapContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.mapKey`.
 	 * @param ctx the parse tree
@@ -323,6 +348,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitMapKey?: (ctx: MapKeyContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.mapValue`.
 	 * @param ctx the parse tree
@@ -333,6 +359,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitMapValue?: (ctx: MapValueContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.tag`.
 	 * @param ctx the parse tree
@@ -343,6 +370,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTag?: (ctx: TagContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.groupBlock`.
 	 * @param ctx the parse tree
@@ -353,6 +381,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitGroupBlock?: (ctx: GroupBlockContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.groupName`.
 	 * @param ctx the parse tree
@@ -363,6 +392,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitGroupName?: (ctx: GroupNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.extensions`.
 	 * @param ctx the parse tree
@@ -373,6 +403,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExtensions?: (ctx: ExtensionsContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.range`.
 	 * @param ctx the parse tree
@@ -383,6 +414,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRange?: (ctx: RangeContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.rangeFrom`.
 	 * @param ctx the parse tree
@@ -393,6 +425,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRangeFrom?: (ctx: RangeFromContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.rangeTo`.
 	 * @param ctx the parse tree
@@ -403,6 +436,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRangeTo?: (ctx: RangeToContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.reservedFieldRanges`.
 	 * @param ctx the parse tree
@@ -413,6 +447,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitReservedFieldRanges?: (ctx: ReservedFieldRangesContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.reservedFieldNames`.
 	 * @param ctx the parse tree
@@ -423,6 +458,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitReservedFieldNames?: (ctx: ReservedFieldNamesContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.reservedFieldName`.
 	 * @param ctx the parse tree
@@ -433,6 +469,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitReservedFieldName?: (ctx: ReservedFieldNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.field`.
 	 * @param ctx the parse tree
@@ -443,6 +480,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitField?: (ctx: FieldContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.fieldName`.
 	 * @param ctx the parse tree
@@ -453,6 +491,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFieldName?: (ctx: FieldNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.fieldModifier`.
 	 * @param ctx the parse tree
@@ -463,6 +502,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFieldModifier?: (ctx: FieldModifierContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.typeReference`.
 	 * @param ctx the parse tree
@@ -473,6 +513,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTypeReference?: (ctx: TypeReferenceContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.fieldOptions`.
 	 * @param ctx the parse tree
@@ -483,6 +524,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFieldOptions?: (ctx: FieldOptionsContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.option`.
 	 * @param ctx the parse tree
@@ -493,6 +535,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitOption?: (ctx: OptionContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.fieldRerefence`.
 	 * @param ctx the parse tree
@@ -503,6 +546,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFieldRerefence?: (ctx: FieldRerefenceContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.standardFieldRerefence`.
 	 * @param ctx the parse tree
@@ -513,6 +557,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitStandardFieldRerefence?: (ctx: StandardFieldRerefenceContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.customFieldReference`.
 	 * @param ctx the parse tree
@@ -523,6 +568,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitCustomFieldReference?: (ctx: CustomFieldReferenceContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.optionValue`.
 	 * @param ctx the parse tree
@@ -533,6 +579,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitOptionValue?: (ctx: OptionValueContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.textFormat`.
 	 * @param ctx the parse tree
@@ -543,6 +590,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTextFormat?: (ctx: TextFormatContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.textFormatOptionName`.
 	 * @param ctx the parse tree
@@ -553,6 +601,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTextFormatOptionName?: (ctx: TextFormatOptionNameContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.textFormatEntry`.
 	 * @param ctx the parse tree
@@ -563,6 +612,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTextFormatEntry?: (ctx: TextFormatEntryContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.textFormatOptionValue`.
 	 * @param ctx the parse tree
@@ -573,6 +623,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTextFormatOptionValue?: (ctx: TextFormatOptionValueContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.fullIdent`.
 	 * @param ctx the parse tree
@@ -583,6 +634,7 @@ export interface ProtoParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFullIdent?: (ctx: FullIdentContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `ProtoParser.ident`.
 	 * @param ctx the parse tree

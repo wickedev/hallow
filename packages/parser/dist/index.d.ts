@@ -1,5 +1,18 @@
 // Generated from parser/ProtoLexer.g4 by ANTLR 4.7.3-SNAPSHOT
-import { ATN, CharStream, Lexer, Vocabulary, Parser, ParserRuleContext, TerminalNode, TokenStream, ParseTreeListener, ParseTreeVisitor, AbstractParseTreeVisitor } from "antlr4ts";
+import { ATN } from "antlr4ts/atn/ATN";
+import { CharStream } from "antlr4ts/CharStream";
+import { Lexer } from "antlr4ts/Lexer";
+import { Vocabulary } from "antlr4ts/Vocabulary";
+import { Parser } from "antlr4ts/Parser";
+import { ParserRuleContext } from "antlr4ts/ParserRuleContext";
+//import { RuleVersion } from "antlr4ts/RuleVersion";
+import { TerminalNode } from "antlr4ts/tree/TerminalNode";
+import { TokenStream } from "antlr4ts/TokenStream";
+// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
+import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
+// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
+import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
 declare class ProtoLexer extends Lexer {
     static readonly PACKAGE = 1;
     static readonly SYNTAX = 2;

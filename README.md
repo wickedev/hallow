@@ -4,7 +4,7 @@
 ## Usage
 
 ```tsx
-import { Client } from "@suited/client" // or "@suited/mock"
+import { Client } from "@suited-grpc/browser" // or "@suited/mock"
 import { GreetingStub } from './greeting.proto'
 
 // Setup
