@@ -4,11 +4,12 @@
 ## Usage
 
 ```tsx
-import { Client, GreetingStub } from './greeting.proto'
+import { Client } from "@suited/client" // or "@suited/mock"
+import { GreetingStub } from './greeting.proto'
 
 // Setup
-const client = Client({ baseURL: "/api" })
-const greeter = GreetingStub(client)
+const client = new Client({ baseURL: "/api" })
+const greeter = new GreetingStub(client)
 
 // Promise
 const res = await greeter.greeting()
