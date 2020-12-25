@@ -25,7 +25,6 @@ const parser = parse(`
         string created = 4;
     }
     
-    
     message GreetingRequest {
     }
     
