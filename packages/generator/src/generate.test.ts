@@ -4,7 +4,7 @@ function stripIndent(s: string): string {
   return s.replace(/^\s+/gm, "");
 }
 
-test("visitor test in generator", () => {
+test("generate typescript code from proto", () => {
   const result = generate(`
     syntax = "proto2";
     package greeting;

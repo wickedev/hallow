@@ -4,7 +4,7 @@
 ## Usage
 
 ```tsx
-import { Client } from "@suited-grpc/browser" // or "@suited/mock"
+import { Client } from "@suited-grpc/browser" // or "@suited-grpc/mock"
 import { GreetingStub } from './greeting.proto'
 
 // Setup
@@ -46,7 +46,7 @@ module.exports = {
     module: {
         rules: [{
             test: /\.proto$/,
-            loader: '@suited/grpc-loader'
+            loader: '@suited-grpc/grpc-loader'
         }]
     }
     ...
@@ -57,7 +57,7 @@ module.exports = {
     ...
     "compilerOptions": {
         "plugins": [{
-            "name": "@suited/ts-language-service-plugin",
+            "name": "@suited-grpc/ts-language-service-plugin",
             "option": {}
         }]
     }
