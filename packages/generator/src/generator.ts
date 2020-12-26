@@ -1,20 +1,15 @@
-import { ParseTree } from "antlr4ts/tree";
 import { XPath } from "antlr4ts/tree/xpath";
-import { Trees } from "antlr4ts/tree/Trees";
 import ts, {
-  InterfaceDeclaration,
-  KeywordTypeNode,
-  NodeArray,
-  SourceFile,
-  TypeElement,
-  TypeNode,
-  visitEachChild
+  ClassElement,
+  DeclarationStatement,
+  TypeElement
 } from "typescript";
 import {
   MessageBlockContext,
   parse,
   ProtoVisitor,
-  ProtoParser
+  ProtoParser,
+  ServiceBlockContext
 } from "@suited-grpc/parser";
 
 interface IMessage {
@@ -28,12 +23,37 @@ interface IField {
   modifier?: string;
 }
 
+interface IService {
+  name: string;
+  methods: IMethod[];
+}
+
+interface IMethod {
+  name: string;
+  request: string;
+  response: string;
+}
+
+function chicagoStypeFirstLetter(s: string) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
 function getFirst<T>(set: Set<T>): T | undefined {
   for (const value of set) {
     return value;
   }
 
   return undefined;
+}
+
+function getLast<T>(set: Set<T>): T | undefined {
+  let value;
+
+  for (const v of set) {
+    value = v;
+  }
+
+  return value;
 }
 
 function wrapType(field: IField, type: ts.TypeNode): ts.TypeNode | undefined {
@@ -61,6 +81,7 @@ function getType(field: IField): ts.TypeNode | undefined {
 
 class MessageInterfaceGenerator extends ProtoVisitor<MessageBlockContext> {
   private readonly messages: IMessage[] = [];
+  private readonly services: IService[] = [];
 
   constructor(private readonly parser: ProtoParser) {
     super();
@@ -118,11 +139,59 @@ class MessageInterfaceGenerator extends ProtoVisitor<MessageBlockContext> {
     return ctx;
   }
 
-  generate(): InterfaceDeclaration[] {
+  visitServiceBlock(ctx: ServiceBlockContext): ServiceBlockContext {
+    const serviceNameCtx = XPath.findAll(
+      ctx,
+      "//serviceName/ident",
+      this.parser
+    );
+
+    const rpcMethodsCtx = XPath.findAll(ctx, "//rpcMethod", this.parser);
+    const serviceName = getFirst(serviceNameCtx)?.text;
+    if (serviceName) {
+      const service: IService = { name: serviceName, methods: [] };
+
+      for (let rpcMethodCtx of rpcMethodsCtx) {
+        const rpcNameCtx = XPath.findAll(
+          rpcMethodCtx,
+          "//rpcName/ident",
+          this.parser
+        );
+        const reqAndRes = XPath.findAll(
+          rpcMethodCtx,
+          "//rpcType/typeReference/ident",
+          this.parser
+        );
+
+        const name = getFirst(rpcNameCtx)?.text;
+        const request = getFirst(reqAndRes)?.text;
+        const response = getLast(reqAndRes)?.text;
+
+        if (name && request && response) {
+          service.methods.push({
+            name,
+            request,
+            response
+          });
+        }
+      }
+
+      this.services.push(service);
+    }
+    return ctx;
+  }
+
+  generate(): DeclarationStatement[] {
     this.visit(this.parser.proto());
 
-    const result: InterfaceDeclaration[] = [];
+    const result: DeclarationStatement[] = [];
 
+    this.generateMessage(result);
+    this.generateStub(result);
+    return result;
+  }
+
+  private generateMessage(result: DeclarationStatement[]): void {
     for (let message of this.messages) {
       const identifier = ts.createIdentifier(message.name);
       const members: TypeElement[] = [];
@@ -149,24 +218,74 @@ class MessageInterfaceGenerator extends ProtoVisitor<MessageBlockContext> {
       );
       result.push(interfaceDeclaration);
     }
+  }
 
-    return result;
+  private generateStub(result: DeclarationStatement[]): void {
+    for (const service of this.services) {
+      const identifier = ts.createIdentifier(`${service.name}Stub`);
+      const members: ClassElement[] = [];
+
+      for (const method of service.methods) {
+        const reqType = ts.createTypeReferenceNode(method.request, []);
+        const reqParams = ts.createParameter(
+          undefined,
+          undefined,
+          undefined,
+          chicagoStypeFirstLetter(method.request),
+          undefined,
+          reqType,
+          undefined
+        );
+
+        const resType = ts.createTypeReferenceNode(method.response, undefined);
+        const promiseType = ts.createTypeReferenceNode("Promise", [resType]);
+
+        const nullExpr = ts.createNull();
+        const returnExpr = ts.createReturn(nullExpr);
+        const block = ts.createBlock([returnExpr], true);
+
+        members.push(
+          ts.createMethod(
+            undefined,
+            undefined,
+            undefined,
+            chicagoStypeFirstLetter(method.name),
+            undefined,
+            [],
+            [reqParams],
+            promiseType,
+            block
+          )
+        );
+      }
+
+      const declaration = ts.createClassDeclaration(
+        undefined,
+        [ts.createToken(ts.SyntaxKind.ExportKeyword)],
+        identifier,
+        undefined,
+        undefined,
+        members
+      );
+
+      result.push(declaration);
+    }
   }
 }
 
 export function generate(proto: string): string {
   const parser = parse(proto);
   const generator = new MessageInterfaceGenerator(parser);
-  const interfaces = generator.generate();
+  const nodes = generator.generate();
   const sourceFile = ts.createSourceFile(
     "interfaces.ts",
     "",
     ts.ScriptTarget.Latest,
-    /*setParentNodes*/ false,
+    false,
     ts.ScriptKind.TS
   );
 
-  const resultFile = ts.updateSourceFileNode(sourceFile, interfaces);
+  const resultFile = ts.updateSourceFileNode(sourceFile, nodes);
   const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed
   });

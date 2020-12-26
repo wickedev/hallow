@@ -23,7 +23,7 @@ test("generate typescript code from proto", () => {
         repeated Greeting greeting = 1;
     }
     
-    service GreetingService {
+    service Greeting {
         rpc Greeting (GreetingRequest) returns (GreetingResponse)
     }
   `);
@@ -42,6 +42,12 @@ test("generate typescript code from proto", () => {
 
       export interface GreetingResponse {
           greeting: Greeting[];
+      }
+      
+      export class GreetingStub {
+        greeting(greetingRequest: GreetingRequest): Promise<GreetingResponse> {
+            return null;
+        }
       }
     `)
   );
