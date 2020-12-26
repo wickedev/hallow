@@ -1,3 +1,5 @@
+import { CharStreams, CommonTokenStream } from 'antlr4ts';
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
 import { ATNDeserializer } from 'antlr4ts/atn/ATNDeserializer';
 import { Lexer } from 'antlr4ts/Lexer';
 import { LexerATNSimulator } from 'antlr4ts/atn/LexerATNSimulator';
@@ -9,8 +11,6 @@ import { ParserRuleContext } from 'antlr4ts/ParserRuleContext';
 import { ParserATNSimulator } from 'antlr4ts/atn/ParserATNSimulator';
 import { RecognitionException } from 'antlr4ts/RecognitionException';
 import { Token } from 'antlr4ts/Token';
-import { CharStreams, CommonTokenStream } from 'antlr4ts';
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
 
 // Generated from parser/ProtoLexer.g4 by ANTLR 4.7.3-SNAPSHOT
 class ProtoLexer extends Lexer {
@@ -5790,7 +5790,6 @@ function parse(proto) {
     let tokenStream = new CommonTokenStream(lexer);
     return new ProtoParser(tokenStream);
 }
-// @ts-ignore
 class ProtoVisitor extends AbstractParseTreeVisitor {
 }
 

@@ -1,110 +1,18 @@
-// Generated from parser/ProtoLexer.g4 by ANTLR 4.7.3-SNAPSHOT
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
+// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
 import { ATN } from "antlr4ts/atn/ATN";
-import { CharStream } from "antlr4ts/CharStream";
-import { Lexer } from "antlr4ts/Lexer";
-import { Vocabulary } from "antlr4ts/Vocabulary";
 import { Parser } from "antlr4ts/Parser";
 import { ParserRuleContext } from "antlr4ts/ParserRuleContext";
 //import { RuleVersion } from "antlr4ts/RuleVersion";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { TokenStream } from "antlr4ts/TokenStream";
+import { Vocabulary } from "antlr4ts/Vocabulary";
 // Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 // Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
-declare class ProtoLexer extends Lexer {
-    static readonly PACKAGE = 1;
-    static readonly SYNTAX = 2;
-    static readonly IMPORT = 3;
-    static readonly PUBLIC = 4;
-    static readonly OPTION = 5;
-    static readonly MESSAGE = 6;
-    static readonly GROUP = 7;
-    static readonly OPTIONAL = 8;
-    static readonly REQUIRED = 9;
-    static readonly REPEATED = 10;
-    static readonly ONEOF = 11;
-    static readonly EXTEND = 12;
-    static readonly EXTENSIONS = 13;
-    static readonly TO = 14;
-    static readonly MAX = 15;
-    static readonly RESERVED = 16;
-    static readonly ENUM = 17;
-    static readonly SERVICE = 18;
-    static readonly RPC = 19;
-    static readonly RETURNS = 20;
-    static readonly STREAM = 21;
-    static readonly MAP = 22;
-    static readonly BOOLEAN_VALUE = 23;
-    static readonly DOUBLE = 24;
-    static readonly FLOAT = 25;
-    static readonly INT32 = 26;
-    static readonly INT64 = 27;
-    static readonly UINT32 = 28;
-    static readonly UINT64 = 29;
-    static readonly SINT32 = 30;
-    static readonly SINT64 = 31;
-    static readonly FIXED32 = 32;
-    static readonly FIXED64 = 33;
-    static readonly SFIXED32 = 34;
-    static readonly SFIXED64 = 35;
-    static readonly BOOL = 36;
-    static readonly STRING = 37;
-    static readonly BYTES = 38;
-    static readonly COMMENT = 39;
-    static readonly LINE_COMMENT = 40;
-    static readonly PLUGIN_DEV_MARKER = 41;
-    static readonly NL = 42;
-    static readonly WS = 43;
-    static readonly LCURLY = 44;
-    static readonly RCURLY = 45;
-    static readonly LPAREN = 46;
-    static readonly RPAREN = 47;
-    static readonly LSQUARE = 48;
-    static readonly RSQUARE = 49;
-    static readonly LT = 50;
-    static readonly GT = 51;
-    static readonly COMMA = 52;
-    static readonly DOT = 53;
-    static readonly COLON = 54;
-    static readonly SEMICOLON = 55;
-    static readonly ASSIGN = 56;
-    static readonly IDENT = 57;
-    static readonly STRING_VALUE = 58;
-    static readonly INTEGER_VALUE = 59;
-    static readonly FLOAT_VALUE = 60;
-    static readonly ERRCHAR = 61;
-    // tslint:disable:no-trailing-whitespace
-    static readonly channelNames: string[];
-    // tslint:disable:no-trailing-whitespace
-    static readonly modeNames: string[];
-    static readonly ruleNames: string[];
-    private static readonly _LITERAL_NAMES;
-    private static readonly _SYMBOLIC_NAMES;
-    static readonly VOCABULARY: Vocabulary;
-    // @Override
-    // @NotNull
-    get vocabulary(): Vocabulary;
-    // tslint:enable:no-trailing-whitespace
-    constructor(input: CharStream);
-    // @Override
-    get grammarFileName(): string;
-    // @Override
-    get ruleNames(): string[];
-    // @Override
-    get serializedATN(): string;
-    // @Override
-    get channelNames(): string[];
-    // @Override
-    get modeNames(): string[];
-    private static readonly _serializedATNSegments;
-    private static readonly _serializedATNSegment0;
-    private static readonly _serializedATNSegment1;
-    static readonly _serializedATN: string;
-    static __ATN: ATN;
-    static get _ATN(): ATN;
-}
+import { CharStream } from "antlr4ts/CharStream";
+import { Lexer } from "antlr4ts/Lexer";
 /**
  * This interface defines a complete listener for a parse tree produced by
  * `ProtoParser`.
@@ -2118,4 +2026,96 @@ declare class IdentContext extends ParserRuleContext {
 declare function parse(proto: string): ProtoParser;
 declare abstract class ProtoVisitor<Result> extends AbstractParseTreeVisitor<Result> implements ProtoParserVisitor<Result> {
 }
-export { ProtoLexer, ProtoParser, ProtoContext, SyntaxStatementContext, SyntaxNameContext, PackageStatementContext, PackageNameContext, ImportStatementContext, FileReferenceContext, OptionEntryContext, EnumBlockContext, EnumNameContext, EnumFieldContext, EnumFieldNameContext, EnumFieldValueContext, ExtendBlockContext, ExtendBlockEntryContext, ServiceBlockContext, ServiceNameContext, RpcMethodContext, RpcNameContext, RpcTypeContext, MessageBlockContext, MessageNameContext, OneofContext, OneofNameContext, MapContext, MapKeyContext, MapValueContext, TagContext, GroupBlockContext, GroupNameContext, ExtensionsContext, RangeContext, RangeFromContext, RangeToContext, ReservedFieldRangesContext, ReservedFieldNamesContext, ReservedFieldNameContext, FieldContext, FieldNameContext, FieldModifierContext, TypeReferenceContext, FieldOptionsContext, OptionContext, FieldRerefenceContext, StandardFieldRerefenceContext, CustomFieldReferenceContext, OptionValueContext, TextFormatContext, TextFormatOptionNameContext, TextFormatEntryContext, TextFormatOptionValueContext, FullIdentContext, IdentContext, ProtoParserListener, ProtoParserVisitor, parse, ProtoVisitor };
+declare class ProtoLexer extends Lexer {
+    static readonly PACKAGE = 1;
+    static readonly SYNTAX = 2;
+    static readonly IMPORT = 3;
+    static readonly PUBLIC = 4;
+    static readonly OPTION = 5;
+    static readonly MESSAGE = 6;
+    static readonly GROUP = 7;
+    static readonly OPTIONAL = 8;
+    static readonly REQUIRED = 9;
+    static readonly REPEATED = 10;
+    static readonly ONEOF = 11;
+    static readonly EXTEND = 12;
+    static readonly EXTENSIONS = 13;
+    static readonly TO = 14;
+    static readonly MAX = 15;
+    static readonly RESERVED = 16;
+    static readonly ENUM = 17;
+    static readonly SERVICE = 18;
+    static readonly RPC = 19;
+    static readonly RETURNS = 20;
+    static readonly STREAM = 21;
+    static readonly MAP = 22;
+    static readonly BOOLEAN_VALUE = 23;
+    static readonly DOUBLE = 24;
+    static readonly FLOAT = 25;
+    static readonly INT32 = 26;
+    static readonly INT64 = 27;
+    static readonly UINT32 = 28;
+    static readonly UINT64 = 29;
+    static readonly SINT32 = 30;
+    static readonly SINT64 = 31;
+    static readonly FIXED32 = 32;
+    static readonly FIXED64 = 33;
+    static readonly SFIXED32 = 34;
+    static readonly SFIXED64 = 35;
+    static readonly BOOL = 36;
+    static readonly STRING = 37;
+    static readonly BYTES = 38;
+    static readonly COMMENT = 39;
+    static readonly LINE_COMMENT = 40;
+    static readonly PLUGIN_DEV_MARKER = 41;
+    static readonly NL = 42;
+    static readonly WS = 43;
+    static readonly LCURLY = 44;
+    static readonly RCURLY = 45;
+    static readonly LPAREN = 46;
+    static readonly RPAREN = 47;
+    static readonly LSQUARE = 48;
+    static readonly RSQUARE = 49;
+    static readonly LT = 50;
+    static readonly GT = 51;
+    static readonly COMMA = 52;
+    static readonly DOT = 53;
+    static readonly COLON = 54;
+    static readonly SEMICOLON = 55;
+    static readonly ASSIGN = 56;
+    static readonly IDENT = 57;
+    static readonly STRING_VALUE = 58;
+    static readonly INTEGER_VALUE = 59;
+    static readonly FLOAT_VALUE = 60;
+    static readonly ERRCHAR = 61;
+    // tslint:disable:no-trailing-whitespace
+    static readonly channelNames: string[];
+    // tslint:disable:no-trailing-whitespace
+    static readonly modeNames: string[];
+    static readonly ruleNames: string[];
+    private static readonly _LITERAL_NAMES;
+    private static readonly _SYMBOLIC_NAMES;
+    static readonly VOCABULARY: Vocabulary;
+    // @Override
+    // @NotNull
+    get vocabulary(): Vocabulary;
+    // tslint:enable:no-trailing-whitespace
+    constructor(input: CharStream);
+    // @Override
+    get grammarFileName(): string;
+    // @Override
+    get ruleNames(): string[];
+    // @Override
+    get serializedATN(): string;
+    // @Override
+    get channelNames(): string[];
+    // @Override
+    get modeNames(): string[];
+    private static readonly _serializedATNSegments;
+    private static readonly _serializedATNSegment0;
+    private static readonly _serializedATNSegment1;
+    static readonly _serializedATN: string;
+    static __ATN: ATN;
+    static get _ATN(): ATN;
+}
+export { parse, ProtoVisitor, ProtoLexer, ProtoParser, ProtoContext, SyntaxStatementContext, SyntaxNameContext, PackageStatementContext, PackageNameContext, ImportStatementContext, FileReferenceContext, OptionEntryContext, EnumBlockContext, EnumNameContext, EnumFieldContext, EnumFieldNameContext, EnumFieldValueContext, ExtendBlockContext, ExtendBlockEntryContext, ServiceBlockContext, ServiceNameContext, RpcMethodContext, RpcNameContext, RpcTypeContext, MessageBlockContext, MessageNameContext, OneofContext, OneofNameContext, MapContext, MapKeyContext, MapValueContext, TagContext, GroupBlockContext, GroupNameContext, ExtensionsContext, RangeContext, RangeFromContext, RangeToContext, ReservedFieldRangesContext, ReservedFieldNamesContext, ReservedFieldNameContext, FieldContext, FieldNameContext, FieldModifierContext, TypeReferenceContext, FieldOptionsContext, OptionContext, FieldRerefenceContext, StandardFieldRerefenceContext, CustomFieldReferenceContext, OptionValueContext, TextFormatContext, TextFormatOptionNameContext, TextFormatEntryContext, TextFormatOptionValueContext, FullIdentContext, IdentContext, ProtoParserListener, ProtoParserVisitor };

@@ -2,6 +2,8 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var antlr4ts = require('antlr4ts');
+var tree = require('antlr4ts/tree');
 var ATNDeserializer = require('antlr4ts/atn/ATNDeserializer');
 var Lexer = require('antlr4ts/Lexer');
 var LexerATNSimulator = require('antlr4ts/atn/LexerATNSimulator');
@@ -13,8 +15,6 @@ var ParserRuleContext = require('antlr4ts/ParserRuleContext');
 var ParserATNSimulator = require('antlr4ts/atn/ParserATNSimulator');
 var RecognitionException = require('antlr4ts/RecognitionException');
 var Token = require('antlr4ts/Token');
-var antlr4ts = require('antlr4ts');
-var tree = require('antlr4ts/tree');
 
 // Generated from parser/ProtoLexer.g4 by ANTLR 4.7.3-SNAPSHOT
 class ProtoLexer extends Lexer.Lexer {
@@ -5794,7 +5794,6 @@ function parse(proto) {
     let tokenStream = new antlr4ts.CommonTokenStream(lexer);
     return new ProtoParser(tokenStream);
 }
-// @ts-ignore
 class ProtoVisitor extends tree.AbstractParseTreeVisitor {
 }
 

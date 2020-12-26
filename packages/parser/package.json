@@ -29,6 +29,9 @@
     "typescript": "^3.9.7"
   },
   "jest": {
-    "preset": "ts-jest"
+    "preset": "ts-jest",
+    "moduleNameMapper": {
+      "^~/(.*)$": "<rootDir>/src/$1"
+    }
   }
 }
