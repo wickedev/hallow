@@ -1,4 +1,4 @@
-# Suited
+# Suited GRPC
 
 
 ## Usage
