@@ -260,7 +260,7 @@ export class GreetingService implements grpc.ServiceDefinition {
 export class GreetingStub {
   constructor(private readonly client: IClient) {}
 
-  greeting(greetingRequest: any): Promise<any> {
+  greeting(greetingRequest: IGreetingRequest): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       grpc.unary(GreetingService.Greeting as any, {
         host: this.client.host,
@@ -274,7 +274,7 @@ export class GreetingStub {
             reject(err);
           }
         },
-        request: GreetingRequest.create({})
+        request: GreetingRequest.create(greetingRequest)
       });
     });
   }
