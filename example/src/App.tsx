@@ -1,8 +1,15 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from "react";
+import { greetingStub } from "./api/greeting";
+import logo from "./logo.svg";
+import "./App.css";
 
 function App() {
+  useEffect(() => {
+    (async () => {
+      const res = await greetingStub.greeting({});
+      console.log(JSON.stringify(res))
+    })();
+  }, []);
   return (
     <div className="App">
       <header className="App-header">

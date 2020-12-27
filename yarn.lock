@@ -1632,6 +1632,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@improbable-eng/grpc-web@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@improbable-eng/grpc-web@npm:0.13.0"
+  dependencies:
+    browser-headers: ^0.4.0
+  peerDependencies:
+    google-protobuf: ^3.2.0
+  checksum: 22240e3f507bd74f437970097440566c51d2fa5f68d600baa17982b16d6e3f3f4b02a91f3daebdffe2a809b05c9690234f48f754dcb2eede0f61697ead53432d
+  languageName: node
+  linkType: hard
+
 "@istanbuljs/load-nyc-config@npm:^1.0.0":
   version: 1.1.0
   resolution: "@istanbuljs/load-nyc-config@npm:1.1.0"
@@ -2338,6 +2349,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/google-protobuf@npm:^3.7.4":
+  version: 3.7.4
+  resolution: "@types/google-protobuf@npm:3.7.4"
+  checksum: f9fab93f36ea8e785405e64226189d0bab4ec0fc8a37010479aa083c71a027571f83437665a359135e6d5a4c18c47c3f3d6c76e570f2c27b2474e00462c446e0
+  languageName: node
+  linkType: hard
+
 "@types/graceful-fs@npm:^4.1.2":
   version: 4.1.4
   resolution: "@types/graceful-fs@npm:4.1.4"
@@ -2351,6 +2369,15 @@ __metadata:
   version: 5.1.1
   resolution: "@types/html-minifier-terser@npm:5.1.1"
   checksum: 1e750b93e1240a6a3bc6d2748a4f09215c9557b8f6655ee57d1e88c7afcc171e2998a1e97a771c64ef8eeadc9db5623f9e08e09574a549cb74549cdbad5a73b7
+  languageName: node
+  linkType: hard
+
+"@types/http-proxy@npm:^1.17.4":
+  version: 1.17.4
+  resolution: "@types/http-proxy@npm:1.17.4"
+  dependencies:
+    "@types/node": "*"
+  checksum: 9f5ba01f1031010f686f628d1b7f8b0989cd0562436675eff13f944ae2ffbaa90be0d2a7f89a6caf5763e00822080ae28c58ce0e1cde138322decb636641e568
   languageName: node
   linkType: hard
 
@@ -3946,6 +3973,13 @@ __metadata:
   version: 1.1.0
   resolution: "brorand@npm:1.1.0"
   checksum: 4536dd73f07f6884d89c09c906345b606abff477e87babef64a85656e8cf12b1c5f40d06313b91dac12bf3e031ac190b5d548f2c3bf75f655344c3fcf90cbc8a
+  languageName: node
+  linkType: hard
+
+"browser-headers@npm:^0.4.0":
+  version: 0.4.1
+  resolution: "browser-headers@npm:0.4.1"
+  checksum: 268030ab33f2c7d80a9851bd9745b04299f6a82b912f40ea569a74d352381ad9c125b7999e45f90a153e08ebe27a6da9efc4f4835efd7a3f8276e81207573f5c
   languageName: node
   linkType: hard
 
@@ -6477,14 +6511,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "example@workspace:example"
   dependencies:
+    "@improbable-eng/grpc-web": ^0.13.0
     "@testing-library/jest-dom": ^5.11.4
     "@testing-library/react": ^11.1.0
     "@testing-library/user-event": ^12.1.10
+    "@types/google-protobuf": ^3.7.4
     "@types/jest": ^26.0.15
     "@types/node": ^12.0.0
     "@types/react": ^16.9.53
     "@types/react-dom": ^16.9.8
     eslint-config-react-app: ^6.0.0
+    google-protobuf: ^3.14.0
+    http-proxy-middleware: ^1.0.6
     react: ^17.0.1
     react-dom: ^17.0.1
     react-refresh: ^0.9.0
@@ -7305,6 +7343,13 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"google-protobuf@npm:^3.14.0":
+  version: 3.14.0
+  resolution: "google-protobuf@npm:3.14.0"
+  checksum: 4bdc34a78522e57abc7ddc80be8fd4e8c2fe40ba50fbfbe0825615d35b451086586b7ce75cca4b820381df3aeb54f2997fced5e8718952936b806d470538159c
+  languageName: node
+  linkType: hard
+
 "graceful-fs@npm:^4.1.11, graceful-fs@npm:^4.1.15, graceful-fs@npm:^4.1.2, graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.3, graceful-fs@npm:^4.2.4":
   version: 4.2.4
   resolution: "graceful-fs@npm:4.2.4"
@@ -7668,7 +7713,20 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"http-proxy@npm:^1.17.0":
+"http-proxy-middleware@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "http-proxy-middleware@npm:1.0.6"
+  dependencies:
+    "@types/http-proxy": ^1.17.4
+    http-proxy: ^1.18.1
+    is-glob: ^4.0.1
+    lodash: ^4.17.20
+    micromatch: ^4.0.2
+  checksum: 46385b03f1a2c5895e6ed054ebb966ac6e8929405bbe8690db78dce460ec19f4cd892fcb12f99f869a047ef888409d0fe7db703d936d853c2c22ea17dddba27b
+  languageName: node
+  linkType: hard
+
+"http-proxy@npm:^1.17.0, http-proxy@npm:^1.18.1":
   version: 1.18.1
   resolution: "http-proxy@npm:1.18.1"
   dependencies:
@@ -13912,6 +13970,7 @@ resolve@1.18.1:
   version: 0.0.0-use.local
   resolution: "suited-grpc@workspace:."
   dependencies:
+    http-proxy-middleware: ^1.0.6
     prettier: ^2.2.1
     ts-node: ^9.1.1
     typescript: ^3.9.7

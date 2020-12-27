@@ -10,21 +10,20 @@ test("generate typescript code from proto", () => {
     package greeting;
     
     message Greeting {
-        string id = 1;
-        string service = 2;
-        string message = 3;
-        string created = 4;
+      required string id = 1;
+      optional string service = 2;
+      required string message = 3;
+      optional string created = 4;
     }
     
-    message GreetingRequest {
-    }
+    message GreetingRequest {}
     
     message GreetingResponse {
-        repeated Greeting greeting = 1;
+      repeated Greeting greeting = 1;
     }
     
-    service Greeting {
-        rpc Greeting (GreetingRequest) returns (GreetingResponse)
+    service GreetingService { 
+      rpc Greeting(GreetingRequest) returns(GreetingResponse);
     }
   `);
 
