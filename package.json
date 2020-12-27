@@ -4,10 +4,11 @@
   "version": "0.2.0",
   "license": "MIT",
   "workspaces": [
+    "example",
     "packages/*"
   ],
   "scripts": {
-    "start": "yarn workspace @suited-grpc/generator run start",
+    "start": "yarn workspace example run start",
     "build": "yarn workspaces foreach run build",
     "test": "yarn workspaces foreach run test",
     "publish": "yarn workspaces foreach npm publish --access public"
