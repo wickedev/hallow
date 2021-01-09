@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { IgRPCError } from "../api/greeting-stub";
 
-export class ErrorBoundary extends React.Component<{}, { error?: IgRPCError }> {
+export class GrpcErrorBoundary extends React.Component<{}, { error?: IgRPCError }> {
   constructor(props: {}) {
     super(props);
     this.state = {};

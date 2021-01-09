@@ -14,13 +14,14 @@ type ForceUpdate = () => void;
 
 export class Resource<ARGS, T> {
   public status: Status = Status.PENDING;
+  public forceUpdate: Optional<ForceUpdate>;
+
+  private initialArgs: Optional<ARGS>;
   private result: Optional<T>;
   private suspender: Optional<Promise<void>>;
-  public forceUpdate: Optional<ForceUpdate>;
-  public initialArgs: Optional<ARGS>;
 
   constructor(private readonly factory: PromiseFactory<T>, initialArgs: ARGS) {
-    // escape React Strict Mode fetching twice
+    // avoid React Strict Mode fetching twice
     if (isDevelopment) {
       this.initialArgs = initialArgs;
     } else {
@@ -28,8 +29,12 @@ export class Resource<ARGS, T> {
     }
   }
 
+  public get canFetch(): boolean {
+    return this.status === Status.FULLFILED || this.status === Status.REJECTED;
+  }
+
   public read() {
-    // escape React Strict Mode fetching twice
+    // avoid React Strict Mode fetching twice
     if (isDevelopment && this.initialArgs) {
       this.fetch(this.initialArgs);
       this.initialArgs = undefined;
@@ -69,17 +74,16 @@ export class Resource<ARGS, T> {
 
 export function useResource<ARGS, R>(
   factory: (req: ARGS) => Promise<R>,
-  request: any
+  request: ARGS
 ): Resource<ARGS, R> {
   const forceUpdate = useForceUpdate();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const resource = useMemo(() => new Resource(factory, request), []);
   resource.forceUpdate = forceUpdate;
 
   useEffect(() => {
-    if (
-      resource.status === Status.FULLFILED ||
-      resource.status === Status.REJECTED
-    ) {
+    if (resource.canFetch) {
       resource.refresh(request);
     }
   }, [resource, request]);

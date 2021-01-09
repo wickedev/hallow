@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect, useState } from "react";
-import { ErrorBoundary } from "./ErrorBoundary";
+import React, { Suspense } from "react";
+import { GrpcErrorBoundary } from "./GrpcErrorBoundary";
 import { v4 as uuid } from "uuid";
 import { hooks } from "../api/hooks";
 
@@ -8,19 +8,7 @@ function Greeting({ greeting }: any) {
 }
 
 export function App() {
-  const [id, setID] = useState(uuid());
-
-  useEffect(() => {
-    const disposable = setInterval(() => {
-      setID(uuid());
-    }, 10000);
-
-    return () => {
-      clearInterval(disposable);
-    };
-  });
-
-  const greeting = hooks.useGreeting({ name: id });
+  const greeting = hooks.useGreeting({ name: "Ryan Yang" });
   return (
     <div>
       <button
@@ -31,11 +19,11 @@ export function App() {
         Refresh
       </button>
 
-      <ErrorBoundary>
-        <Suspense fallback={<p>loading</p>}>
+      <Suspense fallback={<p>loading</p>}>
+        <GrpcErrorBoundary>
           <Greeting greeting={greeting} />
-        </Suspense>
-      </ErrorBoundary>
+        </GrpcErrorBoundary>
+      </Suspense>
     </div>
   );
 }
