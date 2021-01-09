@@ -25,9 +25,14 @@ export class ErrorBoundary extends React.Component<{}, { error?: IgRPCError }> {
     if (error) {
       return (
         <div style={{ color: "#c7384b" }}>
-          {toString(error)}
+          <div>message: {error.message}</div>
+          <div>status: {error.status}</div>
+
           {error.metadata.throwable && (
-            <pre>{JSON.stringify(error.metadata.throwable, null, 4)}</pre>
+            <>
+              <div>throwable: {error.metadata.throwable.originalMessage}</div>
+              <pre>{JSON.stringify(error.metadata.throwable, null, 4)}</pre>
+            </>
           )}
         </div>
       ) as any;
@@ -35,8 +40,4 @@ export class ErrorBoundary extends React.Component<{}, { error?: IgRPCError }> {
 
     return this.props.children as any;
   }
-}
-
-function toString(error: IgRPCError) {
-  return typeof error === "object" ? error.message : error;
 }

@@ -23,6 +23,12 @@ interface IMetadata {
   trailers: any;
 }
 
+function getMessage<R extends grpc.ProtobufMessage>(
+  output: grpc.UnaryOutput<R>
+): string {
+  return output.statusMessage || "Unknown Error";
+}
+
 // noinspection JSUnusedGlobalSymbols
 export class GreetingStub {
   constructor(private readonly client: IClient) {}
@@ -52,12 +58,8 @@ export class GreetingStub {
               ? ThrowableProto.deserializeBinary(proto[0])
               : undefined;
 
-            const message = output.statusMessage
-              ? `${output.statusMessage} (${statusMap[output.status]})`
-              : statusMap[output.status];
-
             reject({
-              message: message,
+              message: getMessage(output),
               code: output.status,
               status: statusMap[output.status],
               metadata: {
