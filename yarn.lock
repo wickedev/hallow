@@ -2430,6 +2430,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lru-cache@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "@types/lru-cache@npm:5.1.0"
+  checksum: 55bffcbc9589163e5c02896fbd658a9e7878527c12197576e1e9b8db5b27744cfabd3dd522939835740eccd9bf348064f0e32a13b9b3019a81c8f69666499590
+  languageName: node
+  linkType: hard
+
 "@types/minimatch@npm:*":
   version: 3.0.3
   resolution: "@types/minimatch@npm:3.0.3"
@@ -2589,6 +2596,13 @@ __metadata:
   dependencies:
     source-map: ^0.6.1
   checksum: 75f1c06245dc31cb44496a4f4b685d313863561892c9cb51e7ba3a90522d4775b276f0febf43b797102309cb44e2226fba15a08aa043cd2423455ff3662d4039
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^8":
+  version: 8.3.0
+  resolution: "@types/uuid@npm:8.3.0"
+  checksum: 620985aed8fdb4aed153daca5235f4303457a67a4d181efac0021712eabd9edd7e88895f79730c0e651effde7633b1b61e49a81519ac8d4e75019d2ac9b6412f
   languageName: node
   linkType: hard
 
@@ -3792,7 +3806,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base64-js@npm:^1.0.2":
+"base64-js@npm:^1.0.2, base64-js@npm:^1.5.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: c1b41a26ddc6620eb7f1ee6c29c812f5942a4e328e74263f995872cfb8ca3aee08542beb25cd10fd7ef16e4f16603e25c35a26e776c01fd55277e5035e829e0e
@@ -6517,17 +6531,22 @@ __metadata:
     "@testing-library/user-event": ^12.1.10
     "@types/google-protobuf": ^3.7.4
     "@types/jest": ^26.0.15
+    "@types/lru-cache": ^5.1.0
     "@types/node": ^12.0.0
     "@types/react": ^16.9.53
     "@types/react-dom": ^16.9.8
+    "@types/uuid": ^8
+    base64-js: ^1.5.1
     eslint-config-react-app: ^6.0.0
     google-protobuf: ^3.14.0
     http-proxy-middleware: ^1.0.6
+    lru-cache: ^6.0.0
     react: ^17.0.1
     react-dom: ^17.0.1
     react-refresh: ^0.9.0
     react-scripts: 4.0.1
     typescript: ^4.0.3
+    uuid: ^8.3.2
     web-vitals: ^0.2.4
   languageName: unknown
   linkType: soft
@@ -14860,7 +14879,7 @@ typescript@^4.0.3:
   languageName: node
   linkType: hard
 
-"uuid@npm:^8.3.0":
+"uuid@npm:^8.3.0, uuid@npm:^8.3.2":
   version: 8.3.2
   resolution: "uuid@npm:8.3.2"
   bin:

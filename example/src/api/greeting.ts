@@ -1,3 +1,282 @@
-import { GreetingStub } from "../proto/Greeting";
+import { grpc } from "@improbable-eng/grpc-web";
+import * as jspb from "google-protobuf";
+import { Optional } from "./utils";
 
-export const greetingStub = new GreetingStub({ host: "/api" });
+interface IObject {
+  $messageInstance?: jspb.Message;
+}
+
+interface IGreeting {
+  readonly message: string;
+  readonly created?: string;
+}
+
+export class Greeting extends jspb.Message {
+  static create(data: IGreeting): Greeting {
+    const message = new Greeting([]);
+    message.message = data.message;
+    message.created = data.created;
+    return message;
+  }
+
+  static toObject(
+      includeInstance: boolean,
+      message: Greeting
+  ): IGreeting & IObject {
+    return {
+      message: message.message,
+      created: message.created,
+      $messageInstance: includeInstance ? message : undefined
+    };
+  }
+
+  static deserializeBinaryFromReader(
+      message: jspb.Message,
+      reader: jspb.BinaryReader
+  ): jspb.Message {
+    while (reader.nextField()) {
+      if (reader.isEndGroup()) {
+        break;
+      }
+      const field = reader.getFieldNumber();
+      switch (field) {
+        case 1:
+          jspb.Message.setField(message, 1, reader.readString());
+          break;
+        case 2:
+          jspb.Message.setField(message, 2, reader.readString());
+          break;
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+    return message;
+  }
+
+  constructor(data: jspb.Message.MessageArray) {
+    super();
+
+    jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
+  }
+
+  get message(): string {
+    return jspb.Message.getField(this, 1) as string;
+  }
+
+  get created(): Optional<string> {
+    return jspb.Message.getField(this, 2) as string;
+  }
+
+  set message(value: string) {
+    jspb.Message.setField(this, 1, value);
+  }
+
+  set created(value: Optional<string>) {
+    jspb.Message.setField(this, 2, value);
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    this.serializeBinaryToWriter(writer);
+    return writer.getResultBuffer();
+  }
+
+  serializeBinaryToWriter(writer: jspb.BinaryWriter) {
+    let v;
+    if ((v = this.message) != null) {
+      writer.writeString(1, v);
+    }
+    if ((v = this.created) != null) {
+      writer.writeString(2, v);
+    }
+  }
+
+  toObject(includeInstance: boolean = false): IGreeting & IObject {
+    return Greeting.toObject(includeInstance, this);
+  }
+}
+
+export interface IGreetingRequest {
+  readonly name: string;
+}
+
+export class GreetingRequest extends jspb.Message {
+  public static create({ name }: IGreetingRequest) {
+    const message = new GreetingRequest([]);
+    message.name = name;
+    return message;
+  }
+
+  static deserializeBinary(bytes: Uint8Array): GreetingRequest {
+    return undefined as any;
+  }
+
+  static toObject(
+      includeInstance: boolean,
+      message: GreetingRequest
+  ): IGreetingRequest & IObject {
+    return {
+      name: message.name,
+      $messageInstance: includeInstance ? message : undefined
+    };
+  }
+
+  constructor(data: jspb.Message.MessageArray) {
+    super();
+    jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
+  }
+
+  get name(): string {
+    return jspb.Message.getField(this, 1) as string;
+  }
+
+  set name(value: string) {
+    jspb.Message.setField(this, 1, value);
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    this.serializeBinaryToWriter(writer);
+    return writer.getResultBuffer();
+  }
+
+  serializeBinaryToWriter(writer: jspb.BinaryWriter) {
+    let v;
+    if ((v = this.name) != null) {
+      writer.writeString(1, v);
+    }
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingRequest {
+    return GreetingRequest.toObject(includeInstance, this);
+  }
+}
+
+export interface IGreetingResponse {
+  greeting: IGreeting[];
+}
+
+export class GreetingResponse extends jspb.Message {
+  static repeatedFields_ = [1];
+
+  static create(data: IGreetingResponse) {
+    const message = new GreetingResponse([]);
+    message.greetingList = data.greeting.map(Greeting.create);
+    return message;
+  }
+  static deserializeBinary(bytes: Uint8Array): GreetingResponse {
+    return GreetingResponse.deserializeBinaryFromReader(
+        new GreetingResponse([]),
+        new jspb.BinaryReader(bytes)
+    );
+  }
+
+  static deserializeBinaryFromReader(
+      msg: GreetingResponse,
+      reader: jspb.BinaryReader
+  ): GreetingResponse {
+    while (reader.nextField()) {
+      if (reader.isEndGroup()) {
+        break;
+      }
+      const field = reader.getFieldNumber();
+      switch (field) {
+        case 1:
+          const value = new Greeting(undefined as any);
+          reader.readMessage(value, Greeting.deserializeBinaryFromReader);
+          msg.addGreeting(value);
+          break;
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+    return msg;
+  }
+
+  static toObject(
+      includeInstance: boolean,
+      message: GreetingResponse
+  ): IGreetingResponse & IObject {
+    const list = jspb.Message.toObjectList(
+        message.greetingList,
+        Greeting.toObject,
+        includeInstance
+    );
+    return {
+      greeting: list as IGreeting[],
+      $messageInstance: includeInstance ? message : undefined
+    };
+  }
+
+  constructor(data: jspb.Message.MessageArray) {
+    super();
+
+    jspb.Message.initialize(
+        this,
+        data,
+        0,
+        -1,
+        GreetingResponse.repeatedFields_,
+        null
+    );
+  }
+
+  get greetingList(): Greeting[] {
+    return jspb.Message.getRepeatedWrapperField(this, Greeting as any, 1);
+  }
+
+  set greetingList(value: Greeting[]) {
+    jspb.Message.setRepeatedWrapperField(this, 1, value);
+  }
+
+  addGreeting(value: Greeting, opt_index?: number) {
+    return jspb.Message.addToRepeatedWrapperField(
+        this,
+        1,
+        value,
+        Greeting as any,
+        opt_index
+    );
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    this.serializeBinaryToWriter(writer);
+    return writer.getResultBuffer();
+  }
+
+  serializeBinaryToWriter(writer: jspb.BinaryWriter) {
+    const list = this.greetingList;
+    if (list.length > 0) {
+      writer.writeRepeatedMessage(1, list, Greeting.serializeBinaryToWriter);
+    }
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
+    return GreetingResponse.toObject(includeInstance, this);
+  }
+}
+
+export interface IClient {
+  host: string;
+}
+
+export class GreetingService implements grpc.ServiceDefinition {
+  serviceName: string = "greeting.GreetingService";
+  static service = new GreetingService();
+
+  static Greeting: grpc.UnaryMethodDefinition<
+      GreetingRequest,
+      GreetingResponse
+      > = {
+    methodName: "Greeting",
+    service: GreetingService.service,
+    requestStream: false,
+    responseStream: false,
+    requestType: GreetingRequest as any,
+    responseType: GreetingResponse as any
+  };
+}
+// @ts-ignore
