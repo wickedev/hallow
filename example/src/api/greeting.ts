@@ -20,19 +20,19 @@ export class Greeting extends jspb.Message {
   }
 
   static toObject(
-      includeInstance: boolean,
-      message: Greeting
+    includeInstance: boolean,
+    message: Greeting
   ): IGreeting & IObject {
     return {
       message: message.message,
       created: message.created,
-      $messageInstance: includeInstance ? message : undefined
+      $messageInstance: includeInstance ? message : undefined,
     };
   }
 
   static deserializeBinaryFromReader(
-      message: jspb.Message,
-      reader: jspb.BinaryReader
+    message: jspb.Message,
+    reader: jspb.BinaryReader
   ): jspb.Message {
     while (reader.nextField()) {
       if (reader.isEndGroup()) {
@@ -113,12 +113,12 @@ export class GreetingRequest extends jspb.Message {
   }
 
   static toObject(
-      includeInstance: boolean,
-      message: GreetingRequest
+    includeInstance: boolean,
+    message: GreetingRequest
   ): IGreetingRequest & IObject {
     return {
       name: message.name,
-      $messageInstance: includeInstance ? message : undefined
+      $messageInstance: includeInstance ? message : undefined,
     };
   }
 
@@ -167,14 +167,14 @@ export class GreetingResponse extends jspb.Message {
   }
   static deserializeBinary(bytes: Uint8Array): GreetingResponse {
     return GreetingResponse.deserializeBinaryFromReader(
-        new GreetingResponse([]),
-        new jspb.BinaryReader(bytes)
+      new GreetingResponse([]),
+      new jspb.BinaryReader(bytes)
     );
   }
 
   static deserializeBinaryFromReader(
-      msg: GreetingResponse,
-      reader: jspb.BinaryReader
+    msg: GreetingResponse,
+    reader: jspb.BinaryReader
   ): GreetingResponse {
     while (reader.nextField()) {
       if (reader.isEndGroup()) {
@@ -196,17 +196,17 @@ export class GreetingResponse extends jspb.Message {
   }
 
   static toObject(
-      includeInstance: boolean,
-      message: GreetingResponse
+    includeInstance: boolean,
+    message: GreetingResponse
   ): IGreetingResponse & IObject {
     const list = jspb.Message.toObjectList(
-        message.greetingList,
-        Greeting.toObject,
-        includeInstance
+      message.greetingList,
+      Greeting.toObject,
+      includeInstance
     );
     return {
       greeting: list as IGreeting[],
-      $messageInstance: includeInstance ? message : undefined
+      $messageInstance: includeInstance ? message : undefined,
     };
   }
 
@@ -214,12 +214,12 @@ export class GreetingResponse extends jspb.Message {
     super();
 
     jspb.Message.initialize(
-        this,
-        data,
-        0,
-        -1,
-        GreetingResponse.repeatedFields_,
-        null
+      this,
+      data,
+      0,
+      -1,
+      GreetingResponse.repeatedFields_,
+      null
     );
   }
 
@@ -233,11 +233,11 @@ export class GreetingResponse extends jspb.Message {
 
   addGreeting(value: Greeting, opt_index?: number) {
     return jspb.Message.addToRepeatedWrapperField(
-        this,
-        1,
-        value,
-        Greeting as any,
-        opt_index
+      this,
+      1,
+      value,
+      Greeting as any,
+      opt_index
     );
   }
 
@@ -268,15 +268,15 @@ export class GreetingService implements grpc.ServiceDefinition {
   static service = new GreetingService();
 
   static Greeting: grpc.UnaryMethodDefinition<
-      GreetingRequest,
-      GreetingResponse
-      > = {
+    GreetingRequest,
+    GreetingResponse
+  > = {
     methodName: "Greeting",
     service: GreetingService.service,
     requestStream: false,
     responseStream: false,
     requestType: GreetingRequest as any,
-    responseType: GreetingResponse as any
+    responseType: GreetingResponse as any,
   };
 }
 // @ts-ignore

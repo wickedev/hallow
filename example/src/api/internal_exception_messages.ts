@@ -36,7 +36,7 @@ export class StackTraceElementProto extends jspb.Message {
       className: message.className,
       methodName: message.methodName,
       fileName: message.fileName,
-      lineNumber: message.lineNumber
+      lineNumber: message.lineNumber,
     };
   }
 
@@ -223,7 +223,7 @@ export class ThrowableProto extends jspb.Message {
       originalClassName: message.originalClassName,
       originalMessage: message.originalMessage,
       stackTrace: list as StackTraceElementProto[],
-      cause: message.cause?.toObject()
+      cause: message.cause?.toObject(),
     };
   }
 

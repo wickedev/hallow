@@ -30,5 +30,5 @@ export const statusMap = {
   [grpc.Code.Internal]: "Internal",
   [grpc.Code.Unavailable]: "Unavailable",
   [grpc.Code.DataLoss]: "DataLoss",
-  [grpc.Code.Unauthenticated]: "Unauthenticated"
+  [grpc.Code.Unauthenticated]: "Unauthenticated",
 };
