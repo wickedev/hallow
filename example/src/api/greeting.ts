@@ -1,12 +1,12 @@
 import { grpc } from "@improbable-eng/grpc-web";
 import * as jspb from "google-protobuf";
-import { Optional } from "./utils";
+import { Optional } from "../api/utils";
 
 interface IObject {
   $messageInstance?: jspb.Message;
 }
 
-interface IGreeting {
+export interface IGreeting {
   readonly message: string;
   readonly created?: string;
 }

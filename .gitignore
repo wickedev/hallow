@@ -133,3 +133,5 @@ yarn-debug.log*
 yarn-error.log*
 
 /gen
+
+/example/build

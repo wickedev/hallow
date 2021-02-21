@@ -1,10 +1,10 @@
-# Suited GRPC
+# Hallow GRPC
 
 
 ## Usage
 
 ```tsx
-import { Client } from "@suited-grpc/browser" // or "@suited-grpc/mock"
+import { Client } from "@hallow/grpc-web"
 import { GreetingStub } from './greeting.proto'
 
 // Setup
@@ -46,7 +46,7 @@ module.exports = {
     module: {
         rules: [{
             test: /\.proto$/,
-            loader: '@suited-grpc/grpc-loader'
+            loader: '@hallow/grpc-loader',
         }]
     }
     ...
@@ -57,8 +57,10 @@ module.exports = {
     ...
     "compilerOptions": {
         "plugins": [{
-            "name": "@suited-grpc/ts-language-service-plugin",
-            "option": {}
+            "name": "@hallow/ts-language-service-plugin",
+            "option": {
+                "grpc": true,
+            }
         }]
     }
     ...

@@ -1,5 +1,4 @@
 {
-  "name": "suited-grpc",
   "private": true,
   "version": "0.2.0",
   "license": "MIT",
@@ -19,6 +18,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "@yarnpkg/pnpify": "^2.4.0",
     "http-proxy-middleware": "^1.0.6"
   }
 }

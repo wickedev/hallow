@@ -1,5 +1,5 @@
 {
-  "name": "@suited-grpc/parser",
+  "name": "@hallow/parser",
   "version": "0.2.0",
   "ts": "src/index.ts",
   "types": "dist/index.d.ts",

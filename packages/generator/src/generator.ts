@@ -10,7 +10,7 @@ import {
   ProtoVisitor,
   ProtoParser,
   ServiceBlockContext
-} from "@suited-grpc/parser";
+} from "@hallow/parser";
 
 interface IMessage {
   name: string;

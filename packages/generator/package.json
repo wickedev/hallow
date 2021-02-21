@@ -1,5 +1,5 @@
 {
-  "name": "@suited-grpc/generator",
+  "name": "@hallow/generator",
   "version": "0.2.0",
   "ts": "src/index.ts",
   "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@suited-grpc/parser": "workspace:packages/parser",
+    "@hallow/parser": "workspace:packages/parser",
     "antlr4ts": "0.5.0-alpha.3",
     "typescript": "^3.9.7"
   },
