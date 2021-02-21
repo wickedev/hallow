@@ -1,10 +1,17 @@
 import { grpc } from "@improbable-eng/grpc-web";
 import * as jspb from "google-protobuf";
-import { Optional } from "../api/utils";
-
-interface IObject {
-  $messageInstance?: jspb.Message;
-}
+import { ProtobufMessageClass } from "@improbable-eng/grpc-web/dist/typings/message";
+import { useEffect } from "react";
+import { Resource } from "../api/resource";
+import { ThrowableProto } from "./internal_exception_messages";
+import {
+  IObject,
+  getMessage,
+  IClient,
+  Optional,
+  statusMap,
+  useForceUpdate,
+} from "./core";
 
 export interface IGreeting {
   readonly message: string;
@@ -12,6 +19,11 @@ export interface IGreeting {
 }
 
 export class Greeting extends jspb.Message {
+  constructor(data?: jspb.Message.MessageArray) {
+    super();
+    data && jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
+  }
+
   static create(data: IGreeting): Greeting {
     const message = new Greeting([]);
     message.message = data.message;
@@ -52,12 +64,6 @@ export class Greeting extends jspb.Message {
       }
     }
     return message;
-  }
-
-  constructor(data: jspb.Message.MessageArray) {
-    super();
-
-    jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
   }
 
   get message(): string {
@@ -102,6 +108,11 @@ export interface IGreetingRequest {
 }
 
 export class GreetingRequest extends jspb.Message {
+  constructor(data: jspb.Message.MessageArray) {
+    super();
+    jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
+  }
+
   public static create({ name }: IGreetingRequest) {
     const message = new GreetingRequest([]);
     message.name = name;
@@ -120,11 +131,6 @@ export class GreetingRequest extends jspb.Message {
       name: message.name,
       $messageInstance: includeInstance ? message : undefined,
     };
-  }
-
-  constructor(data: jspb.Message.MessageArray) {
-    super();
-    jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
   }
 
   get name(): string {
@@ -259,10 +265,6 @@ export class GreetingResponse extends jspb.Message {
   }
 }
 
-export interface IClient {
-  host: string;
-}
-
 export class GreetingService implements grpc.ServiceDefinition {
   serviceName: string = "greeting.GreetingService";
   static service = new GreetingService();
@@ -275,7 +277,76 @@ export class GreetingService implements grpc.ServiceDefinition {
     service: GreetingService.service,
     requestStream: false,
     responseStream: false,
-    requestType: GreetingRequest as any,
-    responseType: GreetingResponse as any,
+    requestType: (GreetingRequest as unknown) as ProtobufMessageClass<GreetingRequest>,
+    responseType: (GreetingResponse as unknown) as ProtobufMessageClass<GreetingResponse>,
   };
+}
+
+export class GreetingStub {
+  private readonly sayHelloResource: Resource<IGreetingResponse>;
+
+  constructor(private readonly client: IClient) {
+    this.sayHelloResource = new Resource(this.greeting.bind(this));
+  }
+
+  greeting(greetingRequest: IGreetingRequest): Promise<IGreetingResponse> {
+    return new Promise<IGreetingResponse>((resolve, reject) => {
+      grpc.unary(GreetingService.Greeting, {
+        host: this.client.host,
+        debug: false,
+        onEnd(output: grpc.UnaryOutput<GreetingResponse>): void {
+          if (output.status === grpc.Code.OK) {
+            const result = output.message?.toObject();
+
+            result
+              ? resolve(result)
+              : reject({
+                  message: "deserialize failed",
+                  code: output.status,
+                  metadata: output.trailers,
+                });
+          } else {
+            const proto = (output as any)?.trailers?.headersMap?.[
+              "armeria.grpc.throwableproto-bin"
+            ];
+
+            let throwable: Optional<ThrowableProto> = proto?.[0]
+              ? ThrowableProto.deserializeBinary(proto[0])
+              : undefined;
+
+            reject({
+              message: getMessage(output),
+              code: output.status,
+              status: statusMap[output.status],
+              metadata: {
+                throwable: throwable?.toObject(),
+                trailers: output.trailers,
+              },
+            });
+          }
+        },
+        request: GreetingRequest.create(greetingRequest),
+      });
+    });
+  }
+
+  useGreeting(request: IGreetingRequest): Resource<IGreetingResponse> {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    this.sayHelloResource.forceUpdate = useForceUpdate();
+    const capturedArgs = arguments;
+    this.sayHelloResource.arguments = capturedArgs;
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (this.sayHelloResource.mustBeIgnored) {
+        this.sayHelloResource.mustBeIgnored = false;
+      } else {
+        this.sayHelloResource.mustBeIgnored = true;
+        this.sayHelloResource.arguments = capturedArgs;
+        this.sayHelloResource.refresh();
+      }
+    }, [capturedArgs]);
+
+    return this.sayHelloResource;
+  }
 }

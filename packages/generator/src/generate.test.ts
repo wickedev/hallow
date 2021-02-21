@@ -1,8 +1,5 @@
+import { stripIndent } from "./utils";
 import { generate } from "./generator";
-
-export function stripIndent(s: string): string {
-  return s.replace(/^\s+/gm, "");
-}
 
 test("generate typescript code from proto", () => {
   const result = generate(`

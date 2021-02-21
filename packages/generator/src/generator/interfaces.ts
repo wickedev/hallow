@@ -1,30 +1,67 @@
 import {
   MessageBlockContext,
-  parse,
   ProtoVisitor,
-  ProtoParser,
-  ServiceBlockContext,
-  ProtoContext,
+  FieldModifierContext,
+  FieldContext,
 } from "@hallow/parser";
+import {
+  InterfaceDeclarationStructure,
+  OptionalKind,
+  PropertySignatureStructure,
+  StructureKind,
+} from "ts-morph";
 
-export class MessageInterfaceGenerator extends ProtoVisitor<MessageBlockContext> {
-  protected defaultResult(): MessageBlockContext {
-    return null as any;
+function isRequired(fieldModifier?: FieldModifierContext) {
+  return fieldModifier?.REQUIRED() != null;
+}
+
+function isArray(fieldModifier?: FieldModifierContext) {
+  return fieldModifier?.REPEATED() != null;
+}
+
+function isOptional(fieldModifier?: FieldModifierContext) {
+  return fieldModifier?.OPTIONAL() != null;
+}
+
+function getType(field?: FieldContext) {
+  const type = field?.typeReference().text;
+  if (isArray(field?.fieldModifier())) {
+    return `${type}[]`;
   }
 
-  generate(proto: ProtoContext): string[] {
-    const ast = this.visit(proto);
-    return [
-      `export interface IGreeting {
-        readonly message: string;
-        readonly created?: string;
-      }`,
-      `export interface IGreetingRequest {
-        readonly name: string;
-      }`,
-      `export interface IGreetingResponse {
-        greeting: IGreeting[];
-      }`,
-    ];
+  return type;
+}
+
+export class MessageInterfaceGenerator extends ProtoVisitor<
+  InterfaceDeclarationStructure[]
+> {
+  private interfaces: InterfaceDeclarationStructure[] = [];
+
+  protected defaultResult(): InterfaceDeclarationStructure[] {
+    return this.interfaces;
+  }
+
+  visitMessageBlock(ctx: MessageBlockContext): InterfaceDeclarationStructure[] {
+    const messageName = `I${ctx.messageName().ident().text}`;
+
+    const properties: OptionalKind<PropertySignatureStructure>[] = ctx
+      .field()
+      .map((f) => ({
+        isReadonly: true,
+        hasQuestionToken: isOptional(f.fieldModifier()),
+        name: f.fieldName().ident().text,
+        type: getType(f),
+      }));
+
+    const message: InterfaceDeclarationStructure = {
+      isExported: true,
+      kind: StructureKind.Interface,
+      name: messageName,
+      properties,
+    };
+
+    this.interfaces.push(message);
+
+    return this.interfaces;
   }
 }

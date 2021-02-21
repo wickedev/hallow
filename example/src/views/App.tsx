@@ -1,14 +1,19 @@
 import React, { Suspense } from "react";
 import { GrpcErrorBoundary } from "./GrpcErrorBoundary";
 import { v4 as uuid } from "uuid";
-import { hooks } from "../api/hooks";
+import { isDevelopment } from "../api/utils";
+import { GreetingStub } from "../api/greeting";
+
+const greetingStub = new GreetingStub({
+  host: isDevelopment ? "/api" : "http://localhost:8080",
+});
 
 function Greeting({ greeting }: any) {
   return <pre>{JSON.stringify(greeting.read(), null, 4)}</pre>;
 }
 
 export function App() {
-  const greeting = hooks.useGreeting({ name: `Ryan Yang ${uuid()}` });
+  const greeting = greetingStub.useGreeting({ name: `Ryan Yang ${uuid()}` });
 
   return (
     <div>

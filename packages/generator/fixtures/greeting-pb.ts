@@ -8,5 +8,5 @@ export interface IGreetingRequest {
 }
 
 export interface IGreetingResponse {
-  greeting: IGreeting[];
+  readonly greeting: IGreeting[];
 }

@@ -1,4 +1,4 @@
-import { Optional } from "./utils";
+import { Optional } from "./core";
 
 export enum Status {
   PENDING,
@@ -34,6 +34,7 @@ export class Resource<T> {
       this.fetch();
     }
 
+    debugger
     switch (this.status) {
       case Status.PENDING:
         throw this.suspender;
