@@ -279,4 +279,3 @@ export class GreetingService implements grpc.ServiceDefinition {
     responseType: GreetingResponse as any,
   };
 }
-// @ts-ignore

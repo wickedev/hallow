@@ -1,6 +1,6 @@
 import { generate } from "./generator";
 
-function stripIndent(s: string): string {
+export function stripIndent(s: string): string {
   return s.replace(/^\s+/gm, "");
 }
 
@@ -43,7 +43,7 @@ test("generate typescript code from proto", () => {
           greeting: Greeting[];
       }
       
-      export class GreetingStub {
+      export class GreetingServiceStub {
         greeting(greetingRequest: GreetingRequest): Promise<GreetingResponse> {
             return null;
         }
