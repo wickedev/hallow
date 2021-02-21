@@ -34,7 +34,6 @@ export class Resource<T> {
       this.fetch();
     }
 
-    debugger
     switch (this.status) {
       case Status.PENDING:
         throw this.suspender;

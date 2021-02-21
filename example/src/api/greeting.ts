@@ -7,7 +7,6 @@ import { ThrowableProto } from "./internal_exception_messages";
 import {
   IObject,
   getMessage,
-  IClient,
   Optional,
   statusMap,
   useForceUpdate,
@@ -19,11 +18,6 @@ export interface IGreeting {
 }
 
 export class Greeting extends jspb.Message {
-  constructor(data?: jspb.Message.MessageArray) {
-    super();
-    data && jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
-  }
-
   static create(data: IGreeting): Greeting {
     const message = new Greeting([]);
     message.message = data.message;
@@ -64,6 +58,12 @@ export class Greeting extends jspb.Message {
       }
     }
     return message;
+  }
+
+  constructor(data?: jspb.Message.MessageArray) {
+    super();
+
+    jspb.Message.initialize(this, data || [], 0, -1, undefined, undefined);
   }
 
   get message(): string {
@@ -108,11 +108,6 @@ export interface IGreetingRequest {
 }
 
 export class GreetingRequest extends jspb.Message {
-  constructor(data: jspb.Message.MessageArray) {
-    super();
-    jspb.Message.initialize(this, data, 0, -1, undefined, undefined);
-  }
-
   public static create({ name }: IGreetingRequest) {
     const message = new GreetingRequest([]);
     message.name = name;
@@ -131,6 +126,11 @@ export class GreetingRequest extends jspb.Message {
       name: message.name,
       $messageInstance: includeInstance ? message : undefined,
     };
+  }
+
+  constructor(data?: jspb.Message.MessageArray) {
+    super();
+    jspb.Message.initialize(this, data || [], 0, -1, undefined, undefined);
   }
 
   get name(): string {
@@ -216,12 +216,12 @@ export class GreetingResponse extends jspb.Message {
     };
   }
 
-  constructor(data: jspb.Message.MessageArray) {
+  constructor(data?: jspb.Message.MessageArray) {
     super();
 
     jspb.Message.initialize(
       this,
-      data,
+      data || [],
       0,
       -1,
       GreetingResponse.repeatedFields_,
@@ -263,6 +263,10 @@ export class GreetingResponse extends jspb.Message {
   toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
     return GreetingResponse.toObject(includeInstance, this);
   }
+}
+
+export interface IClient {
+  host: string;
 }
 
 export class GreetingService implements grpc.ServiceDefinition {
