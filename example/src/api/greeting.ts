@@ -205,13 +205,12 @@ export class GreetingResponse extends jspb.Message {
     includeInstance: boolean,
     message: GreetingResponse
   ): IGreetingResponse & IObject {
-    const list = jspb.Message.toObjectList(
-      message.greetings,
-      Greeting.toObject,
-      includeInstance
-    );
     return {
-      greeting: list as IGreeting[],
+      greeting: jspb.Message.toObjectList(
+        message.greetings,
+        Greeting.toObject,
+        includeInstance
+      ) as IGreeting[],
       $messageInstance: includeInstance ? message : undefined,
     };
   }
