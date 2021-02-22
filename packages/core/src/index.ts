@@ -1,9 +1,15 @@
+export { Resource } from "./resource";
+export { Optional } from "./type";
+export {
+  IThrowableProto,
+  ThrowableProto,
+  IStackTraceElementProto,
+  StackTraceElementProto,
+} from "./internal_exception_messages";
 import * as jspb from "google-protobuf";
 import { useRef, useState } from "react";
 import { grpc } from "@improbable-eng/grpc-web";
 import { IThrowableProto } from "./internal_exception_messages";
-
-export type Optional<T> = T | undefined;
 
 export const statusMap = {
   [grpc.Code.OK]: "OK",

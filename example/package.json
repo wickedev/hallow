@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@hallow/core": "workspace:packages/core",
     "@improbable-eng/grpc-web": "^0.13.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
@@ -13,10 +14,8 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.53",
     "@types/react-dom": "^16.9.8",
-    "base64-js": "^1.5.1",
     "google-protobuf": "^3.14.0",
     "http-proxy-middleware": "^1.0.6",
-    "lru-cache": "^6.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.1",

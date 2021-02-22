@@ -2,15 +2,15 @@ import { grpc } from "@improbable-eng/grpc-web";
 import * as jspb from "google-protobuf";
 import { ProtobufMessageClass } from "@improbable-eng/grpc-web/dist/typings/message";
 import { useEffect } from "react";
-import { Resource } from "../api/resource";
-import { ThrowableProto } from "./internal_exception_messages";
 import {
+  Resource,
+  ThrowableProto,
   IObject,
   getMessage,
   Optional,
   statusMap,
   useForceUpdate,
-} from "./core";
+} from "@hallow/core";
 
 export interface IGreeting {
   readonly message: string;

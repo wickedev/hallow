@@ -1,15 +1,16 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
-// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from parser/ProtoParser.g4 by ANTLR 4.9.0-SNAPSHOT
 import { ATN } from "antlr4ts/atn/ATN";
+import { FailedPredicateException } from "antlr4ts/FailedPredicateException";
 import { Parser } from "antlr4ts/Parser";
 import { ParserRuleContext } from "antlr4ts/ParserRuleContext";
 //import { RuleVersion } from "antlr4ts/RuleVersion";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { TokenStream } from "antlr4ts/TokenStream";
 import { Vocabulary } from "antlr4ts/Vocabulary";
-// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from parser/ProtoParser.g4 by ANTLR 4.9.0-SNAPSHOT
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
-// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from parser/ProtoParser.g4 by ANTLR 4.9.0-SNAPSHOT
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 import { CharStream } from "antlr4ts/CharStream";
 import { Lexer } from "antlr4ts/Lexer";
@@ -1006,6 +1007,7 @@ declare class ProtoParser extends Parser {
     get ruleNames(): string[];
     // @Override
     get serializedATN(): string;
+    protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException;
     constructor(input: TokenStream);
     // @RuleVersion(0)
     proto(): ProtoContext;

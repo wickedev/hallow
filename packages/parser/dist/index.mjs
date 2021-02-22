@@ -5,6 +5,7 @@ import { Lexer } from 'antlr4ts/Lexer';
 import { LexerATNSimulator } from 'antlr4ts/atn/LexerATNSimulator';
 import { VocabularyImpl } from 'antlr4ts/VocabularyImpl';
 import { toCharArray, join } from 'antlr4ts/misc/Utils';
+import { FailedPredicateException } from 'antlr4ts/FailedPredicateException';
 import { NoViableAltException } from 'antlr4ts/NoViableAltException';
 import { Parser } from 'antlr4ts/Parser';
 import { ParserRuleContext } from 'antlr4ts/ParserRuleContext';
@@ -12,7 +13,7 @@ import { ParserATNSimulator } from 'antlr4ts/atn/ParserATNSimulator';
 import { RecognitionException } from 'antlr4ts/RecognitionException';
 import { Token } from 'antlr4ts/Token';
 
-// Generated from parser/ProtoLexer.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from parser/ProtoLexer.g4 by ANTLR 4.9.0-SNAPSHOT
 class ProtoLexer extends Lexer {
     // tslint:enable:no-trailing-whitespace
     constructor(input) {
@@ -503,7 +504,7 @@ ProtoLexer._serializedATN = join([
     ProtoLexer._serializedATNSegment1,
 ], "");
 
-// Generated from parser/ProtoParser.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from parser/ProtoParser.g4 by ANTLR 4.9.0-SNAPSHOT
 class ProtoParser extends Parser {
     constructor(input) {
         super(input);
@@ -521,6 +522,9 @@ class ProtoParser extends Parser {
     get ruleNames() { return ProtoParser.ruleNames; }
     // @Override
     get serializedATN() { return ProtoParser._serializedATN; }
+    createFailedPredicateException(predicate, message) {
+        return new FailedPredicateException(this, predicate, message);
+    }
     // @RuleVersion(0)
     proto() {
         let _localctx = new ProtoContext(this._ctx, this.state);

@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { IgRPCError } from "../api/core";
+import { IgRPCError } from "@hallow/core";
 
 export class GrpcErrorBoundary extends React.Component<
   {},

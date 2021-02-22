@@ -1,4 +1,4 @@
-import { Optional } from "./core";
+import { Optional } from "./type";
 
 export enum Status {
   PENDING,
