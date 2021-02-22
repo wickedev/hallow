@@ -1,50 +1,29 @@
-import { stripIndent } from "./utils";
-import { generate } from "./generator";
+import fs from "fs";
+import { parse } from "@hallow/parser";
+import { gRpcProtoGenerator as GRpcProtoGenerator } from "./generator";
+import { createMemoryFiles, stripSpace } from "./utils";
 
-test("generate typescript code from proto", () => {
-  const result = generate(`
-    syntax = "proto2";
-    package greeting;
-    
-    message Greeting {
-      required string id = 1;
-      optional string service = 2;
-      required string message = 3;
-      optional string created = 4;
+describe("MessageInterfaceGenerator", () => {
+  it("should generate code in fixtures", () => {
+    const proto = fs.readFileSync("fixtures/greeting_proto.proto", "utf-8");
+    const fixture = stripSpace(
+      fs.readFileSync("fixtures/greeting.ts.fixture", "utf-8")
+    );
+
+    const parser = parse(proto);
+    const generator = new GRpcProtoGenerator();
+    const interfaces = generator.visit(parser.proto());
+
+    expect(interfaces.length).toBeGreaterThan(0);
+
+    const files = createMemoryFiles(interfaces);
+
+    for (const file of files) {
+      if (file.filePath.endsWith(".d.ts")) {
+        console.log(file.text);
+
+        expect(fixture).toContain(stripSpace(file.text));
+      }
     }
-    
-    message GreetingRequest {}
-    
-    message GreetingResponse {
-      repeated Greeting greeting = 1;
-    }
-    
-    service GreetingService { 
-      rpc Greeting(GreetingRequest) returns(GreetingResponse);
-    }
-  `);
-
-  expect(stripIndent(result)).toBe(
-    stripIndent(`
-      export interface Greeting {
-        id: string;
-        service: string;
-        message: string;
-        created: string;
-      }
-
-      export interface GreetingRequest {
-      }
-
-      export interface GreetingResponse {
-          greeting: Greeting[];
-      }
-      
-      export class GreetingServiceStub {
-        greeting(greetingRequest: GreetingRequest): Promise<GreetingResponse> {
-            return null;
-        }
-      }
-    `)
-  );
+  });
 });

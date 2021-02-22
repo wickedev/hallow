@@ -11,7 +11,7 @@ message GreetingRequest {
 }
 
 message GreetingResponse {
-  repeated Greeting greeting = 1;
+  repeated Greeting greetings = 1;
 }
 
 service GreetingService {

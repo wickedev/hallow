@@ -157,7 +157,7 @@ class StackTraceElementProto extends jspb.Message {
 class ThrowableProto extends jspb.Message {
     constructor(data) {
         super();
-        jspb.Message.initialize(this, data, 0, -1, ThrowableProto.repeatedFields_, null);
+        jspb.Message.initialize(this, data, 0, -1, ThrowableProto.repeatedFields_, undefined);
     }
     static create(data) {
         const message = new ThrowableProto([]);

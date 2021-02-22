@@ -168,7 +168,7 @@ export class GreetingResponse extends jspb.Message {
 
   static create(data: IGreetingResponse) {
     const message = new GreetingResponse([]);
-    message.greetingList = data.greeting.map(Greeting.create);
+    message.greetings = data.greeting.map(Greeting.create);
     return message;
   }
   static deserializeBinary(bytes: Uint8Array): GreetingResponse {
@@ -189,7 +189,7 @@ export class GreetingResponse extends jspb.Message {
       const field = reader.getFieldNumber();
       switch (field) {
         case 1:
-          const value = new Greeting(undefined as any);
+          const value = new Greeting();
           reader.readMessage(value, Greeting.deserializeBinaryFromReader);
           msg.addGreeting(value);
           break;
@@ -206,7 +206,7 @@ export class GreetingResponse extends jspb.Message {
     message: GreetingResponse
   ): IGreetingResponse & IObject {
     const list = jspb.Message.toObjectList(
-      message.greetingList,
+      message.greetings,
       Greeting.toObject,
       includeInstance
     );
@@ -225,15 +225,15 @@ export class GreetingResponse extends jspb.Message {
       0,
       -1,
       GreetingResponse.repeatedFields_,
-      null
+      undefined
     );
   }
 
-  get greetingList(): Greeting[] {
+  get greetings(): Greeting[] {
     return jspb.Message.getRepeatedWrapperField(this, Greeting as any, 1);
   }
 
-  set greetingList(value: Greeting[]) {
+  set greetings(value: Greeting[]) {
     jspb.Message.setRepeatedWrapperField(this, 1, value);
   }
 
@@ -254,7 +254,7 @@ export class GreetingResponse extends jspb.Message {
   }
 
   serializeBinaryToWriter(writer: jspb.BinaryWriter) {
-    const list = this.greetingList;
+    const list = this.greetings;
     if (list.length > 0) {
       writer.writeRepeatedMessage(1, list, Greeting.serializeBinaryToWriter);
     }
