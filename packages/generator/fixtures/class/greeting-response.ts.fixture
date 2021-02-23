@@ -1,0 +1,101 @@
+export class GreetingResponse extends jspb.Message {
+  static repeatedFields_ = [1];
+
+  constructor(data?: jspb.Message.MessageArray) {
+    super();
+
+    jspb.Message.initialize(
+      this,
+      data || [],
+      0,
+      -1,
+      GreetingResponse.repeatedFields_,
+      undefined,
+    );
+  }
+
+  get greetings(): Greeting[] {
+    return jspb.Message.getRepeatedWrapperField(this, Greeting as any, 1);
+  }
+
+  set greetings(value: Greeting[]) {
+    jspb.Message.setRepeatedWrapperField(this, 1, value);
+  }
+
+  addGreetings(value: Greeting, opt_index?: number) {
+    return jspb.Message.addToRepeatedWrapperField(
+      this,
+      1,
+      value,
+      Greeting as any,
+      opt_index,
+    );
+  }
+
+  static create(data: IGreetingResponse): GreetingResponse {
+    const message = new GreetingResponse([]);
+    message.greetings = data.greetings.map(Greeting.create);
+    return message;
+  }
+
+  static deserializeBinary(bytes: Uint8Array): GreetingResponse {
+    return GreetingResponse.deserializeBinaryFromReader(
+      new GreetingResponse(),
+      new jspb.BinaryReader(bytes)
+    );
+  }
+
+  static deserializeBinaryFromReader(
+    message: GreetingResponse,
+    reader: jspb.BinaryReader
+  ): GreetingResponse {
+    while (reader.nextField()) {
+      if (reader.isEndGroup()) {
+        break;
+      }
+      const field = reader.getFieldNumber();
+      switch (field) {
+        case 1:
+          const value = new Greeting();
+          reader.readMessage(value, Greeting.deserializeBinaryFromReader);
+          message.addGreetings(value);
+          break;
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+    return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: GreetingResponse
+  ): IGreetingResponse & IObject {
+    return {
+      greetings: jspb.Message.toObjectList(
+        message.greetings,
+        Greeting.toObject,
+        includeInstance
+      ) as IGreeting[],
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    this.serializeBinaryToWriter(writer);
+    return writer.getResultBuffer();
+  }
+
+  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
+    let v;
+    if ((v = this.greetings).length > 0) {
+      writer.writeRepeatedMessage(1, v, Greeting.serializeBinaryToWriter);
+    }
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
+    return GreetingResponse.toObject(includeInstance, this);
+  }
+}

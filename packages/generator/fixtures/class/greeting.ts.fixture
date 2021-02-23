@@ -1,0 +1,99 @@
+export class Greeting extends jspb.Message {
+  constructor(data?: jspb.Message.MessageArray) {
+    super();
+
+    jspb.Message.initialize(
+      this,
+      data || [],
+      0,
+      -1,
+      undefined,
+      undefined,
+    );
+  }
+
+  get message(): string {
+    return jspb.Message.getField(this, 1) as string;
+  }
+
+  get created(): Optional<string> {
+    return jspb.Message.getField(this, 2) as string;
+  }
+
+  set message(value: string) {
+    jspb.Message.setField(this, 1, value);
+  }
+
+  set created(value: Optional<string>) {
+    jspb.Message.setField(this, 2, value);
+  }
+
+  static create(data: IGreeting): Greeting {
+    const message = new Greeting([]);
+    message.message = data.message;
+    message.created = data.created;
+    return message;
+  }
+
+  static deserializeBinary(bytes: Uint8Array): Greeting {
+    return Greeting.deserializeBinaryFromReader(
+      new Greeting(),
+      new jspb.BinaryReader(bytes)
+    );
+  }
+
+  static deserializeBinaryFromReader(
+    message: Greeting,
+    reader: jspb.BinaryReader
+  ): Greeting {
+    while (reader.nextField()) {
+      if (reader.isEndGroup()) {
+        break;
+      }
+      const field = reader.getFieldNumber();
+      switch (field) {
+        case 1:
+          jspb.Message.setField(message, 1, reader.readString());
+          break;
+        case 2:
+          jspb.Message.setField(message, 2, reader.readString());
+          break;
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+    return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: Greeting
+  ): IGreeting & IObject {
+    return {
+      message: message.message,
+      created: message.created,
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    this.serializeBinaryToWriter(writer);
+    return writer.getResultBuffer();
+  }
+
+  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
+    let v;
+    if ((v = this.message) != null) {
+      writer.writeString(1, v);
+    }
+    if ((v = this.created) != null) {
+      writer.writeString(2, v);
+    }
+  }
+
+  toObject(includeInstance: boolean = false): IGreeting & IObject {
+    return Greeting.toObject(includeInstance, this);
+  }
+}

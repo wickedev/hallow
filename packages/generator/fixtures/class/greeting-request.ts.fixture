@@ -1,0 +1,82 @@
+export class GreetingRequest extends jspb.Message {
+  constructor(data?: jspb.Message.MessageArray) {
+    super();
+    jspb.Message.initialize(
+      this,
+      data || [],
+      0,
+      -1,
+      undefined,
+      undefined,
+    );
+  }
+
+  get name(): string {
+    return jspb.Message.getField(this, 1) as string;
+  }
+
+  set name(value: string) {
+    jspb.Message.setField(this, 1, value);
+  }
+
+  static create(data: IGreetingRequest): GreetingRequest {
+    const message = new GreetingRequest([]);
+    message.name = data.name;
+    return message;
+  }
+
+  static deserializeBinary(bytes: Uint8Array): GreetingRequest {
+    return GreetingRequest.deserializeBinaryFromReader(
+      new GreetingRequest(),
+      new jspb.BinaryReader(bytes)
+    );
+  }
+
+  static deserializeBinaryFromReader(
+    message: GreetingRequest,
+    reader: jspb.BinaryReader
+  ): GreetingRequest {
+    while (reader.nextField()) {
+      if (reader.isEndGroup()) {
+        break;
+      }
+      const field = reader.getFieldNumber();
+      switch (field) {
+        case 1:
+          jspb.Message.setField(message, 1, reader.readString());
+          break;
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+    return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: GreetingRequest
+  ): IGreetingRequest & IObject {
+    return {
+      name: message.name,
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    this.serializeBinaryToWriter(writer);
+    return writer.getResultBuffer();
+  }
+
+  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
+    let v;
+    if ((v = this.name) != null) {
+      writer.writeString(1, v);
+    }
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingRequest & IObject {
+    return GreetingRequest.toObject(includeInstance, this);
+  }
+}
