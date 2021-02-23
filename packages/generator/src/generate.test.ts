@@ -1,7 +1,7 @@
 import fs from "fs";
 import { parse } from "@hallow/parser";
 import { gRpcProtoGenerator as GRpcProtoGenerator } from "./generator";
-import { createMemoryFiles, stripSpace } from "./utils";
+import { createMemoryFiles, stripSpace } from "./test-utils";
 
 describe("MessageInterfaceGenerator", () => {
   it("should generate code in fixtures", () => {

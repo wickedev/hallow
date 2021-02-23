@@ -5,15 +5,17 @@ import {
   InterfaceDeclarationStructure,
   Project,
   SourceFileStructure,
-  StatementStructures
+  StatementStructures,
 } from "ts-morph";
-import { transformToInterface } from "./interfaces";
-import { MessageVisitor } from "./utils";
+import { transformToInterface } from ".";
+import { MessageVisitor } from "../../test-utils";
 
 describe("transformToInterface", () => {
   it("should transform greeting.proto to typescript", () => {
     const proto = fs.readFileSync("fixtures/proto/greeting.proto", "utf-8");
-    const fixtuere = readStructureFrom("fixtures/interfaces/greeting.ts.fixture");
+    const fixtuere = readStructureFrom(
+      "fixtures/interfaces/greeting.ts.fixture"
+    );
 
     const parser = parse(proto);
     const generator = new MessageVisitor<InterfaceDeclarationStructure>(

@@ -8,7 +8,7 @@ import {
   SetAccessorDeclarationStructure,
   StructureKind,
 } from "ts-morph";
-import { getType, getWrapperType, toFirstLetterCapitalized } from "../utils";
+import { getType, getWrapperType, toFirstLetterCapitalized } from "../../utils";
 
 export function getFieldAccessors(
   feilds: FieldContext[]

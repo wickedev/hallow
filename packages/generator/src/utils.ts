@@ -1,46 +1,46 @@
 import {
-  MemoryEmitResultFile,
-  Project,
-  ScriptTarget,
-  StatementStructures,
-  WriterFunction,
-} from "ts-morph";
+  FieldContext,
+  FieldModifierContext
+} from "@hallow/parser";
 
-export function stripSpace(s: string): string {
-  return s.replace(/^\s+/gm, "");
+
+export function isRequired(fieldModifier?: FieldModifierContext) {
+  return fieldModifier?.REQUIRED() != null;
 }
 
-export function stripIndent(s: string, indent: number = 0): string {
-  const firstLineIndenet = s.match(/\n\s+/);
+export function isArray(fieldModifier?: FieldModifierContext) {
+  return fieldModifier?.REPEATED() != null;
+}
 
-  const removeSize = (firstLineIndenet?.toString().length || 0) - 1;
+export function isOptional(fieldModifier?: FieldModifierContext) {
+  return fieldModifier?.OPTIONAL() != null;
+}
 
-  if (removeSize === 0) {
-    return s;
+export type Optional<T> = T | undefined;
+
+export function getType(field?: FieldContext) {
+  const type = field?.typeReference().text;
+  const fieldModifier = field?.fieldModifier();
+  if (isArray(fieldModifier)) {
+    return `${type}[]`;
   }
 
-  return s.replace(RegExp(`\\n\\s{${removeSize - indent}}`, "gm"), "\n");
+  return type;
 }
 
-export function createMemoryFiles(
-  statements:
-    | (string | WriterFunction | StatementStructures)[]
-    | string
-    | WriterFunction
-): MemoryEmitResultFile[] {
-  const project = new Project({
-    compilerOptions: {
-      outDir: "dist",
-      declaration: true,
-      target: ScriptTarget.ESNext,
-    },
-  });
+export function getWrapperType(field?: FieldContext) {
+  const type = field?.typeReference().text;
+  const fieldModifier = field?.fieldModifier();
+  if (isArray(fieldModifier)) {
+    return `${type}[]`;
+  }
+  if (isOptional(fieldModifier)) {
+    return `Optional<${type}>`;
+  }
 
-  project.createSourceFile("result.ts", {
-    statements,
-  });
+  return type;
+}
 
-  const result = project.emitToMemory();
-
-  return result.getFiles();
+export function toFirstLetterCapitalized(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }

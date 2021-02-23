@@ -1,0 +1,16 @@
+export class GreetingService implements grpc.ServiceDefinition {
+  serviceName: string = "greeting.GreetingService";
+  static service = new GreetingService();
+
+  static Greeting: grpc.UnaryMethodDefinition<
+    GreetingRequest,
+    GreetingResponse
+  > = {
+      methodName: "Greeting",
+      service: GreetingService.service,
+      requestStream: false,
+      responseStream: false,
+      requestType: (GreetingRequest as unknown) as ProtobufMessageClass<GreetingRequest>,
+      responseType: (GreetingResponse as unknown) as ProtobufMessageClass<GreetingResponse>,
+    };
+}

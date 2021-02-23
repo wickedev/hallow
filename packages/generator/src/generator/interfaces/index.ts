@@ -5,7 +5,7 @@ import {
   PropertySignatureStructure,
   StructureKind,
 } from "ts-morph";
-import { isArray, isOptional } from "./utils";
+import { isArray, isOptional } from "../../utils";
 
 function getTypeForInterface(field?: FieldContext) {
   const type = field?.typeReference().text;

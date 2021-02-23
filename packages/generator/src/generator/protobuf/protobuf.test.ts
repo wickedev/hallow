@@ -7,8 +7,12 @@ import {
   SourceFileStructure,
   StatementStructures,
 } from "ts-morph";
-import { transformToProtobufMessage } from "./protobuf";
-import { MessageVisitor } from "./utils";
+import {
+  readStructureFrom,
+  toStructure,
+  MessageVisitor,
+} from "../../test-utils";
+import { transformToProtobufMessage } from ".";
 
 describe("transformToProtobufMessage", () => {
   it("should transform greeting.proto to typescript", () => {
@@ -58,33 +62,3 @@ describe("transformToProtobufMessage", () => {
     expect(toStructure(impls[0])).toEqual(fixture);
   });
 });
-
-function toStructure(statement: StatementStructures): SourceFileStructure {
-  const project = new Project({
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      useTrailingCommas: true,
-      insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
-    },
-  });
-  const file = project.createSourceFile("fixture.ts", {
-    statements: [statement],
-  });
-  return file.getStructure();
-}
-
-function readStructureFrom(path: string): SourceFileStructure {
-  const fixture = fs.readFileSync(path, "utf-8");
-
-  const project = new Project({
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      useTrailingCommas: true,
-      insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
-    },
-  });
-  const file = project.createSourceFile("fixture.ts", {
-    statements: [fixture],
-  });
-  return file.getStructure();
-}

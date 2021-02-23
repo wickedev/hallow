@@ -7,7 +7,7 @@ import {
   VariableDeclarationKind,
   WriterFunction,
 } from "ts-morph";
-import { toFirstLetterCapitalized } from "../utils";
+import { toFirstLetterCapitalized } from "../../utils";
 
 export function serializeBinaryMethod(): OptionalKind<MethodDeclarationStructure> {
   return {

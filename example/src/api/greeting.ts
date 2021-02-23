@@ -10,6 +10,7 @@ import {
   Optional,
   statusMap,
   useForceUpdate,
+  IClient,
 } from "@hallow/core";
 
 export interface IGreeting {
@@ -117,14 +118,7 @@ export interface IGreetingRequest {
 export class GreetingRequest extends jspb.Message {
   constructor(data?: jspb.Message.MessageArray) {
     super();
-    jspb.Message.initialize(
-      this,
-      data || [],
-      0,
-      -1,
-      undefined,
-      undefined,
-    );
+    jspb.Message.initialize(this, data || [], 0, -1, undefined, undefined);
   }
 
   get name(): string {
@@ -301,10 +295,6 @@ export class GreetingResponse extends jspb.Message {
   toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
     return GreetingResponse.toObject(includeInstance, this);
   }
-}
-
-export interface IClient {
-  host: string;
 }
 
 export class GreetingService implements grpc.ServiceDefinition {

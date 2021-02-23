@@ -1,0 +1,68 @@
+export class GreetingStub {
+  private readonly sayHelloResource: Resource<IGreetingResponse>;
+
+  constructor(private readonly client: IClient) {
+    this.sayHelloResource = new Resource(this.greeting.bind(this));
+  }
+
+  greeting(greetingRequest: IGreetingRequest): Promise<IGreetingResponse> {
+    return new Promise<IGreetingResponse>((resolve, reject) => {
+      grpc.unary(GreetingService.Greeting, {
+        host: this.client.host,
+        debug: false,
+        onEnd(output: grpc.UnaryOutput<GreetingResponse>): void {
+          if (output.status === grpc.Code.OK) {
+            const result = output.message?.toObject();
+
+            result
+              ? resolve(result)
+              : reject({
+                  message: "deserialize failed",
+                  code: output.status,
+                  metadata: output.trailers,
+                });
+          } else {
+            const proto = (output as any)?.trailers?.headersMap?.[
+              "armeria.grpc.throwableproto-bin"
+            ];
+
+            let throwable: Optional<ThrowableProto> = proto?.[0]
+              ? ThrowableProto.deserializeBinary(proto[0])
+              : undefined;
+
+            reject({
+              message: getMessage(output),
+              code: output.status,
+              status: statusMap[output.status],
+              metadata: {
+                throwable: throwable?.toObject(),
+                trailers: output.trailers,
+              },
+            });
+          }
+        },
+        request: GreetingRequest.create(greetingRequest),
+      });
+    });
+  }
+
+  useGreeting(request: IGreetingRequest): Resource<IGreetingResponse> {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    this.sayHelloResource.forceUpdate = useForceUpdate();
+    const capturedArgs = arguments;
+    this.sayHelloResource.arguments = capturedArgs;
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (this.sayHelloResource.mustBeIgnored) {
+        this.sayHelloResource.mustBeIgnored = false;
+      } else {
+        this.sayHelloResource.mustBeIgnored = true;
+        this.sayHelloResource.arguments = capturedArgs;
+        this.sayHelloResource.refresh();
+      }
+    }, [capturedArgs]);
+
+    return this.sayHelloResource;
+  }
+}

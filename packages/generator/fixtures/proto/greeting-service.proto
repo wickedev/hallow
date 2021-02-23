@@ -1,0 +1,6 @@
+syntax = "proto2";
+package greeting;
+
+service GreetingService {
+  rpc Greeting(GreetingRequest) returns (GreetingResponse);
+}
