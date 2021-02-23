@@ -1,11 +1,21 @@
-import { MessageBlockContext } from "@hallow/parser";
+import { FieldContext, MessageBlockContext } from "@hallow/parser";
 import {
   InterfaceDeclarationStructure,
   OptionalKind,
   PropertySignatureStructure,
   StructureKind,
 } from "ts-morph";
-import { getType, isOptional } from "./utils";
+import { isArray, isOptional } from "./utils";
+
+function getTypeForInterface(field?: FieldContext) {
+  const type = field?.typeReference().text;
+  const fieldModifier = field?.fieldModifier();
+  if (isArray(fieldModifier)) {
+    return `I${type}[]`;
+  }
+
+  return type;
+}
 
 export function transformToInterface(
   ctx: MessageBlockContext
@@ -18,7 +28,7 @@ export function transformToInterface(
       isReadonly: true,
       hasQuestionToken: isOptional(f.fieldModifier()),
       name: f.fieldName().text,
-      type: getType(f),
+      type: getTypeForInterface(f),
     }));
 
   const messageInterface: InterfaceDeclarationStructure = {
