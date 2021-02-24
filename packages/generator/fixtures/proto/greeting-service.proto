@@ -1,6 +1,11 @@
 syntax = "proto2";
 package greeting;
 
-service GreetingService {
-  rpc Greeting(GreetingRequest) returns (GreetingResponse);
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+service Greeter {
+  rpc Greeting (GreetingRequest) returns (GreetingResponse) {}
+
+  rpc SayHello (google.protobuf.Empty) returns (google.protobuf.UInt64Value) {}
 }

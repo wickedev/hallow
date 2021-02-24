@@ -157,7 +157,7 @@ class StackTraceElementProto extends jspb.Message {
 class ThrowableProto extends jspb.Message {
     constructor(data) {
         super();
-        jspb.Message.initialize(this, data, 0, -1, ThrowableProto.repeatedFields_, undefined);
+        jspb.Message.initialize(this, data, 0, -1, ThrowableProto.repeatedFields_, null);
     }
     static create(data) {
         const message = new ThrowableProto([]);
@@ -295,10 +295,40 @@ function useForceUpdate() {
     const setValue = react.useState(0)[1];
     return react.useRef(() => setValue((v) => ~v)).current;
 }
+function createUnaryOnEndHandler(resolve, reject) {
+    return (output) => {
+        var _a, _b, _c, _d;
+        if (output.status === grpcWeb.grpc.Code.OK) {
+            const result = (_a = output.message) === null || _a === void 0 ? void 0 : _a.toObject();
+            result
+                ? resolve(result)
+                : reject({
+                    message: "deserialize failed",
+                    code: output.status,
+                    metadata: output.trailers,
+                });
+        }
+        else {
+            const proto = (_d = (_c = (_b = output) === null || _b === void 0 ? void 0 : _b.trailers) === null || _c === void 0 ? void 0 : _c.headersMap) === null || _d === void 0 ? void 0 : _d["armeria.grpc.throwableproto-bin"];
+            let throwable = (proto === null || proto === void 0 ? void 0 : proto[0]) ? ThrowableProto.deserializeBinary(proto[0])
+                : undefined;
+            reject({
+                message: getMessage(output),
+                code: output.status,
+                status: statusMap[output.status],
+                metadata: {
+                    throwable: throwable === null || throwable === void 0 ? void 0 : throwable.toObject(),
+                    trailers: output.trailers,
+                },
+            });
+        }
+    };
+}
 
 exports.Resource = Resource;
 exports.StackTraceElementProto = StackTraceElementProto;
 exports.ThrowableProto = ThrowableProto;
+exports.createUnaryOnEndHandler = createUnaryOnEndHandler;
 exports.getMessage = getMessage;
 exports.statusMap = statusMap;
 exports.useForceUpdate = useForceUpdate;

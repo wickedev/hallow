@@ -9,7 +9,8 @@ export {
 import * as jspb from "google-protobuf";
 import { useRef, useState } from "react";
 import { grpc } from "@improbable-eng/grpc-web";
-import { IThrowableProto } from "./internal_exception_messages";
+import { IThrowableProto, ThrowableProto } from "./internal_exception_messages";
+import { Optional } from "./type";
 
 export const statusMap = {
   [grpc.Code.OK]: "OK",
@@ -60,4 +61,41 @@ export interface IClient {
 export function useForceUpdate(): () => void {
   const setValue = useState(0)[1];
   return useRef(() => setValue((v) => ~v)).current;
+}
+
+export function createUnaryOnEndHandler(
+  resolve: (value: any) => void,
+  reject: (reason?: any) => void
+) {
+  return (output: grpc.UnaryOutput<grpc.ProtobufMessage>) => {
+    if (output.status === grpc.Code.OK) {
+      const result = output.message?.toObject();
+
+      result
+        ? resolve(result)
+        : reject({
+            message: "deserialize failed",
+            code: output.status,
+            metadata: output.trailers,
+          });
+    } else {
+      const proto = (output as any)?.trailers?.headersMap?.[
+        "armeria.grpc.throwableproto-bin"
+      ];
+
+      let throwable: Optional<ThrowableProto> = proto?.[0]
+        ? ThrowableProto.deserializeBinary(proto[0])
+        : undefined;
+
+      reject({
+        message: getMessage(output),
+        code: output.status,
+        status: statusMap[output.status],
+        metadata: {
+          throwable: throwable?.toObject(),
+          trailers: output.trailers,
+        },
+      });
+    }
+  };
 }

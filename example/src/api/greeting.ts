@@ -1,17 +1,15 @@
-import { grpc } from "@improbable-eng/grpc-web";
-import * as jspb from "google-protobuf";
-import { ProtobufMessageClass } from "@improbable-eng/grpc-web/dist/typings/message";
-import { useEffect } from "react";
 import {
-  Resource,
-  ThrowableProto,
-  IObject,
-  getMessage,
-  Optional,
-  statusMap,
-  useForceUpdate,
+  createUnaryOnEndHandler,
   IClient,
+  IObject,
+  Optional,
+  Resource,
+  useForceUpdate,
 } from "@hallow/core";
+import { grpc } from "@improbable-eng/grpc-web";
+import { ProtobufMessageClass } from "@improbable-eng/grpc-web/dist/typings/message";
+import * as jspb from "google-protobuf";
+import { useEffect } from "react";
 
 export interface IGreeting {
   readonly message: string;
@@ -315,10 +313,10 @@ export class GreetingService implements grpc.ServiceDefinition {
 }
 
 export class GreetingStub {
-  private readonly sayHelloResource: Resource<IGreetingResponse>;
+  private readonly greetingResource: Resource<IGreetingResponse>;
 
   constructor(private readonly client: IClient) {
-    this.sayHelloResource = new Resource(this.greeting.bind(this));
+    this.greetingResource = new Resource(this.greeting.bind(this));
   }
 
   greeting(greetingRequest: IGreetingRequest): Promise<IGreetingResponse> {
@@ -326,37 +324,7 @@ export class GreetingStub {
       grpc.unary(GreetingService.Greeting, {
         host: this.client.host,
         debug: false,
-        onEnd(output: grpc.UnaryOutput<GreetingResponse>): void {
-          if (output.status === grpc.Code.OK) {
-            const result = output.message?.toObject();
-
-            result
-              ? resolve(result)
-              : reject({
-                  message: "deserialize failed",
-                  code: output.status,
-                  metadata: output.trailers,
-                });
-          } else {
-            const proto = (output as any)?.trailers?.headersMap?.[
-              "armeria.grpc.throwableproto-bin"
-            ];
-
-            let throwable: Optional<ThrowableProto> = proto?.[0]
-              ? ThrowableProto.deserializeBinary(proto[0])
-              : undefined;
-
-            reject({
-              message: getMessage(output),
-              code: output.status,
-              status: statusMap[output.status],
-              metadata: {
-                throwable: throwable?.toObject(),
-                trailers: output.trailers,
-              },
-            });
-          }
-        },
+        onEnd: createUnaryOnEndHandler(resolve, reject),
         request: GreetingRequest.create(greetingRequest),
       });
     });
@@ -364,21 +332,20 @@ export class GreetingStub {
 
   useGreeting(request: IGreetingRequest): Resource<IGreetingResponse> {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    this.sayHelloResource.forceUpdate = useForceUpdate();
-    const capturedArgs = arguments;
-    this.sayHelloResource.arguments = capturedArgs;
+    this.greetingResource.forceUpdate = useForceUpdate();
+    this.greetingResource.arguments = [request];
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
-      if (this.sayHelloResource.mustBeIgnored) {
-        this.sayHelloResource.mustBeIgnored = false;
+      if (this.greetingResource.mustBeIgnored) {
+        this.greetingResource.mustBeIgnored = false;
       } else {
-        this.sayHelloResource.mustBeIgnored = true;
-        this.sayHelloResource.arguments = capturedArgs;
-        this.sayHelloResource.refresh();
+        this.greetingResource.mustBeIgnored = true;
+        this.greetingResource.arguments = [request];
+        this.greetingResource.refresh();
       }
-    }, [capturedArgs]);
+    }, [request]);
 
-    return this.sayHelloResource;
+    return this.greetingResource;
   }
 }

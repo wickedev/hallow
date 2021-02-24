@@ -7,7 +7,7 @@ import {
   VariableDeclarationKind,
   WriterFunction,
 } from "ts-morph";
-import { toFirstLetterCapitalized } from "../../utils";
+import { toCapitalizeStyle } from "../../utils";
 
 export function serializeBinaryMethod(): OptionalKind<MethodDeclarationStructure> {
   return {
@@ -36,7 +36,7 @@ export function fieldsSerializeBinaryToWriter(
 ): WriterFunction {
   return (writer: CodeBlockWriter) => {
     fields.forEach((f, idx) => {
-      const feildType = toFirstLetterCapitalized(f.typeReference().text);
+      const feildType = toCapitalizeStyle(f.typeReference().text);
       const fieldName = f.fieldName().text;
       const fieldNumber = idx + 1;
       const isRepeated = f.fieldModifier()?.REPEATED();

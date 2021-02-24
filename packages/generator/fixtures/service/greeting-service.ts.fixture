@@ -1,16 +1,28 @@
-export class GreetingService implements grpc.ServiceDefinition {
-  serviceName: string = "greeting.GreetingService";
-  static service = new GreetingService();
+export class GreeterService implements grpc.ServiceDefinition {
+  serviceName: string = "greeting.GreeterService";
+  static service = new GreeterService();
 
   static Greeting: grpc.UnaryMethodDefinition<
     GreetingRequest,
     GreetingResponse
   > = {
       methodName: "Greeting",
-      service: GreetingService.service,
+      service: GreeterService.service,
       requestStream: false,
       responseStream: false,
       requestType: (GreetingRequest as unknown) as ProtobufMessageClass<GreetingRequest>,
       responseType: (GreetingResponse as unknown) as ProtobufMessageClass<GreetingResponse>,
+    };
+
+  static SayHello: grpc.UnaryMethodDefinition<
+    Empty,
+    UInt64Value
+  > = {
+      methodName: "SayHello",
+      service: GreeterService.service,
+      requestStream: false,
+      responseStream: false,
+      requestType: (Empty as unknown) as ProtobufMessageClass<Empty>,
+      responseType: (UInt64Value as unknown) as ProtobufMessageClass<UInt64Value>,
     };
 }

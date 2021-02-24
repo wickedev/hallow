@@ -13,7 +13,7 @@ type ForceUpdate = () => void;
 export class Resource<T> {
   public status: Status = Status.PENDING;
   public forceUpdate: Optional<ForceUpdate>;
-  public arguments: Optional<IArguments>;
+  public arguments: Optional<Omit<IArguments, "callee">>;
   public mustBeIgnored: boolean = true;
 
   private result: Optional<T>;

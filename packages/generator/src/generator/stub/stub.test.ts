@@ -9,7 +9,7 @@ import {
 } from "../../test-utils";
 
 describe("transformToStub", () => {
-  it("should transform greeting-service.proto to typescript service", () => {
+  it("should transform greeting-service.proto to typescript stub", () => {
     const proto = fs.readFileSync(
       "fixtures/proto/greeting-service.proto",
       "utf-8"

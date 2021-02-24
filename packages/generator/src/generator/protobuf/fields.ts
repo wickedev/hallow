@@ -8,7 +8,7 @@ import {
   SetAccessorDeclarationStructure,
   StructureKind,
 } from "ts-morph";
-import { getType, getWrapperType, toFirstLetterCapitalized } from "../../utils";
+import { getType, getWrapperType, toCapitalizeStyle } from "../../utils";
 
 export function getFieldAccessors(
   feilds: FieldContext[]
@@ -88,7 +88,7 @@ export function repeatedAddMethods(
     .map((f) => {
       const fieldType = f.typeReference().text;
       const fieldName = f.fieldName().text;
-      const methodSuffix = toFirstLetterCapitalized(fieldName);
+      const methodSuffix = toCapitalizeStyle(fieldName);
       const fieldNumber = f.tag().INTEGER_VALUE().text;
 
       return {

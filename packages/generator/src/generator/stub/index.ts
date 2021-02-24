@@ -1,141 +1,193 @@
-import { ServiceBlockContext } from "@hallow/parser";
+import { RpcMethodContext, ServiceBlockContext } from "@hallow/parser";
+import { writer } from "repl";
 import {
   ClassDeclarationStructure,
+  CodeBlockWriter,
+  MethodDeclarationStructure,
+  OptionalKind,
+  PropertyDeclarationStructure,
   Scope,
-  VariableDeclarationKind,
+  StructureKind,
+  WriterFunction,
 } from "ts-morph";
+import { toCapitalizeStyle, toChicagoStyle } from "../../utils";
+import { convertTypeInfo } from "../well-known-types";
+
+function resourceDeclaration(
+  rpcMethods: RpcMethodContext[]
+): OptionalKind<PropertyDeclarationStructure>[] {
+  return rpcMethods.map((r) => {
+    const rpcName = toChicagoStyle(r.rpcName().text);
+    const rpcResponseType = convertTypeInfo(r.rpcType(1).text, true);
+
+    return {
+      name: `${rpcName}Resource`,
+      type: `Resource<${rpcResponseType.type}>`,
+      isReadonly: true,
+      scope: Scope.Private,
+    };
+  });
+}
+function resourceInitializeWriter(
+  rpcMethods: RpcMethodContext[]
+): WriterFunction {
+  return (writer: CodeBlockWriter) => {
+    rpcMethods.forEach((r) => {
+      const rpcName = toChicagoStyle(r.rpcName().text);
+      writer.writeLine(
+        `this.${rpcName}Resource = new Resource(this.${rpcName}.bind(this));`
+      );
+    });
+  };
+}
+
+function defaultImplementationMethods(
+  serviceNmae: string,
+  rpcMethods: RpcMethodContext[]
+): OptionalKind<MethodDeclarationStructure>[] {
+  return rpcMethods.map((r) => {
+    const rpcName = toChicagoStyle(r.rpcName().text);
+    const rpcNameTypeName = toCapitalizeStyle(r.rpcName().text);
+    const rpcResponseType = convertTypeInfo(r.rpcType(1).text, true);
+    const isEmptyRequest = r.rpcType(0).text === "google.protobuf.Empty";
+
+    return {
+      name: rpcName,
+      parameters: isEmptyRequest
+        ? []
+        : [
+            {
+              name: "request",
+              type: convertTypeInfo(r.rpcType(0).text, true).type,
+            },
+          ],
+      statements: [
+        (writer: CodeBlockWriter) => {
+          writer
+            .write(
+              `return new Promise<${rpcResponseType.type}>((resolve, reject) => {`
+            )
+            .indent(() => {
+              writer
+                .write(`grpc.unary(${serviceNmae}.${rpcNameTypeName}, {`)
+                .indent(() => {
+                  writer.writeLine("host: this.client.host,");
+                  writer.writeLine("debug: false,");
+                  writer.writeLine(
+                    "onEnd: createUnaryOnEndHandler(resolve, reject),"
+                  );
+                  if (isEmptyRequest) {
+                    writer.writeLine(`request: new Empty(),`);
+                  } else {
+                    writer.writeLine(
+                      `request: ${
+                        convertTypeInfo(r.rpcType(0).text).type
+                      }.create(request),`
+                    );
+                  }
+                })
+                .writeLine("});");
+            })
+            .writeLine("});");
+        },
+      ],
+
+      returnType: `Promise<${rpcResponseType.type}>`,
+    };
+  });
+}
+
+function reactHooksMethods(
+  rpcMethods: RpcMethodContext[]
+): OptionalKind<MethodDeclarationStructure>[] {
+  return rpcMethods.map((r) => {
+    const rpcNameAsType = toCapitalizeStyle(r.rpcName().text);
+    const rpcName = toChicagoStyle(rpcNameAsType);
+    const rpcResourceName = `${rpcName}Resource`;
+
+    const isEmptyRequest = r.rpcType(0).text === "google.protobuf.Empty";
+    const isEmptyResponse = r.rpcType(1).text === "google.protobuf.Empty";
+    const rpcRequestType = convertTypeInfo(r.rpcType(0).text, true);
+    const rpcResponseType = convertTypeInfo(r.rpcType(1).text, true);
+
+    return {
+      name: `use${rpcNameAsType}`,
+      parameters: isEmptyRequest
+        ? []
+        : [
+            {
+              name: "request",
+              type: rpcRequestType.protoType,
+            },
+          ],
+      statements: [
+        `this.${rpcName}Resource.forceUpdate = useForceUpdate();`,
+        `this.${rpcName}Resource.arguments = ${
+          isEmptyRequest ? "[]" : "[request]"
+        };`,
+
+        (writer: CodeBlockWriter) => {
+          writer
+            .write("useEffect(() => {")
+            .indent(() => {
+              writer
+                .write(`if (this.${rpcResourceName}.mustBeIgnored) {`)
+                .indent(() => {
+                  writer.writeLine(
+                    `this.${rpcResourceName}.mustBeIgnored = false;`
+                  );
+                })
+                .writeLine("} else {")
+                .indent(() => {
+                  writer.writeLine(
+                    `this.${rpcResourceName}.mustBeIgnored = true;`
+                  );
+                  writer.writeLine(
+                    `this.${rpcResourceName}.arguments = [${
+                      isEmptyRequest ? "" : "request"
+                    }];`
+                  );
+                  writer.writeLine(`this.${rpcResourceName}.refresh();`);
+                })
+                .writeLine("}");
+            })
+            .writeLine(`}, [${isEmptyRequest ? "" : "request"}]);`);
+        },
+
+        `return this.${rpcResourceName};`,
+      ],
+      returnType: `Resource<${rpcResponseType.type}>`,
+    };
+  });
+}
 
 export function transformToStub(
   ctx: ServiceBlockContext
 ): ClassDeclarationStructure {
+  const rpcMethods = ctx.rpcMethod();
+  const serviceNmae = ctx.serviceName().text;
+
   return {
-    decorators: [],
-    typeParameters: [],
-    docs: [],
-    isAbstract: false,
-    implements: [],
-    name: "GreetingStub",
+    name: `${serviceNmae}Stub`,
     isExported: true,
-    isDefaultExport: false,
-    hasDeclareKeyword: false,
-    kind: 1,
+    kind: StructureKind.Class,
+    properties: resourceDeclaration(rpcMethods),
     ctors: [
       {
-        statements: [
-          "this.sayHelloResource = new Resource(this.greeting.bind(this));",
-        ],
+        statements: [resourceInitializeWriter(rpcMethods)],
         parameters: [
           {
             name: "client",
             type: "IClient",
             isReadonly: true,
             scope: Scope.Private,
-            decorators: [],
-            hasQuestionToken: false,
-            kind: 28,
-            isRestParameter: false,
           },
         ],
-        typeParameters: [],
-        docs: [],
-        kind: 3,
-        overloads: [],
       },
     ],
     methods: [
-      {
-        name: "greeting",
-        statements: [
-          'return new Promise<IGreetingResponse>((resolve, reject) => {\n  grpc.unary(GreetingService.Greeting, {\n    host: this.client.host,\n    debug: false,\n    onEnd(output: grpc.UnaryOutput<GreetingResponse>): void {\n      if (output.status === grpc.Code.OK) {\n        const result = output.message?.toObject();\n\n        result\n          ? resolve(result)\n          : reject({\n              message: "deserialize failed",\n              code: output.status,\n              metadata: output.trailers,\n            });\n      } else {\n        const proto = (output as any)?.trailers?.headersMap?.[\n          "armeria.grpc.throwableproto-bin"\n        ];\n\n        let throwable: Optional<ThrowableProto> = proto?.[0]\n          ? ThrowableProto.deserializeBinary(proto[0])\n          : undefined;\n\n        reject({\n          message: getMessage(output),\n          code: output.status,\n          status: statusMap[output.status],\n          metadata: {\n            throwable: throwable?.toObject(),\n            trailers: output.trailers,\n          },\n        });\n      }\n    },\n    request: GreetingRequest.create(greetingRequest),\n  });\n});',
-        ],
-        parameters: [
-          {
-            name: "greetingRequest",
-            type: "IGreetingRequest",
-            isReadonly: false,
-            decorators: [],
-            hasQuestionToken: false,
-            kind: 28,
-            isRestParameter: false,
-          },
-        ],
-        returnType: "Promise<IGreetingResponse>",
-        typeParameters: [],
-        docs: [],
-        isGenerator: false,
-        isAsync: false,
-        isStatic: false,
-        hasQuestionToken: false,
-        isAbstract: false,
-        decorators: [],
-        kind: 24,
-        overloads: [],
-      },
-      {
-        name: "useGreeting",
-        statements: [
-          "this.sayHelloResource.forceUpdate = useForceUpdate();",
-          {
-            isExported: false,
-            isDefaultExport: false,
-            hasDeclareKeyword: false,
-            docs: [],
-            kind: 39,
-            declarationKind: VariableDeclarationKind.Const,
-            declarations: [
-              {
-                name: "capturedArgs",
-                initializer: "arguments",
-                hasExclamationToken: false,
-                kind: 38,
-              },
-            ],
-          },
-          "this.sayHelloResource.arguments = capturedArgs;",
-          "useEffect(() => {\n  if (this.sayHelloResource.mustBeIgnored) {\n    this.sayHelloResource.mustBeIgnored = false;\n  } else {\n    this.sayHelloResource.mustBeIgnored = true;\n    this.sayHelloResource.arguments = capturedArgs;\n    this.sayHelloResource.refresh();\n  }\n}, [capturedArgs]);",
-          "return this.sayHelloResource;",
-        ],
-        parameters: [
-          {
-            name: "request",
-            type: "IGreetingRequest",
-            isReadonly: false,
-            decorators: [],
-            hasQuestionToken: false,
-            kind: 28,
-            isRestParameter: false,
-          },
-        ],
-        returnType: "Resource<IGreetingResponse>",
-        typeParameters: [],
-        docs: [],
-        isGenerator: false,
-        isAsync: false,
-        isStatic: false,
-        hasQuestionToken: false,
-        isAbstract: false,
-        decorators: [],
-        kind: 24,
-        overloads: [],
-      },
+      ...defaultImplementationMethods(serviceNmae, rpcMethods),
+      ...reactHooksMethods(rpcMethods),
     ],
-    properties: [
-      {
-        name: "sayHelloResource",
-        type: "Resource<IGreetingResponse>",
-        hasQuestionToken: false,
-        hasExclamationToken: false,
-        isReadonly: true,
-        docs: [],
-        isStatic: false,
-        scope: Scope.Private,
-        isAbstract: false,
-        decorators: [],
-        hasDeclareKeyword: false,
-        kind: 29,
-      },
-    ],
-    getAccessors: [],
-    setAccessors: [],
   };
 }

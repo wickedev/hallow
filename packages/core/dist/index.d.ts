@@ -13,7 +13,7 @@ declare class Resource<T> {
     private readonly factory;
     status: Status;
     forceUpdate: Optional<ForceUpdate>;
-    arguments: Optional<IArguments>;
+    arguments: Optional<Omit<IArguments, "callee">>;
     mustBeIgnored: boolean;
     private result;
     private suspender;
@@ -128,4 +128,5 @@ interface IClient {
     host: string;
 }
 declare function useForceUpdate(): () => void;
-export { Resource, Optional, IThrowableProto, ThrowableProto, IStackTraceElementProto, StackTraceElementProto, statusMap, IgRPCError, IMetadata, getMessage, IObject, IClient, useForceUpdate };
+declare function createUnaryOnEndHandler(resolve: (value: any) => void, reject: (reason?: any) => void): (output: grpc.UnaryOutput<grpc.ProtobufMessage>) => void;
+export { Resource, Optional, IThrowableProto, ThrowableProto, IStackTraceElementProto, StackTraceElementProto, statusMap, IgRPCError, IMetadata, getMessage, IObject, IClient, useForceUpdate, createUnaryOnEndHandler };

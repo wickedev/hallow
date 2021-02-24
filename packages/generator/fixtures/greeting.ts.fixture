@@ -275,14 +275,14 @@ export interface IClient {
 
 export class GreetingService implements grpc.ServiceDefinition {
   serviceName: string = "greeting.GreetingService";
-  static service = new GreetingService();
+  static service = new GreeterService();
 
   static Greeting: grpc.UnaryMethodDefinition<
     GreetingRequest,
     GreetingResponse
   > = {
     methodName: "Greeting",
-    service: GreetingService.service,
+    service: GreeterService.service,
     requestStream: false,
     responseStream: false,
     requestType: (GreetingRequest as unknown) as ProtobufMessageClass<GreetingRequest>,

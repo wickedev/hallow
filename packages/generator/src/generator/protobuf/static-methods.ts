@@ -7,7 +7,7 @@ import {
   VariableDeclarationKind,
   WriterFunction
 } from "ts-morph";
-import { toFirstLetterCapitalized } from "../../utils";
+import { toCapitalizeStyle } from "../../utils";
 
 export function staticCreateMethod(
   messageName: string,
@@ -145,15 +145,15 @@ export function staticDeserializeBinaryFromReaderFieldWriter(
       writer.write("switch (field)").block(() => {
         fields.forEach((f, idx) => {
           const isRepeated = f.fieldModifier()?.REPEATED();
-          const fieldType = toFirstLetterCapitalized(f.typeReference().text);
+          const fieldType = toCapitalizeStyle(f.typeReference().text);
           const fieldNumber = idx + 1;
 
           writer.write(`case ${idx + 1}:`).indent(() => {
             if (isRepeated) {
               const fieldName = f.fieldName().text;
 
-              const methodSuffix = toFirstLetterCapitalized(fieldName);
-              writer.writeLine(`const value = new Greeting();`);
+              const methodSuffix = toCapitalizeStyle(fieldName);
+              writer.writeLine(`const value = new ${fieldType}();`);
               writer.writeLine(
                 `reader.readMessage(value, ${fieldType}.deserializeBinaryFromReader);`
               );
