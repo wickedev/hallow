@@ -5,7 +5,7 @@ import {
   OptionalKind,
   StructureKind,
   VariableDeclarationKind,
-  WriterFunction
+  WriterFunction,
 } from "ts-morph";
 import { toCapitalizeStyle } from "../../utils";
 
@@ -50,33 +50,86 @@ export function staticCreateMethod(
   };
 }
 
+export function staticSerializeBinaryToWriterMethod(
+  messageName: string,
+  fields: FieldContext[]
+): OptionalKind<MethodDeclarationStructure> {
+  return {
+    isStatic: true,
+    name: "serializeBinaryToWriter",
+    parameters: [
+      {
+        name: "message",
+        type: messageName,
+      },
+      {
+        name: "writer",
+        type: "jspb.BinaryWriter",
+      },
+    ],
+    statements: [
+      {
+        kind: StructureKind.VariableStatement,
+        declarationKind: VariableDeclarationKind.Let,
+        declarations: [
+          {
+            name: "v",
+          },
+        ],
+      },
+      (writer: CodeBlockWriter) => {
+        fields.forEach((f, idx) => {
+          const feildType = toCapitalizeStyle(f.typeReference().text);
+          const fieldName = f.fieldName().text;
+          const fieldNumber = idx + 1;
+          const isRepeated = f.fieldModifier()?.REPEATED();
+
+          if (isRepeated) {
+            writer
+              .write(`if ((v = message.${fieldName}).length > 0)`)
+              .block(() => {
+                writer.writeLine(
+                  `writer.writeRepeatedMessage(${fieldNumber}, v, ${feildType}.serializeBinaryToWriter);`
+                );
+              });
+            return;
+          }
+
+          writer.write(`if ((v = message.${fieldName}) != null)`).block(() => {
+            writer.writeLine(`writer.write${feildType}(${fieldNumber}, v);`);
+          });
+        });
+      },
+    ],
+    returnType: "void",
+  };
+}
+
 export function staticDeserializeBinary(
   messageName: string
-): OptionalKind<MethodDeclarationStructure>[] {
-  return [
-    {
-      isStatic: true,
-      name: "deserializeBinary",
-      parameters: [
-        {
-          name: "bytes",
-          type: "Uint8Array",
-        },
-      ],
-      returnType: messageName,
-      statements: [
-        (writer: CodeBlockWriter) => {
-          writer
-            .write(`return ${messageName}.deserializeBinaryFromReader(`)
-            .indent(() => {
-              writer.writeLine(`new ${messageName}(),`);
-              writer.writeLine("new jspb.BinaryReader(bytes)");
-            })
-            .write(");");
-        },
-      ],
-    },
-  ];
+): OptionalKind<MethodDeclarationStructure> {
+  return {
+    isStatic: true,
+    name: "deserializeBinary",
+    parameters: [
+      {
+        name: "bytes",
+        type: "Uint8Array",
+      },
+    ],
+    returnType: messageName,
+    statements: [
+      (writer: CodeBlockWriter) => {
+        writer
+          .write(`return ${messageName}.deserializeBinaryFromReader(`)
+          .indent(() => {
+            writer.writeLine(`new ${messageName}(),`);
+            writer.writeLine("new jspb.BinaryReader(bytes)");
+          })
+          .write(");");
+      },
+    ],
+  };
 }
 
 export function staticToObjectMethodFieldWriter(

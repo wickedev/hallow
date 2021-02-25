@@ -1,82 +1,89 @@
 interface IType {
-  readonly packages?: string;
   readonly type: string;
   readonly protoType: string;
   readonly isEmpty?: boolean;
 }
-interface TypesInfo {
+interface TypesInfos {
   [key: string]: IType;
+}
+
+interface ProtoFileInfos {
+  [key: string]: IProtoFileInfo;
+}
+
+interface IProtoFileInfo {
+  defaultImport: string;
+  moduleSpecifier: string;
 }
 
 type OptionProtoType<T extends IType> = Pick<T, Exclude<keyof T, "protoType">> &
   Partial<Pick<T, "protoType">>;
 
-const AnyTypes: TypesInfo = {
+const AnyTypes: TypesInfos = {
   "google.protobuf.Any": {
-    packages: "google-protobuf/google/protobuf/any_pb.js",
     type: "any",
-    protoType: "Any",
+    protoType: "any_pb.Any",
   },
 };
 
-const WrappersTypes: TypesInfo = {
+const WrappersTypes: TypesInfos = {
   "google.protobuf.BoolValue": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "boolean",
-    protoType: "BoolValue",
+    protoType: "wrappers_pb.BoolValue",
   },
   "google.protobuf.BytesValue": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "ArrayBuffer",
-    protoType: "BytesValue",
+    protoType: "wrappers_pb.BytesValue",
   },
   "google.protobuf.DoubleValue": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "number",
-    protoType: "DoubleValue",
+    protoType: "wrappers_pb.DoubleValue",
   },
   "google.protobuf.FloatValue": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "number",
-    protoType: "FloatValue",
+    protoType: "wrappers_pb.FloatValue",
   },
   "google.protobuf.Int32Value": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "number",
-    protoType: "Int32Value",
+    protoType: "wrappers_pb.Int32Value",
   },
   "google.protobuf.Int64Value": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "number",
-    protoType: "Int64Value",
+    protoType: "wrappers_pb.Int64Value",
   },
   "google.protobuf.StringValue": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "string",
-    protoType: "StringValue",
+    protoType: "wrappers_pb.StringValue",
   },
   "google.protobuf.UInt32Value": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "number",
-    protoType: "UInt32Value",
+    protoType: "wrappers_pb.UInt32Value",
   },
   "google.protobuf.UInt64Value": {
-    packages: "google-protobuf/google/protobuf/wrappers_pb.js",
     type: "number",
-    protoType: "UInt64Value",
+    protoType: "wrappers_pb.UInt64Value",
   },
 };
 
-const EmptyTypes: TypesInfo = {
+const EmptyTypes: TypesInfos = {
   "google.protobuf.Empty": {
-    packages: "google-protobuf/google/protobuf/empty_pb.js",
     isEmpty: true,
     type: "void",
-    protoType: "Empty",
+    protoType: "empty_pb.Empty",
+  },
+};
+export const ImportProtoFiles: ProtoFileInfos = {
+  'google/protobuf/empty.proto': {
+    defaultImport: "empty_pb",
+    moduleSpecifier: "google-protobuf/google/protobuf/empty_pb",
+  },
+  'google/protobuf/wrappers.proto': {
+    defaultImport: "wrappers_pb",
+    moduleSpecifier: "google-protobuf/google/protobuf/wrappers_pb",
   },
 };
 
-const WellKnowTypes: TypesInfo = {
+const WellKnowTypes: TypesInfos = {
   ...AnyTypes,
   ...EmptyTypes,
   ...WrappersTypes,

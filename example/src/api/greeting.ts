@@ -10,6 +10,8 @@ import { grpc } from "@improbable-eng/grpc-web";
 import { ProtobufMessageClass } from "@improbable-eng/grpc-web/dist/typings/message";
 import * as jspb from "google-protobuf";
 import { useEffect } from "react";
+import wrappers_pb from "google-protobuf/google/protobuf/wrappers_pb";
+import empty_pb from "google-protobuf/google/protobuf/empty_pb";
 
 export interface IGreeting {
   readonly message: string;
@@ -19,7 +21,6 @@ export interface IGreeting {
 export class Greeting extends jspb.Message {
   constructor(data?: jspb.Message.MessageArray) {
     super();
-
     jspb.Message.initialize(this, data || [], 0, -1, undefined, undefined);
   }
 
@@ -27,16 +28,26 @@ export class Greeting extends jspb.Message {
     return jspb.Message.getField(this, 1) as string;
   }
 
-  get created(): Optional<string> {
-    return jspb.Message.getField(this, 2) as string;
-  }
-
   set message(value: string) {
     jspb.Message.setField(this, 1, value);
   }
 
+  get created(): Optional<string> {
+    return jspb.Message.getField(this, 2) as string;
+  }
+
   set created(value: Optional<string>) {
     jspb.Message.setField(this, 2, value);
+  }
+
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    Greeting.serializeBinaryToWriter(this, writer);
+    return writer.getResultBuffer();
+  }
+
+  toObject(includeInstance: boolean = false): IGreeting & IObject {
+    return Greeting.toObject(includeInstance, this);
   }
 
   static create(data: IGreeting): Greeting {
@@ -44,6 +55,30 @@ export class Greeting extends jspb.Message {
     message.message = data.message;
     message.created = data.created;
     return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: Greeting
+  ): IGreeting & IObject {
+    return {
+      message: message.message,
+      created: message.created,
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  static serializeBinaryToWriter(
+    message: Greeting,
+    writer: jspb.BinaryWriter
+  ): void {
+    let v;
+    if ((v = message.message) != null) {
+      writer.writeString(1, v);
+    }
+    if ((v = message.created) != null) {
+      writer.writeString(2, v);
+    }
   }
 
   static deserializeBinary(bytes: Uint8Array): Greeting {
@@ -74,38 +109,8 @@ export class Greeting extends jspb.Message {
           break;
       }
     }
+
     return message;
-  }
-
-  static toObject(
-    includeInstance: boolean,
-    message: Greeting
-  ): IGreeting & IObject {
-    return {
-      message: message.message,
-      created: message.created,
-      $messageInstance: includeInstance ? message : undefined,
-    };
-  }
-
-  serializeBinary(): Uint8Array {
-    const writer = new jspb.BinaryWriter();
-    this.serializeBinaryToWriter(writer);
-    return writer.getResultBuffer();
-  }
-
-  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
-    let v;
-    if ((v = this.message) != null) {
-      writer.writeString(1, v);
-    }
-    if ((v = this.created) != null) {
-      writer.writeString(2, v);
-    }
-  }
-
-  toObject(includeInstance: boolean = false): IGreeting & IObject {
-    return Greeting.toObject(includeInstance, this);
   }
 }
 
@@ -127,10 +132,40 @@ export class GreetingRequest extends jspb.Message {
     jspb.Message.setField(this, 1, value);
   }
 
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    GreetingRequest.serializeBinaryToWriter(this, writer);
+    return writer.getResultBuffer();
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingRequest & IObject {
+    return GreetingRequest.toObject(includeInstance, this);
+  }
+
   static create(data: IGreetingRequest): GreetingRequest {
     const message = new GreetingRequest([]);
     message.name = data.name;
     return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: GreetingRequest
+  ): IGreetingRequest & IObject {
+    return {
+      name: message.name,
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  static serializeBinaryToWriter(
+    message: GreetingRequest,
+    writer: jspb.BinaryWriter
+  ): void {
+    let v;
+    if ((v = message.name) != null) {
+      writer.writeString(1, v);
+    }
   }
 
   static deserializeBinary(bytes: Uint8Array): GreetingRequest {
@@ -158,39 +193,13 @@ export class GreetingRequest extends jspb.Message {
           break;
       }
     }
+
     return message;
-  }
-
-  static toObject(
-    includeInstance: boolean,
-    message: GreetingRequest
-  ): IGreetingRequest & IObject {
-    return {
-      name: message.name,
-      $messageInstance: includeInstance ? message : undefined,
-    };
-  }
-
-  serializeBinary(): Uint8Array {
-    const writer = new jspb.BinaryWriter();
-    this.serializeBinaryToWriter(writer);
-    return writer.getResultBuffer();
-  }
-
-  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
-    let v;
-    if ((v = this.name) != null) {
-      writer.writeString(1, v);
-    }
-  }
-
-  toObject(includeInstance: boolean = false): IGreetingRequest & IObject {
-    return GreetingRequest.toObject(includeInstance, this);
   }
 }
 
 export interface IGreetingResponse {
-  greetings: IGreeting[];
+  readonly greetings: IGreeting[];
 }
 
 export class GreetingResponse extends jspb.Message {
@@ -198,7 +207,6 @@ export class GreetingResponse extends jspb.Message {
 
   constructor(data?: jspb.Message.MessageArray) {
     super();
-
     jspb.Message.initialize(
       this,
       data || [],
@@ -227,10 +235,44 @@ export class GreetingResponse extends jspb.Message {
     );
   }
 
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    GreetingResponse.serializeBinaryToWriter(this, writer);
+    return writer.getResultBuffer();
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
+    return GreetingResponse.toObject(includeInstance, this);
+  }
+
   static create(data: IGreetingResponse): GreetingResponse {
     const message = new GreetingResponse([]);
     message.greetings = data.greetings.map(Greeting.create);
     return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: GreetingResponse
+  ): IGreetingResponse & IObject {
+    return {
+      greetings: jspb.Message.toObjectList(
+        message.greetings,
+        Greeting.toObject,
+        includeInstance
+      ) as IGreeting[],
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  static serializeBinaryToWriter(
+    message: GreetingResponse,
+    writer: jspb.BinaryWriter
+  ): void {
+    let v;
+    if ((v = message.greetings).length > 0) {
+      writer.writeRepeatedMessage(1, v, Greeting.serializeBinaryToWriter);
+    }
   }
 
   static deserializeBinary(bytes: Uint8Array): GreetingResponse {
@@ -260,78 +302,71 @@ export class GreetingResponse extends jspb.Message {
           break;
       }
     }
+
     return message;
-  }
-
-  static toObject(
-    includeInstance: boolean,
-    message: GreetingResponse
-  ): IGreetingResponse & IObject {
-    return {
-      greetings: jspb.Message.toObjectList(
-        message.greetings,
-        Greeting.toObject,
-        includeInstance
-      ) as IGreeting[],
-      $messageInstance: includeInstance ? message : undefined,
-    };
-  }
-
-  serializeBinary(): Uint8Array {
-    const writer = new jspb.BinaryWriter();
-    this.serializeBinaryToWriter(writer);
-    return writer.getResultBuffer();
-  }
-
-  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
-    let v;
-    if ((v = this.greetings).length > 0) {
-      writer.writeRepeatedMessage(1, v, Greeting.serializeBinaryToWriter);
-    }
-  }
-
-  toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
-    return GreetingResponse.toObject(includeInstance, this);
   }
 }
 
-export class GreetingService implements grpc.ServiceDefinition {
-  serviceName: string = "greeting.GreetingService";
-  static service = new GreetingService();
-
+export class GreeterService implements grpc.ServiceDefinition {
+  serviceName: string = "greeting.Greeter";
+  static service = new GreeterService();
   static Greeting: grpc.UnaryMethodDefinition<
     GreetingRequest,
     GreetingResponse
   > = {
     methodName: "Greeting",
-    service: GreetingService.service,
+    service: GreeterService.service,
     requestStream: false,
     responseStream: false,
     requestType: (GreetingRequest as unknown) as ProtobufMessageClass<GreetingRequest>,
     responseType: (GreetingResponse as unknown) as ProtobufMessageClass<GreetingResponse>,
   };
+  static SayHello: grpc.UnaryMethodDefinition<
+    empty_pb.Empty,
+    wrappers_pb.UInt64Value
+  > = {
+    methodName: "SayHello",
+    service: GreeterService.service,
+    requestStream: false,
+    responseStream: false,
+    requestType: (empty_pb.Empty as unknown) as ProtobufMessageClass<empty_pb.Empty>,
+    responseType: (wrappers_pb.UInt64Value as unknown) as ProtobufMessageClass<wrappers_pb.UInt64Value>,
+  };
 }
 
-export class GreetingStub {
+export class GreeterStub {
   private readonly greetingResource: Resource<IGreetingResponse>;
+  private readonly sayHelloResource: Resource<number>;
 
   constructor(private readonly client: IClient) {
     this.greetingResource = new Resource(this.greeting.bind(this));
+    this.sayHelloResource = new Resource(this.sayHello.bind(this));
   }
 
-  greeting(greetingRequest: IGreetingRequest): Promise<IGreetingResponse> {
+  greeting(request: IGreetingRequest): Promise<IGreetingResponse> {
     return new Promise<IGreetingResponse>((resolve, reject) => {
-      grpc.unary(GreetingService.Greeting, {
+      grpc.unary(GreeterService.Greeting, {
         host: this.client.host,
         debug: false,
         onEnd: createUnaryOnEndHandler(resolve, reject),
-        request: GreetingRequest.create(greetingRequest),
+        request: GreetingRequest.create(request),
+      });
+    });
+  }
+
+  sayHello(): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      grpc.unary(GreeterService.SayHello, {
+        host: this.client.host,
+        debug: false,
+        onEnd: createUnaryOnEndHandler(resolve, reject),
+        request: new empty_pb.Empty(),
       });
     });
   }
 
   useGreeting(request: IGreetingRequest): Resource<IGreetingResponse> {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+      // eslint-disable-next-line react-hooks/rules-of-hooks
     this.greetingResource.forceUpdate = useForceUpdate();
     this.greetingResource.arguments = [request];
 
@@ -345,7 +380,24 @@ export class GreetingStub {
         this.greetingResource.refresh();
       }
     }, [request]);
-
     return this.greetingResource;
+  }
+
+  useSayHello(): Resource<number> {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    this.sayHelloResource.forceUpdate = useForceUpdate();
+    this.sayHelloResource.arguments = [];
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (this.sayHelloResource.mustBeIgnored) {
+        this.sayHelloResource.mustBeIgnored = false;
+      } else {
+        this.sayHelloResource.mustBeIgnored = true;
+        this.sayHelloResource.arguments = [];
+        this.sayHelloResource.refresh();
+      }
+    }, []);
+    return this.sayHelloResource;
   }
 }

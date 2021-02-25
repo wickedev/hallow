@@ -1,6 +1,8 @@
 import fs from "fs";
 import {
+  ImportStatementContext,
   MessageBlockContext,
+  ProtoContext,
   ProtoVisitor,
   ServiceBlockContext,
 } from "@hallow/parser";
@@ -71,6 +73,40 @@ export class ServiceVisitor<T> extends ProtoVisitor<T[]> {
   }
 }
 
+export class ImportsVisitor<T> extends ProtoVisitor<T[]> {
+  private statements: T[] = [];
+
+  constructor(private readonly transfomer: (ctx: ImportStatementContext) => T) {
+    super();
+  }
+
+  protected defaultResult(): T[] {
+    return this.statements;
+  }
+  visitImportStatement(ctx: ImportStatementContext): T[] {
+    const result = this.transfomer(ctx);
+    this.statements.push(result);
+    return this.statements;
+  }
+}
+
+export class ImportVisitor<T> extends ProtoVisitor<T[]> {
+  private statements: T[] = [];
+
+  constructor(private readonly transfomer: (ctx: ProtoContext) => T) {
+    super();
+  }
+
+  protected defaultResult(): T[] {
+    return this.statements;
+  }
+  visitProtoBlock(ctx: ProtoContext): T[] {
+    const result = this.transfomer(ctx);
+    this.statements.push(result);
+    return this.statements;
+  }
+}
+
 export function stripSpace(s: string): string {
   return s.replace(/^\s+/gm, "");
 }
@@ -88,7 +124,7 @@ export function stripIndent(s: string, indent: number = 0): string {
 }
 
 export function toStructure(
-  statement: StatementStructures
+  statement: (StatementStructures | WriterFunction)[]
 ): SourceFileStructure {
   const project = new Project({
     manipulationSettings: {
@@ -98,7 +134,7 @@ export function toStructure(
     },
   });
   const file = project.createSourceFile("fixture.ts", {
-    statements: [statement],
+    statements: statement,
   });
   return file.getStructure();
 }

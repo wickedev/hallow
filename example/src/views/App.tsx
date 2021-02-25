@@ -2,9 +2,9 @@ import React, { Suspense } from "react";
 import { GrpcErrorBoundary } from "./GrpcErrorBoundary";
 import { v4 as uuid } from "uuid";
 import { isDevelopment } from "../api/utils";
-import { GreetingStub } from "../api/greeting";
+import { GreeterStub } from "../api/greeting";
 
-const greetingStub = new GreetingStub({
+const greetingStub = new GreeterStub({
   host: isDevelopment ? "/api" : "http://localhost:8080",
 });
 

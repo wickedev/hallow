@@ -247,7 +247,7 @@ export class GreetingResponse extends jspb.Message {
       1,
       value,
       Greeting as any,
-      opt_index
+      opt_index,
     );
   }
 

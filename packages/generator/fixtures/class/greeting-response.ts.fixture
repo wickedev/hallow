@@ -3,7 +3,6 @@ export class GreetingResponse extends jspb.Message {
 
   constructor(data?: jspb.Message.MessageArray) {
     super();
-
     jspb.Message.initialize(
       this,
       data || [],
@@ -32,10 +31,44 @@ export class GreetingResponse extends jspb.Message {
     );
   }
 
+  serializeBinary(): Uint8Array {
+    const writer = new jspb.BinaryWriter();
+    GreetingResponse.serializeBinaryToWriter(this, writer);
+    return writer.getResultBuffer();
+  }
+
+  toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
+    return GreetingResponse.toObject(includeInstance, this);
+  }
+
   static create(data: IGreetingResponse): GreetingResponse {
     const message = new GreetingResponse([]);
     message.greetings = data.greetings.map(Greeting.create);
     return message;
+  }
+
+  static toObject(
+    includeInstance: boolean,
+    message: GreetingResponse
+  ): IGreetingResponse & IObject {
+    return {
+      greetings: jspb.Message.toObjectList(
+        message.greetings,
+        Greeting.toObject,
+        includeInstance
+      ) as IGreeting[],
+      $messageInstance: includeInstance ? message : undefined,
+    };
+  }
+
+  static serializeBinaryToWriter(
+    message: GreetingResponse,
+    writer: jspb.BinaryWriter
+  ): void {
+    let v;
+    if ((v = message.greetings).length > 0) {
+      writer.writeRepeatedMessage(1, v, Greeting.serializeBinaryToWriter);
+    }
   }
 
   static deserializeBinary(bytes: Uint8Array): GreetingResponse {
@@ -65,37 +98,7 @@ export class GreetingResponse extends jspb.Message {
           break;
       }
     }
+
     return message;
-  }
-
-  static toObject(
-    includeInstance: boolean,
-    message: GreetingResponse
-  ): IGreetingResponse & IObject {
-    return {
-      greetings: jspb.Message.toObjectList(
-        message.greetings,
-        Greeting.toObject,
-        includeInstance
-      ) as IGreeting[],
-      $messageInstance: includeInstance ? message : undefined,
-    };
-  }
-
-  serializeBinary(): Uint8Array {
-    const writer = new jspb.BinaryWriter();
-    this.serializeBinaryToWriter(writer);
-    return writer.getResultBuffer();
-  }
-
-  serializeBinaryToWriter(writer: jspb.BinaryWriter): void {
-    let v;
-    if ((v = this.greetings).length > 0) {
-      writer.writeRepeatedMessage(1, v, Greeting.serializeBinaryToWriter);
-    }
-  }
-
-  toObject(includeInstance: boolean = false): IGreetingResponse & IObject {
-    return GreetingResponse.toObject(includeInstance, this);
   }
 }

@@ -4,13 +4,13 @@ describe("WellKnownTypes", () => {
   it("should convernt google.protobuf.Int32Value to number", () => {
     const info = convertTypeInfo("google.protobuf.Int32Value");
     expect(info.type).toEqual("number");
-    expect(info.protoType).toEqual("Int32Value");
+    expect(info.protoType).toEqual("wrappers_pb.Int32Value");
   });
 
   it("should convernt google.protobuf.Empty to void", () => {
     const info = convertTypeInfo("google.protobuf.Empty");
     expect(info.type).toEqual("void");
-    expect(info.protoType).toEqual("Empty");
+    expect(info.protoType).toEqual("empty_pb.Empty");
   });
 
   it("should convernt Greeting to Greeting", () => {

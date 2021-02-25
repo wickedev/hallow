@@ -9,7 +9,7 @@ export class GreeterStub {
 
   greeting(request: IGreetingRequest): Promise<IGreetingResponse> {
     return new Promise<IGreetingResponse>((resolve, reject) => {
-      grpc.unary(Greeter.Greeting, {
+      grpc.unary(GreeterService.Greeting, {
         host: this.client.host,
         debug: false,
         onEnd: createUnaryOnEndHandler(resolve, reject),
@@ -20,11 +20,11 @@ export class GreeterStub {
 
   sayHello(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
-      grpc.unary(Greeter.SayHello, {
+      grpc.unary(GreeterService.SayHello, {
         host: this.client.host,
         debug: false,
         onEnd: createUnaryOnEndHandler(resolve, reject),
-        request: new Empty(),
+        request: new empty_pb.Empty(),
       });
     });
   }

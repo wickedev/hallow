@@ -69,7 +69,7 @@ export function transformToService(
       {
         name: "serviceName",
         type: "string",
-        initializer: `"greeting.${serviceName}Service"`,
+        initializer: `"greeting.${serviceName}"`,
       },
       {
         name: "service",

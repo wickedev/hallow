@@ -26,6 +26,6 @@ describe("transformToService", () => {
 
     const impls = generator.visit(parser.proto());
     expect(impls.length).toEqual(1);
-    expect(toStructure(impls[0])).toEqual(fixtuere);
+    expect(toStructure(impls)).toEqual(fixtuere);
   });
 });

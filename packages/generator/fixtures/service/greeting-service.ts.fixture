@@ -15,14 +15,14 @@ export class GreeterService implements grpc.ServiceDefinition {
     };
 
   static SayHello: grpc.UnaryMethodDefinition<
-    Empty,
-    UInt64Value
+    empty_pb.Empty,
+    wrappers_pb.UInt64Value
   > = {
       methodName: "SayHello",
       service: GreeterService.service,
       requestStream: false,
       responseStream: false,
-      requestType: (Empty as unknown) as ProtobufMessageClass<Empty>,
-      responseType: (UInt64Value as unknown) as ProtobufMessageClass<UInt64Value>,
+      requestType: (empty_pb.Empty as unknown) as ProtobufMessageClass<empty_pb.Empty>,
+      responseType: (wrappers_pb.UInt64Value as unknown) as ProtobufMessageClass<wrappers_pb.UInt64Value>,
     };
 }

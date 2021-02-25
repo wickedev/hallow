@@ -1,6 +1,10 @@
 syntax = "proto2";
 package greeting;
 
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
 message Greeting {
   required string message = 1;
   optional string created = 2;
@@ -14,6 +18,8 @@ message GreetingResponse {
   repeated Greeting greetings = 1;
 }
 
-service GreetingService {
+service Greeter {
   rpc Greeting(GreetingRequest) returns (GreetingResponse);
+
+  rpc SayHello (google.protobuf.Empty) returns (google.protobuf.UInt64Value) {}
 }

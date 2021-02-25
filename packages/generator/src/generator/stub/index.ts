@@ -69,7 +69,7 @@ function defaultImplementationMethods(
             )
             .indent(() => {
               writer
-                .write(`grpc.unary(${serviceNmae}.${rpcNameTypeName}, {`)
+                .write(`grpc.unary(${serviceNmae}Service.${rpcNameTypeName}, {`)
                 .indent(() => {
                   writer.writeLine("host: this.client.host,");
                   writer.writeLine("debug: false,");
@@ -77,7 +77,7 @@ function defaultImplementationMethods(
                     "onEnd: createUnaryOnEndHandler(resolve, reject),"
                   );
                   if (isEmptyRequest) {
-                    writer.writeLine(`request: new Empty(),`);
+                    writer.writeLine(`request: new empty_pb.Empty(),`);
                   } else {
                     writer.writeLine(
                       `request: ${

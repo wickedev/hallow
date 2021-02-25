@@ -9,7 +9,9 @@ import {
 } from "ts-morph";
 import { toCapitalizeStyle } from "../../utils";
 
-export function serializeBinaryMethod(): OptionalKind<MethodDeclarationStructure> {
+export function serializeBinaryMethod(
+  messageName: string
+): OptionalKind<MethodDeclarationStructure> {
   return {
     name: "serializeBinary",
     statements: [
@@ -24,63 +26,10 @@ export function serializeBinaryMethod(): OptionalKind<MethodDeclarationStructure
           },
         ],
       },
-      "this.serializeBinaryToWriter(writer);",
+      `${messageName}.serializeBinaryToWriter(this, writer);`,
       "return writer.getResultBuffer();",
     ],
     returnType: "Uint8Array",
-  };
-}
-
-export function fieldsSerializeBinaryToWriter(
-  fields: FieldContext[]
-): WriterFunction {
-  return (writer: CodeBlockWriter) => {
-    fields.forEach((f, idx) => {
-      const feildType = toCapitalizeStyle(f.typeReference().text);
-      const fieldName = f.fieldName().text;
-      const fieldNumber = idx + 1;
-      const isRepeated = f.fieldModifier()?.REPEATED();
-
-      if (isRepeated) {
-        writer.write(`if ((v = this.${fieldName}).length > 0)`).block(() => {
-          writer.writeLine(
-            `writer.writeRepeatedMessage(${fieldNumber}, v, ${feildType}.serializeBinaryToWriter);`
-          );
-        });
-        return;
-      }
-
-      writer.write(`if ((v = this.${fieldName}) != null)`).block(() => {
-        writer.writeLine(`writer.write${feildType}(${fieldNumber}, v);`);
-      });
-    });
-  };
-}
-
-export function serializeBinaryToWriterMethod(
-  feilds: FieldContext[]
-): OptionalKind<MethodDeclarationStructure> {
-  return {
-    name: "serializeBinaryToWriter",
-    statements: [
-      {
-        kind: StructureKind.VariableStatement,
-        declarationKind: VariableDeclarationKind.Let,
-        declarations: [
-          {
-            name: "v",
-          },
-        ],
-      },
-      fieldsSerializeBinaryToWriter(feilds),
-    ],
-    parameters: [
-      {
-        name: "writer",
-        type: "jspb.BinaryWriter",
-      },
-    ],
-    returnType: "void",
   };
 }
 

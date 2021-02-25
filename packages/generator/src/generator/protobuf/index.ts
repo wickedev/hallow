@@ -13,15 +13,12 @@ import {
   repeatedFields_,
   setFieldAccessors,
 } from "./fields";
-import {
-  serializeBinaryMethod,
-  serializeBinaryToWriterMethod,
-  toObjectMethod,
-} from "./methods";
+import { serializeBinaryMethod, toObjectMethod } from "./methods";
 import {
   staticCreateMethod,
   staticDeserializeBinary,
   staticDeserializeBinaryFromReader,
+  staticSerializeBinaryToWriterMethod,
   staticToObjectMethod,
 } from "./static-methods";
 
@@ -79,16 +76,17 @@ export function transformToProtobufMessage(
       // repeated add methods
       ...repeatedAddMethods(fields),
 
+      // methods
+      serializeBinaryMethod(messageName),
+      toObjectMethod(messageName),
+
       // static methods
       staticCreateMethod(messageName, fields),
-      ...staticDeserializeBinary(messageName),
-      staticDeserializeBinaryFromReader(messageName, fields),
       staticToObjectMethod(messageName, fields),
 
-      // methods
-      serializeBinaryMethod(),
-      serializeBinaryToWriterMethod(fields),
-      toObjectMethod(messageName),
+      staticSerializeBinaryToWriterMethod(messageName, fields),
+      staticDeserializeBinary(messageName),
+      staticDeserializeBinaryFromReader(messageName, fields),
     ],
   };
 }

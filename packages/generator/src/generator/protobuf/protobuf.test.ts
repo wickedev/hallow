@@ -25,7 +25,7 @@ describe("transformToProtobufMessage", () => {
     );
     const impls = generator.visit(parser.proto());
     expect(impls.length).toEqual(1);
-    expect(toStructure(impls[0])).toEqual(fixtuere);
+    expect(toStructure(impls)).toEqual(fixtuere);
   });
 
   it("should transform greeting-request.proto to typescript", () => {
@@ -42,7 +42,7 @@ describe("transformToProtobufMessage", () => {
     );
     const impls = generator.visit(parser.proto());
     expect(impls.length).toEqual(1);
-    expect(toStructure(impls[0])).toEqual(fixture);
+    expect(toStructure(impls)).toEqual(fixture);
   });
 
   it("should transform greeting-response.proto to typescript", () => {
@@ -59,6 +59,6 @@ describe("transformToProtobufMessage", () => {
     );
     const impls = generator.visit(parser.proto());
     expect(impls.length).toEqual(1);
-    expect(toStructure(impls[0])).toEqual(fixture);
+    expect(toStructure(impls)).toEqual(fixture);
   });
 });
