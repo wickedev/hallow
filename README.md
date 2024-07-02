@@ -39,30 +39,4 @@ function App() {
 
 ## Setup
 
-```js
-// webpack.config.js
-module.exports = {
-    ...
-    module: {
-        rules: [{
-            test: /\.proto$/,
-            loader: '@hallow/grpc-loader',
-        }]
-    }
-    ...
-};
-
-// tsconfig.json
-{
-    ...
-    "compilerOptions": {
-        "plugins": [{
-            "name": "@hallow/ts-language-service-plugin",
-            "option": {
-                "grpc": true,
-            }
-        }]
-    }
-    ...
-}
-```
+TBD
