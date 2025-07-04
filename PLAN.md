@@ -81,14 +81,17 @@ class GreetingStub {
 - [x] 기본 빌드 및 테스트 환경 구성
 
 ### Phase 2: Demo 프로젝트 및 SWC 플러그인 개발 🚀
-- [ ] Demo 프로젝트 구조 설정
-- [ ] 샘플 .proto 파일 작성
-- [ ] SWC 플러그인에서 .proto import 감지
-- [ ] SWC 플러그인 내부 .proto 파일 파싱
-- [ ] TypeScript 스텁 클래스 AST 생성 로직
-- [ ] Promise 기반 API 코드 생성
-- [ ] SWC 플러그인으로 import 구문을 생성된 코드로 교체
-- [ ] Demo 프로젝트에서 동작 검증
+- [x] Demo 프로젝트 구조 설정
+- [x] 샘플 .proto 파일 작성 (greeting.proto, user.proto, chat.proto)
+- [x] React 컴포넌트 구조 설정 (GreetingDemo, UserDemo, ChatDemo)
+- [x] Vite + React + TypeScript 환경 구성
+- [x] 모노레포 workspace 통합
+- [ ] **현재 작업**: SWC 플러그인 프로젝트 설정 (packages/swc-plugin)
+- [ ] SWC 플러그인에서 .proto import 감지 로직
+- [ ] Protocol Buffer 파싱 로직을 Rust로 포팅
+- [ ] TypeScript 스텁 클래스 AST 생성 및 코드 교체
+- [ ] Vite와 SWC 플러그인 통합
+- [ ] Demo 프로젝트에서 실제 .proto import 동작 검증
 
 ### Phase 3: React 통합 및 고급 기능
 - [ ] React hooks 생성 로직 (SWC 플러그인 내)
@@ -169,10 +172,24 @@ class GreetingStub {
 
 ## 다음 단계
 
-**Phase 2 우선 작업:**
-1. `packages/demo` 프로젝트 설정
-2. 샘플 .proto 파일 작성
-3. SWC 플러그인에서 .proto import 감지 로직 구현
-4. 프로토콜 버퍼 파싱을 SWC 플러그인 내부로 통합
-5. TypeScript AST 생성 및 코드 교체 로직 구현
-6. Vite + SWC 플러그인 통합 설정
+**Phase 2 현재 작업:**
+1. ✅ `packages/demo` 프로젝트 설정 완료
+2. ✅ 샘플 .proto 파일 작성 완료
+3. ✅ React 컴포넌트 구조 설정 완료
+4. **🚀 진행 중**: SWC 플러그인 프로젝트 설정 (`packages/swc-plugin`)
+
+**다음 우선 작업:**
+1. SWC 플러그인 Rust 프로젝트 초기 설정
+   - Cargo.toml 의존성 설정
+   - SWC visitor 패턴 기본 구조
+   - .proto import 감지 로직
+2. Protocol Buffer 파싱 로직을 TypeScript에서 Rust로 포팅
+3. AST 변환 및 TypeScript 코드 생성 로직
+4. Vite와 SWC 플러그인 통합
+5. Demo 프로젝트에서 실제 동작 검증
+
+**데모 프로젝트 현재 상태:**
+- `packages/demo/src/protos/`: 3개 서비스 정의 완료
+- `packages/demo/src/components/`: 모든 데모 컴포넌트 구현 완료
+- TODO 주석으로 SWC 플러그인 통합 지점 표시
+- Mock 데이터로 UI/UX 검증 가능한 상태
