@@ -78,7 +78,7 @@ class GreetingStub {
 - [x] TypeScript 런타임 라이브러리 기본 구조 설정
 - [x] 프로토콜 버퍼 파서 (기본적인 service 정의 읽기)
 - [x] 모노레포 구조 설정 (pnpm workspace)
-- [ ] 기본 빌드 및 테스트 환경 구성
+- [x] 기본 빌드 및 테스트 환경 구성
 
 ### Phase 2: 코드 생성 구현
 - [ ] Proto 파일에서 service 정의 추출

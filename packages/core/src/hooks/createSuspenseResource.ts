@@ -21,17 +21,22 @@ interface RejectedResource<T> {
   error: Error;
 }
 
-type ResourceState<T> = PendingResource<T> | FulfilledResource<T> | RejectedResource<T>;
+type ResourceState<T> =
+  | PendingResource<T>
+  | FulfilledResource<T>
+  | RejectedResource<T>;
 
-export function createSuspenseResource<T>(promise: Promise<T>): SuspenseResource<T> {
+export function createSuspenseResource<T>(
+  promise: Promise<T>
+): SuspenseResource<T> {
   let resource: ResourceState<T> = {
     status: Status.PENDING,
     promise: promise.then(
-      (value) => {
+      value => {
         resource = { status: Status.FULFILLED, value };
         return value;
       },
-      (error) => {
+      error => {
         resource = { status: Status.REJECTED, error };
         throw error;
       }

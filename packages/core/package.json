@@ -9,9 +9,12 @@
     "build": "rollup -c",
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts test/**/*.ts --fix",
     "test": "jest",
-    "clean": "rimraf dist",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "clean": "rimraf dist coverage",
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [

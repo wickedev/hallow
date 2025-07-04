@@ -9,7 +9,7 @@ import {
   ParseResult,
   ParseError,
   ParseWarning,
-  ParseOptions
+  ParseOptions,
 } from '../types/parser';
 
 export class ProtoParser {
@@ -20,7 +20,7 @@ export class ProtoParser {
       keepCase: false,
       alternateCommentMode: false,
       preferTrailingComment: false,
-      ...options
+      ...options,
     };
   }
 
@@ -32,25 +32,26 @@ export class ProtoParser {
       const root = protobuf.parse(content, {
         keepCase: this.options.keepCase,
         alternateCommentMode: this.options.alternateCommentMode,
-        preferTrailingComment: this.options.preferTrailingComment
+        preferTrailingComment: this.options.preferTrailingComment,
       }).root;
 
       const protoPackage = this.convertToProtoPackage(root);
-      
+
       return {
         package: protoPackage,
         errors,
-        warnings
+        warnings,
       };
     } catch (error) {
       errors.push({
-        message: error instanceof Error ? error.message : 'Unknown parsing error'
+        message:
+          error instanceof Error ? error.message : 'Unknown parsing error',
       });
-      
+
       return {
         package: this.createEmptyPackage(),
         errors,
-        warnings
+        warnings,
       };
     }
   }
@@ -62,21 +63,22 @@ export class ProtoParser {
     try {
       const root = await protobuf.load(filePath);
       const protoPackage = this.convertToProtoPackage(root);
-      
+
       return {
         package: protoPackage,
         errors,
-        warnings
+        warnings,
       };
     } catch (error) {
       errors.push({
-        message: error instanceof Error ? error.message : 'Unknown parsing error'
+        message:
+          error instanceof Error ? error.message : 'Unknown parsing error',
       });
-      
+
       return {
         package: this.createEmptyPackage(),
         errors,
-        warnings
+        warnings,
       };
     }
   }
@@ -94,7 +96,7 @@ export class ProtoParser {
       imports: [],
       services,
       messages,
-      enums
+      enums,
     };
   }
 
@@ -127,14 +129,14 @@ export class ProtoParser {
         responseType: method.responseType,
         requestStream: method.requestStream || false,
         responseStream: method.responseStream || false,
-        options: method.options || {}
+        options: method.options || {},
       });
     });
 
     return {
       name: service.name,
       methods,
-      options: service.options || {}
+      options: service.options || {},
     };
   }
 
@@ -147,7 +149,7 @@ export class ProtoParser {
         name: field.name,
         type: field.type,
         number: field.id,
-        options: field.options || {}
+        options: field.options || {},
       });
     });
 
@@ -160,14 +162,14 @@ export class ProtoParser {
     return {
       name: type.name,
       fields,
-      nested: Object.keys(nested).length > 0 ? nested : undefined
+      nested: Object.keys(nested).length > 0 ? nested : undefined,
     };
   }
 
   private convertEnum(enumType: protobuf.Enum): ProtoEnum {
     return {
       name: enumType.name,
-      values: enumType.values
+      values: enumType.values,
     };
   }
 
@@ -177,7 +179,7 @@ export class ProtoParser {
       imports: [],
       services: {},
       messages: {},
-      enums: {}
+      enums: {},
     };
   }
 
@@ -189,7 +191,10 @@ export class ProtoParser {
     return Object.keys(protoPackage.messages);
   }
 
-  getServiceMethods(protoPackage: ProtoPackage, serviceName: string): ProtoMethod[] {
+  getServiceMethods(
+    protoPackage: ProtoPackage,
+    serviceName: string
+  ): ProtoMethod[] {
     const service = protoPackage.services[serviceName];
     return service ? service.methods : [];
   }

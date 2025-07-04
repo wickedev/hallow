@@ -45,7 +45,7 @@ export class Client {
       });
 
       const combinedMetadata = metadata || new grpc.Metadata();
-      
+
       Object.entries(this.headers).forEach(([key, value]) => {
         combinedMetadata.set(key, value);
       });

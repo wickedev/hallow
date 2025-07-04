@@ -1,6 +1,12 @@
 import { Client } from '../client/Client';
 import { createSuspenseResource } from '../hooks/createSuspenseResource';
-import { ProtoService, ProtoMethod, ProtoPackage, HooksAPI, SuspenseResource } from '../types';
+import {
+  ProtoService,
+  ProtoMethod,
+  ProtoPackage,
+  HooksAPI,
+  SuspenseResource,
+} from '../types';
 import { Message } from 'google-protobuf';
 import { grpc } from '@improbable-eng/grpc-web';
 
@@ -13,13 +19,16 @@ export class StubGenerator {
     return class GeneratedStub {
       private client: Client;
       private service: ProtoService;
-      private methodDescriptors: Record<string, grpc.MethodDefinition<any, any>>;
+      private methodDescriptors: Record<
+        string,
+        grpc.MethodDefinition<any, any>
+      >;
 
       constructor(client: Client) {
         this.client = client;
         this.service = service;
         this.methodDescriptors = methodDescriptors;
-        
+
         this.bindMethods();
       }
 
@@ -27,13 +36,13 @@ export class StubGenerator {
         this.service.methods.forEach(method => {
           const methodName = method.name;
           const camelCaseMethodName = this.toCamelCase(methodName);
-          
+
           (this as any)[camelCaseMethodName] = async (request?: any) => {
             const descriptor = this.methodDescriptors[methodName];
             if (!descriptor) {
               throw new Error(`Method descriptor not found for ${methodName}`);
             }
-            
+
             return this.client.invoke(descriptor, request || {});
           };
         });
@@ -41,28 +50,30 @@ export class StubGenerator {
 
       createHooks(): HooksAPI<any> {
         const hooks: HooksAPI<any> = {};
-        
+
         this.service.methods.forEach(method => {
           const methodName = method.name;
           const camelCaseMethodName = this.toCamelCase(methodName);
           const hookName = `use${this.toPascalCase(methodName)}`;
-          
+
           hooks[hookName] = (request?: any): SuspenseResource<any> => {
             const descriptor = this.methodDescriptors[methodName];
             if (!descriptor) {
               throw new Error(`Method descriptor not found for ${methodName}`);
             }
-            
+
             const promise = this.client.invoke(descriptor, request || {});
             return createSuspenseResource(promise);
           };
         });
-        
+
         return hooks;
       }
 
       private toCamelCase(str: string): string {
-        return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+        return str.replace(/_([a-z])/g, (match, letter) =>
+          letter.toUpperCase()
+        );
       }
 
       private toPascalCase(str: string): string {
@@ -72,7 +83,10 @@ export class StubGenerator {
     };
   }
 
-  static generateMethodDescriptor<TRequest extends Message, TResponse extends Message>(
+  static generateMethodDescriptor<
+    TRequest extends Message,
+    TResponse extends Message,
+  >(
     serviceName: string,
     method: ProtoMethod,
     requestCtor: any,
@@ -86,7 +100,7 @@ export class StubGenerator {
       requestStream: method.requestStream || false,
       responseStream: method.responseStream || false,
       requestType: requestCtor,
-      responseType: responseCtor
+      responseType: responseCtor,
     };
   }
 }
