@@ -43,7 +43,6 @@ const res = hooks.useGreeting()
   /core           # TypeScript - 런타임 라이브러리 (기존)
   /swc-plugin     # Rust crate - SWC 플러그인 (기존)
   /demo           # Demo 프로젝트 - 실제 사용 예시
-  /codegen        # TypeScript - 코드 생성 유틸리티
 ```
 
 ## 핵심 변환 예시
@@ -81,30 +80,25 @@ class GreetingStub {
 - [x] 모노레포 구조 설정 (pnpm workspace)
 - [x] 기본 빌드 및 테스트 환경 구성
 
-### Phase 2: Demo 프로젝트 및 코드 생성 🚀
+### Phase 2: Demo 프로젝트 및 SWC 플러그인 개발 🚀
 - [ ] Demo 프로젝트 구조 설정
 - [ ] 샘플 .proto 파일 작성
-- [ ] 코드 생성 CLI 도구 개발
-- [ ] TypeScript 스텁 클래스 생성 로직
-- [ ] Promise 기반 API 구현
-- [ ] 기본 빌드 파이프라인 연동
-- [ ] 수동 코드 생성으로 동작 검증
-
-### Phase 3: SWC 플러그인 통합
 - [ ] SWC 플러그인에서 .proto import 감지
-- [ ] 런타임에 코드 생성 호출
-- [ ] AST 변환으로 import 구문 교체
-- [ ] 타입 정의 생성 및 통합
-- [ ] 에러 처리 강화
+- [ ] SWC 플러그인 내부 .proto 파일 파싱
+- [ ] TypeScript 스텁 클래스 AST 생성 로직
+- [ ] Promise 기반 API 코드 생성
+- [ ] SWC 플러그인으로 import 구문을 생성된 코드로 교체
+- [ ] Demo 프로젝트에서 동작 검증
 
-### Phase 4: React 통합
-- [ ] React hooks 생성 로직
+### Phase 3: React 통합 및 고급 기능
+- [ ] React hooks 생성 로직 (SWC 플러그인 내)
 - [ ] Suspense 지원 구현
 - [ ] 캐싱 메커니즘
-- [ ] 에러 바운더리 지원
+- [ ] 에러 바운더리 지원  
 - [ ] 중복 요청 방지
+- [ ] 스트리밍 지원 (Server-Sent Events)
 
-### Phase 5: 최적화 및 완성
+### Phase 4: 최적화 및 완성
 - [ ] 성능 최적화
 - [ ] 타입 안정성 강화
 - [ ] 종합 테스트 스위트
@@ -134,9 +128,10 @@ class GreetingStub {
 ```
 
 ### 개발 워크플로우
-1. **수동 코드 생성**: CLI 도구로 .proto → TypeScript 스텁 생성
-2. **빌드 통합**: Vite/SWC 플러그인으로 자동 변환
-3. **실시간 개발**: 파일 변경시 자동 재생성
+1. **개발자가 코드 작성**: `import { GreetingStub } from './greeting.proto'`
+2. **SWC 플러그인 감지**: 빌드 시 .proto import 구문 탐지
+3. **실시간 코드 생성**: .proto 파일 파싱 → AST 생성 → TypeScript 코드 교체
+4. **타입 체크**: 생성된 코드가 TypeScript 컴파일러를 통과
 
 ### 샘플 서비스들
 - **GreetingService**: 기본 요청/응답 패턴
@@ -156,7 +151,7 @@ class GreetingStub {
 
 ## 주요 도전 과제
 
-1. **코드 생성 파이프라인**: .proto → TypeScript 변환의 신뢰성
+1. **SWC 플러그인 코드 생성**: .proto → TypeScript AST 변환의 신뢰성
 2. **SWC 플러그인 복잡성**: AST 변환 및 코드 생성의 복잡성
 3. **프로토콜 버퍼 파싱**: 완전한 .proto 파일 지원
 4. **React Suspense 통합**: 올바른 데이터 페칭 패턴 구현
@@ -177,6 +172,7 @@ class GreetingStub {
 **Phase 2 우선 작업:**
 1. `packages/demo` 프로젝트 설정
 2. 샘플 .proto 파일 작성
-3. 코드 생성 CLI 도구 개발
-4. 수동 워크플로우로 동작 검증
-5. Vite 빌드 파이프라인 통합
+3. SWC 플러그인에서 .proto import 감지 로직 구현
+4. 프로토콜 버퍼 파싱을 SWC 플러그인 내부로 통합
+5. TypeScript AST 생성 및 코드 교체 로직 구현
+6. Vite + SWC 플러그인 통합 설정
