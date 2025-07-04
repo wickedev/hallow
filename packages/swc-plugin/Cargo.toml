@@ -7,9 +7,25 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+swc_core = { version = "0.80", features = [
+  "ecma_plugin_transform",
+  "ecma_ast",
+  "ecma_visit",
+  "ecma_utils",
+  "common"
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+regex = "1.5"
+# Temporarily disable protobuf until Rust version is updated
+# protobuf = "2.28"
+# protobuf-codegen = "2.28"
 
-# Note: SWC dependencies require Rust 1.82+
-# These will be added when Rust is updated:
-# swc_core = { version = "0.80", features = ["ecma_plugin_transform"] }
+[profile.release]
+# This removes more dead code
+codegen-units = 1
+lto = true
+# Optimize for size
+opt-level = "s"
+# Strip symbols
+strip = true
