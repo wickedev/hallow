@@ -74,7 +74,7 @@ class GreetingStub {
 ## 개발 로드맵
 
 ### Phase 1: 기본 인프라 구축
-- [ ] Rust SWC 플러그인 스켈레톤 생성
+- [x] Rust SWC 플러그인 스켈레톤 생성
 - [ ] TypeScript 런타임 라이브러리 기본 구조 설정
 - [ ] 프로토콜 버퍼 파서 (기본적인 service 정의 읽기)
 - [ ] 모노레포 구조 설정 (pnpm workspace)
