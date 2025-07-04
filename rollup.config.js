@@ -26,6 +26,7 @@ const config = [
       'google-protobuf',
       '@improbable-eng/grpc-web',
       'react',
+      'protobufjs',
     ],
   },
   {

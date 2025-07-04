@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package greeting;
+
+message GreetingRequest {
+  string name = 1;
+  int32 age = 2;
+}
+
+message GreetingResponse {
+  string message = 1;
+  int64 timestamp = 2;
+}
+
+service GreetingService {
+  rpc Greeting(GreetingRequest) returns (GreetingResponse);
+  rpc StreamGreeting(GreetingRequest) returns (stream GreetingResponse);
+}
