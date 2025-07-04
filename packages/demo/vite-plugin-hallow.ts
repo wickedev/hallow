@@ -64,8 +64,6 @@ export function hallowPlugin(options: HallowPluginOptions = {}): Plugin {
             
             return `
 // Generated from ${protoPath}
-import { Client } from "@hallow/grpc-web";
-
 ${stubClass}`;
           }
         );
