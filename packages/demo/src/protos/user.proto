@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package user;
+
+// 사용자 생성 요청
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  int32 age = 3;
+}
+
+// 사용자 정보
+message User {
+  int32 id = 1;
+  string username = 2;
+  string email = 3;
+  int32 age = 4;
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}
+
+// 사용자 조회 요청
+message GetUserRequest {
+  int32 id = 1;
+}
+
+// 사용자 목록 요청
+message ListUsersRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+// 사용자 목록 응답
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+// 사용자 업데이트 요청
+message UpdateUserRequest {
+  int32 id = 1;
+  string username = 2;
+  string email = 3;
+  int32 age = 4;
+}
+
+// 삭제 요청
+message DeleteUserRequest {
+  int32 id = 1;
+}
+
+// 일반적인 응답
+message UserResponse {
+  bool success = 1;
+  string message = 2;
+  User user = 3;
+}
+
+// 사용자 관리 서비스
+service UserService {
+  // CRUD 작업들
+  rpc CreateUser(CreateUserRequest) returns (UserResponse);
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (UserResponse);
+  
+  // 목록 조회
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  
+  // 실시간 사용자 업데이트 (서버 스트리밍)
+  rpc WatchUserUpdates(GetUserRequest) returns (stream UserResponse);
+}

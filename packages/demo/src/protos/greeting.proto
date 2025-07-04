@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package greeting;
+
+// 인사 요청 메시지
+message GreetingRequest {
+  string name = 1;
+  int32 age = 2;
+  repeated string hobbies = 3;
+}
+
+// 인사 응답 메시지
+message GreetingResponse {
+  string message = 1;
+  int64 timestamp = 2;
+  bool success = 3;
+}
+
+// 사용자 상태 열거형
+enum UserStatus {
+  UNKNOWN = 0;
+  ONLINE = 1;
+  OFFLINE = 2;
+  BUSY = 3;
+}
+
+// 인사 서비스 정의
+service GreetingService {
+  // 기본 인사 (단일 요청/응답)
+  rpc Greeting(GreetingRequest) returns (GreetingResponse);
+  
+  // 개인화된 인사
+  rpc PersonalizedGreeting(GreetingRequest) returns (GreetingResponse);
+  
+  // 스트리밍 인사 (서버 스트리밍)
+  rpc StreamGreeting(GreetingRequest) returns (stream GreetingResponse);
+}

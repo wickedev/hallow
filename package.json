@@ -18,7 +18,10 @@
     "test:coverage": "pnpm -r test:coverage",
     "clean": "pnpm -r clean && rimraf node_modules",
     "install:all": "pnpm install",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "demo:dev": "pnpm --filter @hallow/demo dev",
+    "demo:build": "pnpm --filter @hallow/demo build",
+    "demo:preview": "pnpm --filter @hallow/demo preview"
   },
   "keywords": [
     "grpc",

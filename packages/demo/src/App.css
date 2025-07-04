@@ -1,0 +1,78 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-header {
+  margin-bottom: 3rem;
+}
+
+.app-header h1 {
+  color: #646cff;
+  margin-bottom: 0.5rem;
+}
+
+.app-header p {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+.app-main {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.demo-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: left;
+}
+
+.demo-section h2 {
+  color: #646cff;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.demo-section p {
+  color: #888;
+  margin-bottom: 1.5rem;
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
+
+.app-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 2rem;
+  color: #888;
+}
+
+.app-footer strong {
+  color: #646cff;
+}
+
+.app-footer code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+@media (max-width: 768px) {
+  .app {
+    padding: 1rem;
+  }
+  
+  .demo-section {
+    padding: 1.5rem;
+  }
+}

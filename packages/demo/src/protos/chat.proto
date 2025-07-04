@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package chat;
+
+// 메시지 타입
+enum MessageType {
+  TEXT = 0;
+  IMAGE = 1;
+  FILE = 2;
+  SYSTEM = 3;
+}
+
+// 채팅 메시지
+message ChatMessage {
+  string id = 1;
+  string room_id = 2;
+  string user_id = 3;
+  string username = 4;
+  string content = 5;
+  MessageType type = 6;
+  int64 timestamp = 7;
+}
+
+// 채팅방 참여 요청
+message JoinRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+  string username = 3;
+}
+
+// 메시지 전송 요청
+message SendMessageRequest {
+  string room_id = 1;
+  string user_id = 2;
+  string username = 3;
+  string content = 4;
+  MessageType type = 5;
+}
+
+// 채팅방 나가기 요청
+message LeaveRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+
+// 일반적인 응답
+message ChatResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 채팅 서비스 (양방향 스트리밍)
+service ChatService {
+  // 채팅방 참여
+  rpc JoinRoom(JoinRoomRequest) returns (ChatResponse);
+  
+  // 메시지 전송
+  rpc SendMessage(SendMessageRequest) returns (ChatResponse);
+  
+  // 채팅방 나가기  
+  rpc LeaveRoom(LeaveRoomRequest) returns (ChatResponse);
+  
+  // 실시간 채팅 (양방향 스트리밍)
+  rpc StreamChat(stream SendMessageRequest) returns (stream ChatMessage);
+  
+  // 채팅 메시지 수신 (서버 스트리밍)
+  rpc ReceiveMessages(JoinRoomRequest) returns (stream ChatMessage);
+}
