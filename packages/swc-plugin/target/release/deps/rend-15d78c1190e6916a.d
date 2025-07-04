@@ -1,0 +1,10 @@
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/rend-15d78c1190e6916a.d: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_struct.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_traits.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_validation.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/librend-15d78c1190e6916a.rlib: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_struct.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_traits.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_validation.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/librend-15d78c1190e6916a.rmeta: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_struct.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_traits.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_validation.rs
+
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/lib.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_struct.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_traits.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rend-0.4.2/src/impl_validation.rs:

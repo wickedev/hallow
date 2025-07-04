@@ -1,0 +1,10 @@
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/debug/deps/siphasher-96f7808872d6780e.d: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip128.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/../README.md
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/debug/deps/libsiphasher-96f7808872d6780e.rlib: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip128.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/../README.md
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/debug/deps/libsiphasher-96f7808872d6780e.rmeta: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip128.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/../README.md
+
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/lib.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/sip128.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/siphasher-1.0.1/src/../README.md:

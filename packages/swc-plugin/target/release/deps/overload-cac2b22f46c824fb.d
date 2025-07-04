@@ -1,0 +1,10 @@
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/overload-cac2b22f46c824fb.d: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/unary.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/assignment.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/binary.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/liboverload-cac2b22f46c824fb.rlib: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/unary.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/assignment.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/binary.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/liboverload-cac2b22f46c824fb.rmeta: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/unary.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/assignment.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/binary.rs
+
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/lib.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/unary.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/assignment.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/overload-0.1.1/src/binary.rs:

@@ -1,0 +1,10 @@
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/swc_visit-dc2462330c262f09.d: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/mod.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/map.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/move_map.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/libswc_visit-dc2462330c262f09.rlib: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/mod.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/map.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/move_map.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/deps/libswc_visit-dc2462330c262f09.rmeta: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/mod.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/map.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/move_map.rs
+
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/lib.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/mod.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/map.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/swc_visit-0.5.14/src/util/move_map.rs:

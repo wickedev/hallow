@@ -1,0 +1,9 @@
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/debug/deps/simd_abstraction-1843440330a0cbc9.d: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/tools.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/traits.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/ascii.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/hex.rs
+
+/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/debug/deps/libsimd_abstraction-1843440330a0cbc9.rmeta: /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/lib.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/tools.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/traits.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/ascii.rs /Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/hex.rs
+
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/lib.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/tools.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/traits.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/ascii.rs:
+/Users/krenginelryan.y/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simd-abstraction-0.7.1/src/hex.rs:

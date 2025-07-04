@@ -1,10 +1,9 @@
 use swc_core::ecma::{
     ast::*,
-    visit::{as_folder, FoldWith, VisitMut, VisitMutWith},
+    visit::{as_folder, FoldWith, VisitMut},
 };
 use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
 use serde::Deserialize;
-use std::path::Path;
 
 mod proto_parser;
 mod code_generator;
