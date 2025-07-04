@@ -1,5 +1,4 @@
 import { Plugin } from 'vite';
-import { transformSync } from '@swc/core';
 import path from 'path';
 import fs from 'fs';
 
@@ -28,29 +27,7 @@ export function hallowPlugin(options: HallowPluginOptions = {}): Plugin {
       console.log(`🔄 Hallow Plugin: Processing ${id}`);
       
       try {
-        // Transform the code using SWC with our plugin
-        const result = transformSync(code, {
-          filename: id,
-          jsc: {
-            parser: {
-              syntax: 'typescript',
-              tsx: id.endsWith('.tsx'),
-              decorators: true,
-            },
-            target: 'es2020',
-            experimental: {
-              plugins: [
-                // For now, we'll do a simple string replacement
-                // Later this will be replaced with the actual SWC plugin
-              ],
-            },
-          },
-          module: {
-            type: 'es6',
-          },
-        });
-
-        // Manual transformation for now (will be replaced by SWC plugin)
+        // Transform .proto imports directly using regex replacement
         let transformedCode = code;
         
         // Replace .proto imports with generated stub classes
