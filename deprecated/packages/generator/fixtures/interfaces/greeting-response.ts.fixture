@@ -1,3 +1,0 @@
-export interface IGreetingResponse {
-  readonly greetings: IGreeting[];
-}

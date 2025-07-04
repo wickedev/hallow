@@ -1,4 +1,0 @@
-export interface IGreeting {
-  readonly message: string;
-  readonly created?: string;
-}

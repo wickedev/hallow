@@ -1,6 +1,0 @@
-syntax = "proto2";
-package greeting;
-
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/empty.proto";
-import "common.proto";

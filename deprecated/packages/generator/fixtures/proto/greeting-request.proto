@@ -1,6 +1,0 @@
-syntax = "proto2";
-package greeting;
-
-message GreetingRequest {
-  required string name = 1;
-}
