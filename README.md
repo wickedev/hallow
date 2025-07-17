@@ -1,88 +1,59 @@
-# Hallow GRPC
+# Hallow gRPC
 
-A gRPC web client library with TypeScript/JavaScript interface and React Hooks support.
-
-## Monorepo Structure
-
-This project uses pnpm workspaces for managing multiple packages:
-
-```
-hallow/
-├── packages/
-│   ├── core/           # Core gRPC web client library
-│   └── swc-plugin/     # SWC plugin for code generation
-├── pnpm-workspace.yaml
-└── package.json
-```
-
-## Requirements
-
-- Node.js >= 16.0.0
-- pnpm >= 8.0.0
-
-## Installation
-
-```bash
-pnpm install
-```
-
-## Development
-
-```bash
-# Build all packages
-pnpm build
-
-# Run tests for all packages
-pnpm test
-
-# Type check all packages
-pnpm typecheck
-
-# Lint all packages
-pnpm lint
-
-# Development mode (watch)
-pnpm dev
-
-# Clean all build artifacts
-pnpm clean
-```
-
-## Package-specific Commands
-
-```bash
-# Build only core package
-pnpm --filter @hallow/grpc-web build
-
-# Test only core package
-pnpm --filter @hallow/grpc-web test
-```
+A Seamless gRPC web client library without code generation by plugin system
 
 ## Usage
+
+### Example Protobuf
+```protobuf
+syntax = "proto3";
+
+package greeting;
+
+service Greeting {
+    rpc Greeting (GreetingRequest) returns (GreetingResponse);
+}
+
+message GreetingRequest {
+    string name = 1;
+}
+
+message GreetingResponse {
+    string message = 1;
+}
+```
+
+### Promise API
 
 ```tsx
 import { Client } from "@hallow/grpc-web"
 import { GreetingStub } from './greeting.proto'
 
-// Setup
 const client = new Client({ baseURL: "/api" })
 const greeter = new GreetingStub(client)
 
-// Promise
-const res = await greeter.greeting()
-console.log(JSON.stringify(res))
+const res = await greeter.greeting({message: "Hello, Ryan!"})
+console.log(`hello from server: ${res.message}`)
+```
 
-// React Hooks with Suspense
-const hooks = greeter.createHooks()
+### React Hook API (with Suspense)
+
+```tsx
+import { Client } from "@hallow/grpc-web"
+import { GreetingHookStub } from './greeting.proto'
+import { ErrorBoundary } from "react-error-boundary";
+
+const client = new Client({ baseURL: "/api" })
+const greeter = new GreetingHookStub(client)
 
 function Greeter() {
-    const res = hooks.useGreeting()
-    return <div>{JSON.stringify(res.read())}</div>
+    const res = greeter.useGreeting({message: "Hello, Ryan!"})
+    return <div>{`hello from server: ${res.message}`}</div>
 }
 
 function App() {
-    return <Suspense fallback={'loading'}>
-        <ErrorBoundary>
+    return <Suspense fallback={"loading"}>
+        <ErrorBoundary fallback={"Something went wrong"}>
             <Greeter />
         </ErrorBoundary>
     </Suspense>
@@ -93,13 +64,3 @@ function App() {
 
 - google-protobuf
 - @improbable-eng/grpc-web
-- protobufjs (for proto parsing)
-
-## Architecture
-
-The library provides:
-- A `Client` class for gRPC web connections
-- Protocol buffer parser for service definitions
-- Generated stubs from protobuf definitions
-- React Hooks integration with Suspense support
-- Error boundary compatibility

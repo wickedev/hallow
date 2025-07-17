@@ -1,0 +1,52 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$PWD\" && if [ -f package.json ]; then pnpm run lint:fix 2>/dev/null || npm run lint:fix 2>/dev/null || echo \"No lint script found\"; elif [ -f Cargo.toml ]; then cargo fmt 2>/dev/null || echo \"Cargo fmt not available\"; elif [ -f pyproject.toml ] || [ -f requirements.txt ]; then black . 2>/dev/null || ruff format . 2>/dev/null || echo \"No Python formatter found\"; else echo \"No known formatter for this project\"; fi'",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$PWD\" && if [ -n \"$(git status --porcelain 2>/dev/null)\" ]; then CHANGED_FILES=$(git status --porcelain | head -3 | awk \"{print \\$NF}\" | tr \"\\n\" \",\" | sed \"s/,$//\"); git add . && git commit -m \"checkpoint: modify ${CHANGED_FILES} - $(date +\"%H:%M\")\"; fi'",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$PWD\" && if [ -d .git ]; then CHECKPOINT_COUNT=$(git log --oneline | grep \"checkpoint:\" | wc -l); if [ \"$CHECKPOINT_COUNT\" -gt 1 ]; then LAST_CHANGES=$(git log --oneline | grep \"checkpoint:\" | head -3 | cut -d\" \" -f3- | tr \"\\n\" \", \" | sed \"s/, $//\"); git reset --soft HEAD~$CHECKPOINT_COUNT && git commit -m \"task: ${LAST_CHANGES} - $(date+\"%Y-%m-%d\")\"; echo \"Squashed $CHECKPOINT_COUNT checkpoint commits into final task commit\"; fi; fi'",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$PWD\" && if [ -d .git ]; then CHECKPOINT_COUNT=$(git log --oneline | grep \"checkpoint:\" | wc -l); if [ \"$CHECKPOINT_COUNT\" -gt 1 ]; then LAST_CHANGES=$(git log --oneline | grep \"checkpoint:\" | head -3 | cut -d\" \" -f3- | tr \"\\n\" \", \" | sed \"s/, $//\"); git reset --soft HEAD~$CHECKPOINT_COUNT && git commit -m \"task: conversation compacted -${LAST_CHANGES} - $(date +\"%Y-%m-%d\")\"; echo \"Squashed $CHECKPOINT_COUNT checkpoint commits before compaction\"; fi; fi'",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

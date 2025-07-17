@@ -1,1 +1,0 @@
-/Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/target/release/libhallow_swc_plugin.dylib: /Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/src/code_generator.rs /Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/src/lib.rs /Users/krenginelryan.y/Workspace/hallow/packages/swc-plugin/src/proto_parser.rs
