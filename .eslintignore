@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Generated files
+packages/*/src/generated/
+.antlr/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Config files
+*.config.js
+*.config.ts
+jest.config.js
+rollup.config.js
+
+# Type definitions
+*.d.ts
+
+# Misc
+*.min.js
+*.bundle.js

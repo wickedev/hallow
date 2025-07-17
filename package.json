@@ -11,6 +11,7 @@
     "build": "yarn workspaces run build",
     "test": "yarn workspaces run test",
     "lint": "yarn workspaces run lint",
+    "lint:fix": "yarn workspaces run lint:fix",
     "typecheck": "yarn workspaces run typecheck",
     "clean": "yarn workspaces run clean"
   },

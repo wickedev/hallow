@@ -58,7 +58,7 @@ export {
   StrLitContext,
   BoolLitContext,
   FloatLitContext,
-  KeywordsContext
+  KeywordsContext,
 } from './generated/grammar/Protobuf3Parser';
 
 // ANTLR Runtime exports for convenience
