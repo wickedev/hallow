@@ -31,7 +31,7 @@ export class Generator {
    * @param protoFile Parsed proto file AST
    * @returns Generated code result
    */
-  async generateCode(protoFile: ProtoFile): Promise<GeneratedCode> {
+  generateCode(protoFile: ProtoFile): GeneratedCode {
     try {
       this.validateProtoFile(protoFile);
       
@@ -58,7 +58,7 @@ export class Generator {
       throw new GenerationError(
         `Unexpected error during code generation: ${error instanceof Error ? error.message : String(error)}`,
         GenerationErrorCode.INVALID_PROTO,
-        error
+        error,
       );
     }
   }
@@ -71,7 +71,7 @@ export class Generator {
     if (!protoFile) {
       throw new GenerationError(
         'Proto file is required',
-        GenerationErrorCode.INVALID_PROTO
+        GenerationErrorCode.INVALID_PROTO,
       );
     }
     

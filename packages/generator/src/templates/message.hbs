@@ -1,0 +1,113 @@
+{{comment "Generated message types"}}
+import * as protobuf from 'google-protobuf';
+
+{{#each messages}}
+/**
+ * {{comment description "line"}}
+ */
+export interface {{pascalCase name}} {
+  {{#each fields}}
+  {{camelCase name}}{{#if optional}}?{{/if}}: {{mapType type}}{{#if repeated}}[]{{/if}};
+  {{/each}}
+}
+
+/**
+ * Serialization utilities for {{pascalCase name}}
+ */
+export namespace {{pascalCase name}} {
+  /**
+   * Encode message to protobuf format
+   * @param message Message to encode
+   * @returns Encoded bytes
+   */
+  export function encode(message: {{pascalCase name}}): Uint8Array {
+    const writer = new protobuf.BinaryWriter();
+    
+    {{#each fields}}
+    {{#ifExists ../name}}
+    if (message.{{camelCase name}} !== undefined) {
+      {{#if repeated}}
+      message.{{camelCase name}}.forEach(item => {
+        writer.writeTag({{number}}, protobuf.WireType.{{wireType}});
+        {{#if (eq type "string")}}
+        writer.writeString(item);
+        {{else if (eq type "int32")}}
+        writer.writeInt32(item);
+        {{else if (eq type "bool")}}
+        writer.writeBool(item);
+        {{else}}
+        // TODO: Handle {{type}} serialization
+        {{/if}}
+      });
+      {{else}}
+      writer.writeTag({{number}}, protobuf.WireType.{{wireType}});
+      {{#if (eq type "string")}}
+      writer.writeString(message.{{camelCase name}});
+      {{else if (eq type "int32")}}
+      writer.writeInt32(message.{{camelCase name}});
+      {{else if (eq type "bool")}}
+      writer.writeBool(message.{{camelCase name}});
+      {{else}}
+      // TODO: Handle {{type}} serialization
+      {{/if}}
+      {{/if}}
+    }
+    {{/ifExists}}
+    {{/each}}
+    
+    return writer.getResultBuffer();
+  }
+
+  /**
+   * Decode message from protobuf format
+   * @param bytes Encoded bytes
+   * @returns Decoded message
+   */
+  export function decode(bytes: Uint8Array): {{pascalCase name}} {
+    const reader = new protobuf.BinaryReader(bytes);
+    const message: {{pascalCase name}} = {
+      {{#each fields}}
+      {{camelCase name}}: {{#if repeated}}[]{{else}}{{#if (eq type "string")}}''{{else if (eq type "bool")}}false{{else if (eq type "int32")}}0{{else}}undefined{{/if}}{{/if}},
+      {{/each}}
+    };
+
+    while (reader.nextField()) {
+      const tag = reader.getFieldNumber();
+      
+      switch (tag) {
+        {{#each fields}}
+        case {{number}}:
+          {{#if repeated}}
+          {{#if (eq type "string")}}
+          message.{{camelCase name}}.push(reader.readString());
+          {{else if (eq type "int32")}}
+          message.{{camelCase name}}.push(reader.readInt32());
+          {{else if (eq type "bool")}}
+          message.{{camelCase name}}.push(reader.readBool());
+          {{else}}
+          // TODO: Handle {{type}} deserialization
+          {{/if}}
+          {{else}}
+          {{#if (eq type "string")}}
+          message.{{camelCase name}} = reader.readString();
+          {{else if (eq type "int32")}}
+          message.{{camelCase name}} = reader.readInt32();
+          {{else if (eq type "bool")}}
+          message.{{camelCase name}} = reader.readBool();
+          {{else}}
+          // TODO: Handle {{type}} deserialization
+          {{/if}}
+          {{/if}}
+          break;
+        {{/each}}
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+
+    return message;
+  }
+}
+
+{{/each}}

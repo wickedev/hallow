@@ -14,7 +14,8 @@
   "dependencies": {
     "@hallow/parser": "*",
     "google-protobuf": "^3.21.2",
-    "@improbable-eng/grpc-web": "^0.15.0"
+    "@improbable-eng/grpc-web": "^0.15.0",
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",

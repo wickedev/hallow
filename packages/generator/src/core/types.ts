@@ -110,7 +110,8 @@ export class GenerationError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly details?: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public readonly details?: any,
   ) {
     super(message);
     this.name = 'GenerationError';

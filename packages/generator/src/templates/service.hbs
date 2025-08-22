@@ -1,0 +1,54 @@
+{{comment "Generated service stub for " name}}
+{{#each imports}}
+import {{#if isDefault}}{{name}}{{else}}{{{join imports ", "}}}{{/if}} from '{{source}}';
+{{/each}}
+
+{{#each services}}
+/**
+ * {{comment description "line"}}
+ * Generated gRPC service stub
+ */
+export class {{pascalCase name}}Stub {
+  constructor(private readonly baseUrl: string) {}
+
+  {{#each methods}}
+  /**
+   * {{comment description "line"}}
+   * @param request Request message
+   * @returns Promise resolving to response message
+   */
+  async {{camelCase name}}(request: {{inputType}}): Promise<{{outputType}}> {
+    // TODO: Implement gRPC call
+    throw new Error('Method not implemented');
+  }
+
+  {{/each}}
+}
+
+{{#if ../includeReactHooks}}
+/**
+ * React Hook stub for {{pascalCase name}} service
+ */
+export class {{pascalCase name}}HookStub {
+  constructor(private readonly baseUrl: string) {}
+
+  {{#each methods}}
+  /**
+   * React Hook for {{camelCase name}} method
+   * @param request Request message
+   * @returns Hook result with data, loading, and error states
+   */
+  use{{pascalCase name}}(request: {{inputType}}): {
+    data?: {{outputType}};
+    loading: boolean;
+    error?: Error;
+  } {
+    // TODO: Implement React Hook
+    throw new Error('Hook not implemented');
+  }
+
+  {{/each}}
+}
+{{/if}}
+
+{{/each}}

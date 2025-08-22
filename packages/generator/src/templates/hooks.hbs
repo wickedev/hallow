@@ -1,0 +1,109 @@
+{{comment "Generated React hooks for gRPC services"}}
+import { useState, useEffect } from 'react';
+
+{{#each imports}}
+import {{#if isDefault}}{{name}}{{else}}{{{join imports ", "}}}{{/if}} from '{{source}}';
+{{/each}}
+
+{{#each services}}
+/**
+ * React Hook utilities for {{pascalCase name}} service
+ */
+export class {{pascalCase name}}HookStub {
+  constructor(private readonly stub: {{pascalCase name}}Stub) {}
+
+  {{#each methods}}
+  /**
+   * React Hook for {{camelCase name}} method
+   * @param request Request message
+   * @returns Hook result with data, loading, and error states
+   */
+  use{{pascalCase name}}(request: {{inputType}}): {
+    data?: {{outputType}};
+    loading: boolean;
+    error?: Error;
+    refetch: () => void;
+  } {
+    const [data, setData] = useState<{{outputType}} | undefined>(undefined);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<Error | undefined>(undefined);
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(undefined);
+        const result = await this.stub.{{camelCase name}}(request);
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchData();
+    }, [JSON.stringify(request)]); // Re-run when request changes
+
+    return {
+      data,
+      loading,
+      error,
+      refetch: fetchData,
+    };
+  }
+
+  /**
+   * Suspense-compatible React Hook for {{camelCase name}} method
+   * @param request Request message
+   * @returns Response data (throws promise while loading or error if failed)
+   */
+  useSuspense{{pascalCase name}}(request: {{inputType}}): {{outputType}} {
+    const [data, setData] = useState<{{outputType}} | undefined>(undefined);
+    const [error, setError] = useState<Error | undefined>(undefined);
+    const [promise, setPromise] = useState<Promise<{{outputType}}> | undefined>(undefined);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data && !promise) {
+      const newPromise = this.stub.{{camelCase name}}(request)
+        .then(result => {
+          setData(result);
+          return result;
+        })
+        .catch(err => {
+          const error = err instanceof Error ? err : new Error(String(err));
+          setError(error);
+          throw error;
+        });
+      
+      setPromise(newPromise);
+      throw newPromise;
+    }
+
+    if (!data) {
+      throw promise;
+    }
+
+    return data;
+  }
+
+  {{/each}}
+}
+
+{{/each}}
+
+{{#each services}}
+/**
+ * Hook factory for {{pascalCase name}} service
+ * @param baseUrl Base URL for the gRPC service
+ * @returns Hook utilities
+ */
+export function use{{pascalCase name}}Service(baseUrl: string): {{pascalCase name}}HookStub {
+  const stub = new {{pascalCase name}}Stub(baseUrl);
+  return new {{pascalCase name}}HookStub(stub);
+}
+
+{{/each}}

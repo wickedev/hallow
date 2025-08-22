@@ -1,1 +1,1 @@
-export {};
+export { TemplateEngine, TemplateEngineFactory, TemplateContext, TemplateOptions, TemplateMetadata } from '../core/template-engine';
