@@ -21,7 +21,7 @@
   - Add template validation and error reporting
   - _Requirements: 4.3, 6.4_
 
-- [ ] 4. Implement type mapping utilities
+- [x] 4. Implement type mapping utilities
   - Create TypeMapper class for Proto to TypeScript type conversion
   - Map scalar types (string, int32, bool, etc.) to TypeScript types
   - Handle repeated fields, optional fields, and oneof fields
