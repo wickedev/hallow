@@ -6,12 +6,14 @@ import {
   GenerationErrorCode,
 } from './types';
 import { ProtoFile } from './proto-types';
+import { ServiceGenerator } from '../generators/ServiceGenerator';
 
 /**
  * Main code generator class
  */
 export class Generator {
   private options: Required<GeneratorOptions>;
+  private serviceGenerator: ServiceGenerator;
   
   constructor(options: GeneratorOptions = {}) {
     this.options = {
@@ -24,6 +26,15 @@ export class Generator {
       templateDir: options.templateDir || '',
       treeShaking: options.treeShaking ?? false,
     };
+    
+    // Initialize service generator
+    this.serviceGenerator = new ServiceGenerator({
+      serverUrl: this.options.serverUrl,
+      generateReactHooks: this.options.generateReactHooks,
+      generateSuspenseHooks: this.options.generateSuspenseHooks,
+      generateComments: this.options.generateComments,
+      templateDir: this.options.templateDir,
+    });
   }
   
   /**
@@ -31,7 +42,7 @@ export class Generator {
    * @param protoFile Parsed proto file AST
    * @returns Generated code result
    */
-  generateCode(protoFile: ProtoFile): GeneratedCode {
+  async generateCode(protoFile: ProtoFile): Promise<GeneratedCode> {
     try {
       this.validateProtoFile(protoFile);
       
@@ -39,13 +50,19 @@ export class Generator {
       const metadata = {
         generatedAt: new Date(),
         generatorVersion: '0.1.0', // TODO: Get from package.json
-        servicesCount: 0,
-        messagesCount: 0,
-        enumsCount: 0,
+        servicesCount: protoFile.services.length,
+        messagesCount: protoFile.messages.length,
+        enumsCount: protoFile.enums.length,
       };
       
-      // TODO: Implement actual generation logic
-      // For now, return empty result
+      // Generate service stubs
+      if (protoFile.services.length > 0) {
+        const serviceFiles = await this.serviceGenerator.generateStubs(protoFile);
+        files.push(...serviceFiles);
+      }
+      
+      // TODO: Generate message types
+      // TODO: Generate enum types
       
       return {
         files,
@@ -94,5 +111,14 @@ export class Generator {
       ...this.options,
       ...options,
     };
+    
+    // Update service generator options
+    this.serviceGenerator.updateOptions({
+      serverUrl: this.options.serverUrl,
+      generateReactHooks: this.options.generateReactHooks,
+      generateSuspenseHooks: this.options.generateSuspenseHooks,
+      generateComments: this.options.generateComments,
+      templateDir: this.options.templateDir,
+    });
   }
 }

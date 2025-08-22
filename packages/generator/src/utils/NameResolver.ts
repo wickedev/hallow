@@ -166,7 +166,7 @@ export class NameResolver {
     
     let tsName = protoMethodName;
     
-    // Convert to camelCase unless preserving proto case
+    // Always convert to camelCase for methods unless preserving proto case
     if (!this.config.preserveProtoCase) {
       tsName = this.toCamelCase(tsName);
     }
@@ -219,6 +219,12 @@ export class NameResolver {
    * Convert snake_case or kebab-case to PascalCase
    */
   private toPascalCase(str: string): string {
+    // If the string doesn't contain underscores or hyphens, just ensure first letter is uppercase
+    if (!str.includes('_') && !str.includes('-')) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    // Otherwise split and capitalize each part
     return str
       .split(/[_-]/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -229,6 +235,11 @@ export class NameResolver {
    * Convert snake_case or kebab-case to camelCase
    */
   private toCamelCase(str: string): string {
+    // If the string doesn't contain underscores or hyphens, just ensure first letter is lowercase
+    if (!str.includes('_') && !str.includes('-')) {
+      return str.charAt(0).toLowerCase() + str.slice(1);
+    }
+    
     const pascal = this.toPascalCase(str);
     return pascal.charAt(0).toLowerCase() + pascal.slice(1);
   }
