@@ -1,0 +1,91 @@
+export namespace {{interfaceName}} {
+  /**
+   * Encode {{name}} message to protobuf format
+   * @param message Message to encode
+   * @returns Encoded bytes
+   */
+  export function encode(message: {{interfaceName}}): Uint8Array {
+    const writer = new Writer();
+    
+    {{#each fields}}
+    if (message.{{camelCaseName}} !== undefined) {
+      {{#if repeated}}
+      for (const item of message.{{camelCaseName}}) {
+        writer.{{serializerMethod}}({{number}}, item);
+      }
+      {{else if map}}
+      for (const [key, value] of message.{{camelCaseName}}) {
+        const entry = { key, value };
+        writer.{{serializerMethod}}({{number}}, entry);
+      }
+      {{else}}
+      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
+      {{/if}}
+    }
+    {{/each}}
+    
+    {{#each oneofs}}
+    {{#each fields}}
+    if (message.{{../camelCaseName}} === '{{name}}') {
+      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
+    }
+    {{/each}}
+    {{/each}}
+    
+    return writer.getResultBuffer();
+  }
+
+  /**
+   * Decode {{name}} message from protobuf format
+   * @param bytes Encoded bytes
+   * @returns Decoded message
+   */
+  export function decode(bytes: Uint8Array): {{interfaceName}} {
+    const reader = new Reader(bytes);
+    const message: {{interfaceName}} = {
+      {{#each fields}}
+      {{#unless optional}}
+      {{camelCaseName}}: {{defaultValue}},
+      {{/unless}}
+      {{/each}}
+    };
+
+    while (reader.nextField()) {
+      const tag = reader.getFieldNumber();
+      
+      switch (tag) {
+        {{#each fields}}
+        case {{number}}:
+          {{#if repeated}}
+          if (!message.{{camelCaseName}}) {
+            message.{{camelCaseName}} = [];
+          }
+          message.{{camelCaseName}}.push(reader.{{deserializerMethod}}());
+          {{else if map}}
+          if (!message.{{camelCaseName}}) {
+            message.{{camelCaseName}} = new Map();
+          }
+          const entry = reader.{{deserializerMethod}}();
+          message.{{camelCaseName}}.set(entry.key, entry.value);
+          {{else}}
+          message.{{camelCaseName}} = reader.{{deserializerMethod}}();
+          {{/if}}
+          break;
+        {{/each}}
+        {{#each oneofs}}
+        {{#each fields}}
+        case {{number}}:
+          message.{{../../camelCaseName}} = '{{name}}';
+          message.{{camelCaseName}} = reader.{{deserializerMethod}}();
+          break;
+        {{/each}}
+        {{/each}}
+        default:
+          reader.skipField();
+          break;
+      }
+    }
+
+    return message;
+  }
+}

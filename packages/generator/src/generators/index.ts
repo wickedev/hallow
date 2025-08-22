@@ -10,3 +10,10 @@ export {
   createServiceGenerator,
   type ServiceGeneratorOptions 
 } from './ServiceGenerator';
+
+export {
+  MessageGenerator,
+  createMessageGenerator,
+  type MessageGeneratorOptions,
+  type GeneratedMessage
+} from './MessageGenerator';

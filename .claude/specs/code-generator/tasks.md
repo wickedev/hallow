@@ -35,7 +35,7 @@
   - Add basic method implementation for unary RPC calls
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 6. Implement message type generation
+- [x] 6. Implement message type generation
   - Create MessageGenerator class for TypeScript interface generation
   - Generate TypeScript interfaces from message definitions
   - Handle nested messages and maintain proper namespace structure

@@ -1,0 +1,40 @@
+{{#if generateComments}}
+/**
+ * Interface for {{name}} message
+ */
+{{/if}}
+export interface {{interfaceName}} {
+  {{#each fields}}
+  {{#if ../generateComments}}
+  /** {{comment}} */
+  {{/if}}
+  {{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
+  {{/each}}
+  {{#each oneofs}}
+  {{camelCaseName}}: {{unionType}};
+  {{/each}}
+}
+
+{{#if hasNestedTypes}}
+export namespace {{interfaceName}} {
+  {{#each nestedMessages}}
+  {{> message-interface}}
+  {{/each}}
+  
+  {{#each nestedEnums}}
+  {{#if ../generateComments}}
+  /**
+   * Enum {{name}}
+   */
+  {{/if}}
+  export enum {{name}} {
+    {{#each values}}
+    {{#if ../../generateComments}}
+    /** {{comment}} */
+    {{/if}}
+    {{name}} = {{number}},
+    {{/each}}
+  }
+  {{/each}}
+}
+{{/if}}
