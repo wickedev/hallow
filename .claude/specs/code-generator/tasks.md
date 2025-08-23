@@ -77,7 +77,7 @@
   - Add streaming-specific error handling and cancellation
   - _Requirements: 5.1_
 
-- [ ] 12. Add custom options and metadata support
+- [x] 12. Add custom options and metadata support
   - Parse and include custom options from proto definitions
   - Generate metadata objects with option information
   - Support method-level and service-level options

@@ -20,6 +20,7 @@ import { TemplateEngine } from '../core/template-engine';
 import { TypeMapper } from '../utils/TypeMapper';
 import { ImportManager } from '../utils/ImportManager';
 import { NameResolver } from '../utils/NameResolver';
+import { OptionProcessor, TemplateOptionMetadata } from '../utils/OptionProcessor';
 
 /**
  * Processed method data for template rendering
@@ -33,6 +34,7 @@ interface ProcessedServiceMethod {
   clientStreaming: boolean;
   serverStreaming: boolean;
   description: string;
+  options?: TemplateOptionMetadata;
 }
 
 /**
@@ -71,6 +73,22 @@ export interface ServiceGeneratorOptions {
     strictNullChecks?: boolean;
     useBigInt?: boolean;
   };
+  
+  /**
+   * Whether to include option metadata in generated code
+   */
+  includeOptionMetadata?: boolean;
+  
+  /**
+   * Configuration for option processing
+   */
+  optionProcessing?: {
+    includeStandard?: boolean;
+    includeCustom?: boolean;
+    excludeStandard?: string[];
+    excludeCustom?: string[];
+    processNestedObjects?: boolean;
+  };
 }
 
 /**
@@ -88,6 +106,7 @@ interface ServiceTemplateContext {
     name: string;
     pascalName: string;
     description?: string;
+    options?: TemplateOptionMetadata;
     methods: Array<{
       name: string;
       pascalName: string;
@@ -97,6 +116,7 @@ interface ServiceTemplateContext {
       clientStreaming: boolean;
       serverStreaming: boolean;
       description?: string;
+      options?: TemplateOptionMetadata;
     }>;
   }>;
   includeReactHooks: boolean;
@@ -112,6 +132,7 @@ export class ServiceGenerator {
   private typeMapper: TypeMapper;
   private importManager: ImportManager;
   private nameResolver: NameResolver;
+  private optionProcessor: OptionProcessor;
   private options: Required<ServiceGeneratorOptions>;
   
   constructor(options: ServiceGeneratorOptions = {}) {
@@ -122,6 +143,8 @@ export class ServiceGenerator {
       generateComments: options.generateComments ?? true,
       templateDir: options.templateDir || '',
       typeMapping: options.typeMapping || {},
+      includeOptionMetadata: options.includeOptionMetadata ?? false,
+      optionProcessing: options.optionProcessing || {},
     };
     
     // Initialize dependencies
@@ -133,6 +156,7 @@ export class ServiceGenerator {
     this.typeMapper = new TypeMapper(this.options.typeMapping);
     this.importManager = new ImportManager();
     this.nameResolver = new NameResolver();
+    this.optionProcessor = new OptionProcessor(this.options.optionProcessing);
     
     // Load default template initially (will be replaced on first use if file exists)
     this.loadDefaultTemplate();
@@ -214,11 +238,19 @@ export class ServiceGenerator {
     // Check if we have any streaming methods
     const hasStreaming = methods.some(m => m.clientStreaming || m.serverStreaming);
     
+    // Process service-level options if enabled
+    let serviceOptions: TemplateOptionMetadata | undefined;
+    if (this.options.includeOptionMetadata && service.options) {
+      const optionMetadata = this.optionProcessor.processOptions(service.options);
+      serviceOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
+    }
+    
     // Prepare service context
     const serviceContext = {
       name: service.name,
       pascalName: this.nameResolver.resolveTypeName(service.name),
       description: this.generateDescription(service),
+      options: serviceOptions,
       methods,
     };
     
@@ -275,6 +307,13 @@ export class ServiceGenerator {
     // For pascalName in the template, we want to keep the original Pascal case (e.g., GetUser -> GetUser)
     const pascalName = method.name.charAt(0).toUpperCase() + method.name.slice(1);
     
+    // Process method-level options if enabled
+    let methodOptions: TemplateOptionMetadata | undefined;
+    if (this.options.includeOptionMetadata && method.options) {
+      const optionMetadata = this.optionProcessor.processOptions(method.options);
+      methodOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
+    }
+    
     // Debug: log the name conversions
     // console.log(`Method ${method.name} -> camel: ${camelName}, pascal: ${pascalName}`);
     
@@ -287,6 +326,7 @@ export class ServiceGenerator {
       clientStreaming: method.clientStreaming,
       serverStreaming: method.serverStreaming,
       description: this.generateMethodDescription(method) || '',
+      options: methodOptions,
     };
   }
   

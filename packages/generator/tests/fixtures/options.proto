@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package com.example.options;
+
+import "google/protobuf/descriptor.proto";
+
+// Custom field option
+extend google.protobuf.FieldOptions {
+  string field_validation = 50001;
+  bool required_field = 50002;
+  int32 max_length = 50003;
+}
+
+// Custom service option
+extend google.protobuf.ServiceOptions {
+  string api_version = 60001;
+  bool deprecated_service = 60002;
+  string rate_limit = 60003;
+}
+
+// Custom method option
+extend google.protobuf.MethodOptions {
+  bool requires_auth = 70001;
+  string permission = 70002;
+  int32 timeout_seconds = 70003;
+}
+
+// Custom message option
+extend google.protobuf.MessageOptions {
+  string table_name = 80001;
+  bool cacheable = 80002;
+  repeated string indexes = 80003;
+}
+
+// Service with options
+service UserService {
+  option (api_version) = "v2";
+  option (deprecated_service) = false;
+  option (rate_limit) = "100/minute";
+
+  // Method with options
+  rpc GetUser(GetUserRequest) returns (User) {
+    option (requires_auth) = true;
+    option (permission) = "user:read";
+    option (timeout_seconds) = 30;
+  }
+
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (requires_auth) = true;
+    option (permission) = "user:create";
+    option deprecated = true;
+  }
+
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (requires_auth) = false;
+  }
+}
+
+// Message with options
+message User {
+  option (table_name) = "users";
+  option (cacheable) = true;
+  option (indexes) = "email";
+  option (indexes) = "created_at";
+
+  string id = 1 [(field_validation) = "uuid", (required_field) = true];
+  string email = 2 [(field_validation) = "email", (required_field) = true, (max_length) = 255];
+  string name = 3 [(max_length) = 100];
+  int64 created_at = 4;
+  repeated string roles = 5;
+  UserStatus status = 6;
+}
+
+message GetUserRequest {
+  string id = 1 [(field_validation) = "uuid", (required_field) = true];
+}
+
+message CreateUserRequest {
+  string email = 1 [(field_validation) = "email", (required_field) = true];
+  string name = 2 [(required_field) = true, (max_length) = 100];
+}
+
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+}
+
+enum UserStatus {
+  option deprecated = true;
+  
+  USER_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
+  SUSPENDED = 3;
+}

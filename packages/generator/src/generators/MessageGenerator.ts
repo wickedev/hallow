@@ -24,6 +24,7 @@ import {
 import { TypeMapper, TypeMappingConfig } from '../utils/TypeMapper';
 import { NameResolver } from '../utils/NameResolver';
 import { ImportManager } from '../utils/ImportManager';
+import { OptionProcessor, TemplateOptionMetadata } from '../utils/OptionProcessor';
 
 /**
  * Options for message generation
@@ -58,6 +59,22 @@ export interface MessageGeneratorOptions {
    * Type mapping configuration
    */
   typeMappingConfig?: TypeMappingConfig;
+  
+  /**
+   * Whether to include option metadata in generated code
+   */
+  includeOptionMetadata?: boolean;
+  
+  /**
+   * Configuration for option processing
+   */
+  optionProcessing?: {
+    includeStandard?: boolean;
+    includeCustom?: boolean;
+    excludeStandard?: string[];
+    excludeCustom?: string[];
+    processNestedObjects?: boolean;
+  };
 }
 
 /**
@@ -104,6 +121,7 @@ interface MessageContext {
   hasNestedTypes: boolean;
   generateSerialization: boolean;
   generateComments: boolean;
+  options?: TemplateOptionMetadata;
 }
 
 /**
@@ -130,6 +148,7 @@ interface FieldContext {
   deserializerMethod: string;
   defaultValue: string;
   comment?: string;
+  options?: TemplateOptionMetadata;
 }
 
 /**
@@ -151,8 +170,10 @@ interface EnumContext {
     name: string;
     number: number;
     comment?: string;
+    options?: TemplateOptionMetadata;
   }>;
   isConstEnum: boolean;
+  options?: TemplateOptionMetadata;
 }
 
 /**
@@ -163,6 +184,7 @@ export class MessageGenerator {
   private typeMapper: TypeMapper;
   private nameResolver: NameResolver;
   private importManager: ImportManager;
+  private optionProcessor: OptionProcessor;
   private options: MessageGeneratorOptions;
   
   constructor(
@@ -176,6 +198,8 @@ export class MessageGenerator {
       readonlyProperties: false,
       generateNamespaces: true,
       inlineNestedMessages: false,
+      includeOptionMetadata: false,
+      optionProcessing: {},
       ...options,
     };
     
@@ -187,6 +211,7 @@ export class MessageGenerator {
     
     this.nameResolver = new NameResolver();
     this.importManager = new ImportManager();
+    this.optionProcessor = new OptionProcessor(this.options.optionProcessing);
     
     // Load templates
     this.loadTemplates();
@@ -464,6 +489,13 @@ export namespace {{interfaceName}} {
       this.createEnumContext(enumDef),
     );
     
+    // Process message-level options if enabled
+    let messageOptions: TemplateOptionMetadata | undefined;
+    if (this.options.includeOptionMetadata && message.options) {
+      const optionMetadata = this.optionProcessor.processOptions(message.options);
+      messageOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
+    }
+    
     return {
       name: message.name,
       interfaceName,
@@ -475,6 +507,7 @@ export namespace {{interfaceName}} {
       hasNestedTypes: nestedMessages.length > 0 || nestedEnums.length > 0,
       generateSerialization: !this.options.interfacesOnly,
       generateComments: this.options.generateComments || false,
+      options: messageOptions,
     };
   }
   
@@ -495,6 +528,13 @@ export namespace {{interfaceName}} {
     const deserializerMethod = this.getDeserializerMethod(field);
     const defaultValue = this.getDefaultValue(field);
     const packed = field.repeated && this.isPackableType(field.type);
+    
+    // Process field-level options if enabled
+    let fieldOptions: TemplateOptionMetadata | undefined;
+    if (this.options.includeOptionMetadata && field.options) {
+      const optionMetadata = this.optionProcessor.processOptions(field.options);
+      fieldOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
+    }
     
     return {
       name: field.name,
@@ -519,6 +559,7 @@ export namespace {{interfaceName}} {
       defaultValue,
       comment: this.options.generateComments ? 
         `Field ${field.name} (${field.type})` : undefined,
+      options: fieldOptions,
     };
   }
   
@@ -547,15 +588,33 @@ export namespace {{interfaceName}} {
    * Create enum context for template rendering
    */
   private createEnumContext(enumDef: EnumDefinition): EnumContext {
+    // Process enum-level options if enabled
+    let enumOptions: TemplateOptionMetadata | undefined;
+    if (this.options.includeOptionMetadata && enumDef.options) {
+      const optionMetadata = this.optionProcessor.processOptions(enumDef.options);
+      enumOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
+    }
+    
     return {
       name: enumDef.name,
-      values: enumDef.values.map(value => ({
-        name: value.name,
-        number: value.number,
-        comment: this.options.generateComments ? 
-          `Value ${value.name} = ${value.number}` : undefined,
-      })),
+      values: enumDef.values.map(value => {
+        // Process enum value-level options if enabled
+        let valueOptions: TemplateOptionMetadata | undefined;
+        if (this.options.includeOptionMetadata && value.options) {
+          const optionMetadata = this.optionProcessor.processOptions(value.options);
+          valueOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
+        }
+        
+        return {
+          name: value.name,
+          number: value.number,
+          comment: this.options.generateComments ? 
+            `Value ${value.name} = ${value.number}` : undefined,
+          options: valueOptions,
+        };
+      }),
       isConstEnum: false, // Can be configured later
+      options: enumOptions,
     };
   }
   

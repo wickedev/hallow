@@ -41,6 +41,41 @@ export interface GeneratorOptions {
    * Whether to optimize generated code for tree-shaking
    */
   treeShaking?: boolean;
+  
+  /**
+   * Whether to include option metadata in generated code
+   */
+  includeOptionMetadata?: boolean;
+  
+  /**
+   * Configuration for option processing
+   */
+  optionProcessing?: {
+    /**
+     * Whether to include standard protobuf options
+     */
+    includeStandard?: boolean;
+    
+    /**
+     * Whether to include custom options
+     */
+    includeCustom?: boolean;
+    
+    /**
+     * List of standard options to exclude
+     */
+    excludeStandard?: string[];
+    
+    /**
+     * List of custom options to exclude
+     */
+    excludeCustom?: string[];
+    
+    /**
+     * Whether to process nested object values
+     */
+    processNestedObjects?: boolean;
+  };
 }
 
 /**

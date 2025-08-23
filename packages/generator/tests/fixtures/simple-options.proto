@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package com.example.simple;
+
+// Service with standard options only
+service SimpleService {
+  option deprecated = true;
+
+  rpc DoSomething(SimpleRequest) returns (SimpleResponse) {
+    option deprecated = false;
+  }
+}
+
+// Message with standard options
+message SimpleRequest {
+  option deprecated = false;
+  
+  string value = 1;
+}
+
+message SimpleResponse {
+  string result = 1;
+}
