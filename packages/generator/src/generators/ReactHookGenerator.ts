@@ -190,16 +190,16 @@ export class ReactHookGenerator {
    * @param protoFile Proto file containing services
    * @returns Array of generated files
    */
-  public async generateAllHooks(protoFile: ProtoFile): Promise<GeneratedFile[]> {
+  public generateAllHooks(protoFile: ProtoFile): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
     
     // Only generate if there are services and hooks are enabled
     if (protoFile.services.length === 0) {
-      return files;
+      return Promise.resolve(files);
     }
     
     if (!this.options.generateRegularHooks && !this.options.generateSuspenseHooks) {
-      return files;
+      return Promise.resolve(files);
     }
     
     // Generate a single hooks file for all services
@@ -213,7 +213,7 @@ export class ReactHookGenerator {
       sourceMap: undefined,
     });
     
-    return files;
+    return Promise.resolve(files);
   }
   
   /**
@@ -226,12 +226,17 @@ export class ReactHookGenerator {
     // Reset import manager for this service
     this.importManager.clear();
     
-    // Add required React imports
+    // Add required React imports based on configuration
     if (this.options.generateRegularHooks) {
-      this.importManager.addNamedImports('react', ['useState', 'useEffect', 'useCallback']);
+      const reactImports = ['useState', 'useEffect', 'useRef'];
+      if (this.options.includeRefetch) {
+        reactImports.push('useCallback');
+      }
+      this.importManager.addNamedImports('react', reactImports);
     }
     if (this.options.generateSuspenseHooks) {
-      this.importManager.addNamedImports('react', ['useState', 'use']);
+      // For React 19+ with 'use' hook
+      this.importManager.addNamedImports('react', ['use']);
     }
     
     // Add service stub import
@@ -271,12 +276,17 @@ export class ReactHookGenerator {
     // Reset import manager
     this.importManager.clear();
     
-    // Add required React imports
+    // Add required React imports based on configuration
     if (this.options.generateRegularHooks) {
-      this.importManager.addNamedImports('react', ['useState', 'useEffect', 'useCallback']);
+      const reactImports = ['useState', 'useEffect', 'useRef'];
+      if (this.options.includeRefetch) {
+        reactImports.push('useCallback');
+      }
+      this.importManager.addNamedImports('react', reactImports);
     }
     if (this.options.generateSuspenseHooks) {
-      this.importManager.addNamedImports('react', ['useState']);
+      // For React 19+ with 'use' hook
+      this.importManager.addNamedImports('react', ['use']);
     }
     
     // Process all services
@@ -315,7 +325,7 @@ export class ReactHookGenerator {
   /**
    * Process a single method definition
    */
-  private processMethod(method: MethodDefinition, protoFile: ProtoFile): any {
+  private processMethod(method: MethodDefinition, protoFile: ProtoFile): ProcessedMethod {
     // Resolve input and output types
     const inputType = this.resolveMessageType(method.inputType, protoFile);
     const outputType = this.resolveMessageType(method.outputType, protoFile);
@@ -335,7 +345,7 @@ export class ReactHookGenerator {
       outputType,
       clientStreaming: method.clientStreaming,
       serverStreaming: method.serverStreaming,
-      description: this.generateMethodDescription(method),
+      description: this.generateMethodDescription(method) || '',
       hookName,
       suspenseHookName,
     };
@@ -385,21 +395,25 @@ export class ReactHookGenerator {
     // Note: ImportManager's internal structure is not exposed, so we'll build manually
     // This would need to be enhanced to work with actual ImportManager API
     
-    // React imports
+    // React imports - build based on what's needed
     const reactImports: string[] = [];
     if (this.options.generateRegularHooks) {
-      reactImports.push('useState', 'useEffect');
+      reactImports.push('useState', 'useEffect', 'useRef');
       if (this.options.includeRefetch) {
         reactImports.push('useCallback');
       }
     }
-    if (this.options.generateSuspenseHooks && !reactImports.includes('useState')) {
-      reactImports.push('useState');
+    if (this.options.generateSuspenseHooks) {
+      // For React 19+, we use the 'use' hook
+      reactImports.push('use');
     }
     
-    if (reactImports.length > 0) {
+    // Remove duplicates and sort for consistency
+    const uniqueReactImports = [...new Set(reactImports)].sort();
+    
+    if (uniqueReactImports.length > 0) {
       imports.push({
-        imports: reactImports,
+        imports: uniqueReactImports,
         source: 'react',
       });
     }
@@ -511,7 +525,7 @@ export class ReactHookGenerator {
       if (method.clientStreaming || method.serverStreaming) {
         console.warn(
           `Warning: Streaming method "${method.name}" in service "${service.name}" ` +
-          `may not be fully supported in React hooks yet`,
+          'may not be fully supported in React hooks yet',
         );
       }
     });
@@ -525,9 +539,14 @@ export class ReactHookGenerator {
     // For now, we'll use the template that already exists in hooks.hbs
     // The TemplateEngine will handle loading from the file system
     
-    // If template file doesn't exist, use this default
+    // If template file doesn't exist, use this improved default with better Suspense support
     const defaultTemplate = `{{!-- Generated React hooks for gRPC services --}}
-import { useState, useEffect{{#if includeRefetch}}, useCallback{{/if}} } from 'react';
+{{#if generateRegularHooks}}
+import { useState, useEffect{{#if includeRefetch}}, useCallback, useRef{{else}}, useRef{{/if}} } from 'react';
+{{/if}}
+{{#if generateSuspenseHooks}}
+import { use } from 'react';
+{{/if}}
 
 {{#each imports}}
 import {{#if isDefault}}{{name}}{{else}}{{{join imports ", "}}}{{/if}} from '{{source}}';
@@ -557,6 +576,7 @@ export class {{pascalName}}Hooks {
     const [data, setData] = useState<{{outputType}} | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | undefined>(undefined);
+    const requestRef = useRef<string>();
 
     {{#if ../../includeRefetch}}
     const fetchData = useCallback(async () => {
@@ -587,7 +607,15 @@ export class {{pascalName}}Hooks {
     {{/if}}
 
     useEffect(() => {
+      {{#if ../../memoizeRequests}}
+      const requestKey = JSON.stringify(request);
+      if (requestRef.current !== requestKey) {
+        requestRef.current = requestKey;
+        fetchData();
+      }
+      {{else}}
       fetchData();
+      {{/if}}
     }, [{{#if ../../memoizeRequests}}JSON.stringify(request){{else}}request{{/if}}]);
 
     return {
@@ -603,9 +631,19 @@ export class {{pascalName}}Hooks {
 {{/if}}
 
 {{#if ../generateSuspenseHooks}}
+// Cache for promise deduplication and proper Suspense integration
+const promiseCache = new Map<string, Promise<any>>();
+const resultCache = new Map<string, any>();
+const errorCache = new Map<string, Error>();
+
 /**
  * Suspense-compatible hooks for {{pascalName}} service
  * {{#if description}}{{description}}{{/if}}
+ * 
+ * These hooks integrate with React Suspense and Error Boundaries:
+ * - Throws promises while loading (caught by Suspense)
+ * - Throws errors on failure (caught by Error Boundary)
+ * - Returns data when ready
  */
 export class {{pascalName}}SuspenseHooks {
   constructor(private readonly stub: {{stubClassName}}) {}
@@ -614,41 +652,138 @@ export class {{pascalName}}SuspenseHooks {
   /**
    * Suspense hook for {{name}} method
    * {{#if description}}{{description}}{{/if}}
+   * 
+   * Usage: Wrap component with Suspense to show loading state
+   * and ErrorBoundary to handle errors
+   * 
    * @param request - {{inputType}} request message
-   * @returns {{outputType}} - Response data (throws promise while loading)
+   * @returns {{outputType}} - Response data
+   * @throws Promise while loading (handled by Suspense)
+   * @throws Error on failure (handled by Error Boundary)
    */
   public {{suspenseHookName}}(request: {{inputType}}): {{outputType}} {
-    const [data, setData] = useState<{{outputType}} | undefined>(undefined);
-    const [error, setError] = useState<Error | undefined>(undefined);
-    const [promise, setPromise] = useState<Promise<{{outputType}}> | undefined>(undefined);
-
-    if (error) {
-      throw error;
+    // Create a stable cache key for this request
+    const cacheKey = \\\`{{../name}}.{{name}}:\\\${JSON.stringify(request)}\\\`;
+    
+    // Check if we have a cached error for this request
+    if (errorCache.has(cacheKey)) {
+      throw errorCache.get(cacheKey);
     }
-
-    if (!data && !promise) {
-      const newPromise = this.stub.{{camelName}}(request)
+    
+    // Check if we have a cached result for this request
+    if (resultCache.has(cacheKey)) {
+      return resultCache.get(cacheKey);
+    }
+    
+    // Check if there's already a promise in flight for this request
+    let promise = promiseCache.get(cacheKey);
+    
+    if (!promise) {
+      // Create a new promise for this request
+      promise = this.stub.{{camelName}}(request)
         .then(result => {
-          setData(result);
+          // Cache the successful result
+          resultCache.set(cacheKey, result);
+          promiseCache.delete(cacheKey);
           return result;
         })
         .catch(err => {
+          // Cache the error
           const error = err instanceof Error ? err : new Error(String(err));
-          setError(error);
+          errorCache.set(cacheKey, error);
+          promiseCache.delete(cacheKey);
           throw error;
         });
       
-      setPromise(newPromise);
-      throw newPromise;
+      // Cache the promise to prevent duplicate requests
+      promiseCache.set(cacheKey, promise);
     }
-
-    if (!data && promise) {
-      throw promise;
-    }
-
-    return data!;
+    
+    // Throw the promise to trigger Suspense
+    throw promise;
   }
 
+  /**
+   * Clear cached data for {{name}} method
+   * Useful for invalidating cache after mutations
+   * 
+   * @param request - Optional specific request to clear, or clears all if not provided
+   */
+  public clear{{pascalName}}Cache(request?: {{inputType}}): void {
+    if (request) {
+      const cacheKey = \\\`{{../name}}.{{name}}:\\\${JSON.stringify(request)}\\\`;
+      promiseCache.delete(cacheKey);
+      resultCache.delete(cacheKey);
+      errorCache.delete(cacheKey);
+    } else {
+      // Clear all caches for this method
+      const prefix = \\\`{{../name}}.{{name}}:\\\`;
+      for (const key of [...promiseCache.keys(), ...resultCache.keys(), ...errorCache.keys()]) {
+        if (key.startsWith(prefix)) {
+          promiseCache.delete(key);
+          resultCache.delete(key);
+          errorCache.delete(key);
+        }
+      }
+    }
+  }
+
+  {{/each}}
+  
+  /**
+   * Clear all cached data for this service
+   */
+  public clearAllCache(): void {
+    const prefix = \\\`{{name}}.\\\`;
+    for (const key of [...promiseCache.keys(), ...resultCache.keys(), ...errorCache.keys()]) {
+      if (key.startsWith(prefix)) {
+        promiseCache.delete(key);
+        resultCache.delete(key);
+        errorCache.delete(key);
+      }
+    }
+  }
+}
+
+/**
+ * React 19+ Suspense hooks using the 'use' API
+ * Provides the most modern integration with React Suspense
+ */
+export class {{pascalName}}UseHooks {
+  private readonly promiseCache = new Map<string, Promise<any>>();
+  
+  constructor(private readonly stub: {{stubClassName}}) {}
+
+  {{#each methods}}
+  /**
+   * React 19+ 'use' hook for {{name}} method
+   * {{#if description}}{{description}}{{/if}}
+   * 
+   * This hook uses React 19's 'use' API for optimal Suspense integration
+   * 
+   * @param request - {{inputType}} request message
+   * @returns {{outputType}} - Response data (using React's 'use' hook)
+   */
+  public {{camelName}}(request: {{inputType}}): {{outputType}} {
+    const cacheKey = \\\`{{../name}}.{{name}}:\\\${JSON.stringify(request)}\\\`;
+    
+    let promise = this.promiseCache.get(cacheKey);
+    
+    if (!promise) {
+      promise = this.stub.{{camelName}}(request);
+      this.promiseCache.set(cacheKey, promise);
+      
+      // Clean up cache after resolution
+      promise.finally(() => {
+        // Keep in cache for a short time to handle re-renders
+        setTimeout(() => this.promiseCache.delete(cacheKey), 100);
+      });
+    }
+    
+    // Use React 19's 'use' hook to handle the promise
+    return use(promise);
+  }
+  
   {{/each}}
 }
 {{/if}}
@@ -675,9 +810,46 @@ export function create{{pascalName}}SuspenseHooks(baseUrl: string): {{pascalName
   const stub = new {{stubClassName}}(baseUrl);
   return new {{pascalName}}SuspenseHooks(stub);
 }
+
+/**
+ * Create React 19+ 'use' hooks instance for {{pascalName}} service
+ * @param baseUrl - Base URL for the gRPC service
+ * @returns Use hooks instance
+ */
+export function create{{pascalName}}UseHooks(baseUrl: string): {{pascalName}}UseHooks {
+  const stub = new {{stubClassName}}(baseUrl);
+  return new {{pascalName}}UseHooks(stub);
+}
 {{/if}}
 
-{{/each}}`;
+{{/each}}
+
+{{#if generateSuspenseHooks}}
+/**
+ * Clear all cached data across all services
+ * Useful for global cache invalidation
+ */
+export function clearAllServiceCaches(): void {
+  promiseCache.clear();
+  resultCache.clear();
+  errorCache.clear();
+}
+
+/**
+ * Get cache statistics for monitoring and debugging
+ */
+export function getCacheStats(): {
+  promiseCacheSize: number;
+  resultCacheSize: number;
+  errorCacheSize: number;
+} {
+  return {
+    promiseCacheSize: promiseCache.size,
+    resultCacheSize: resultCache.size,
+    errorCacheSize: errorCache.size,
+  };
+}
+{{/if}}`;
     
     // Load the template into the engine
     this.templateEngine.loadTemplateFromString('hooks', defaultTemplate);
@@ -712,6 +884,22 @@ export function create{{pascalName}}SuspenseHooks(baseUrl: string): {{pascalName
 /**
  * Factory function to create a ReactHookGenerator instance
  */
+/**
+ * Processed method context for template rendering
+ */
+interface ProcessedMethod {
+  name: string;
+  pascalName: string;
+  camelName: string;
+  inputType: string;
+  outputType: string;
+  clientStreaming: boolean;
+  serverStreaming: boolean;
+  description: string;
+  hookName: string;
+  suspenseHookName: string;
+}
+
 export function createReactHookGenerator(options?: ReactHookGeneratorOptions): ReactHookGenerator {
   return new ReactHookGenerator(options);
 }

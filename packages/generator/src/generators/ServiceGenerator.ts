@@ -22,6 +22,20 @@ import { ImportManager } from '../utils/ImportManager';
 import { NameResolver } from '../utils/NameResolver';
 
 /**
+ * Processed method data for template rendering
+ */
+interface ProcessedServiceMethod {
+  name: string;
+  pascalName: string;
+  camelName: string;
+  inputType: string;
+  outputType: string;
+  clientStreaming: boolean;
+  serverStreaming: boolean;
+  description: string;
+}
+
+/**
  * Service generation options
  */
 export interface ServiceGeneratorOptions {
@@ -169,15 +183,15 @@ export class ServiceGenerator {
    * @param protoFile Proto file containing services
    * @returns Array of generated files
    */
-  public async generateStubs(protoFile: ProtoFile): Promise<GeneratedFile[]> {
+  public generateStubs(protoFile: ProtoFile): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
     
     for (const service of protoFile.services) {
-      const file = await this.generateStub(service, protoFile);
+      const file = this.generateStub(service, protoFile);
       files.push(file);
     }
     
-    return files;
+    return Promise.resolve(files);
   }
   
   /**
@@ -237,7 +251,7 @@ export class ServiceGenerator {
   /**
    * Process a single method definition
    */
-  private processMethod(method: MethodDefinition, protoFile: ProtoFile): any {
+  private processMethod(method: MethodDefinition, protoFile: ProtoFile): ProcessedServiceMethod {
     // Resolve input and output types
     const inputType = this.resolveMessageType(method.inputType, protoFile);
     const outputType = this.resolveMessageType(method.outputType, protoFile);
@@ -257,7 +271,7 @@ export class ServiceGenerator {
       outputType,
       clientStreaming: method.clientStreaming,
       serverStreaming: method.serverStreaming,
-      description: this.generateMethodDescription(method),
+      description: this.generateMethodDescription(method) || '',
     };
   }
   

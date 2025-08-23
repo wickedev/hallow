@@ -113,8 +113,8 @@ describe('ReactHookGenerator Integration', () => {
     
     const content = files[0].content;
     
-    // Verify imports
-    expect(content).toContain("import { useState, useEffect, useCallback } from 'react'");
+    // Verify imports - now includes useRef for memoization
+    expect(content).toContain("import { useState, useEffect, useCallback, useRef } from 'react'");
     
     // Verify UserService hooks are generated
     expect(content).toContain('class UserServiceHooks');
