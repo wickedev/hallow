@@ -701,4 +701,584 @@ describe('MessageGenerator', () => {
       expect(result).toContain('readonly list: readonly number[];');
     });
   });
+
+  describe('Edge Cases and Complex Scenarios', () => {
+    describe('Map Fields', () => {
+      it('should handle map fields correctly', () => {
+        const message: MessageDefinition = {
+          name: 'MessageWithMap',
+          fields: [
+            {
+              name: 'metadata',
+              number: 1,
+              type: 'map<string, string>',
+              repeated: false,
+              optional: false,
+              map: true,
+              mapKeyType: 'string',
+              mapValueType: 'string',
+              options: {}
+            },
+            {
+              name: 'counters',
+              number: 2,
+              type: 'map<string, int32>',
+              repeated: false,
+              optional: false,
+              map: true,
+              mapKeyType: 'string',
+              mapValueType: 'int32',
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(message);
+
+        expect(result).toContain('metadata: Map<string, string>;');
+        expect(result).toContain('counters: Map<string, number>;');
+      });
+
+      it('should handle complex map value types', () => {
+        const message: MessageDefinition = {
+          name: 'ComplexMap',
+          fields: [
+            {
+              name: 'objects',
+              number: 1,
+              type: 'map<string, CustomObject>',
+              repeated: false,
+              optional: false,
+              map: true,
+              mapKeyType: 'string',
+              mapValueType: 'CustomObject',
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(message);
+
+        expect(result).toContain('objects: Map<string, CustomObject>;');
+      });
+    });
+
+    describe('Deeply Nested Messages', () => {
+      it('should handle deeply nested messages', () => {
+        const deeplyNestedMessage: MessageDefinition = {
+          name: 'Level1',
+          fields: [
+            {
+              name: 'level2',
+              number: 1,
+              type: 'Level2',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [
+            {
+              name: 'Level2',
+              fields: [
+                {
+                  name: 'level3',
+                  number: 1,
+                  type: 'Level3',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                }
+              ],
+              nestedMessages: [
+                {
+                  name: 'Level3',
+                  fields: [
+                    {
+                      name: 'value',
+                      number: 1,
+                      type: 'string',
+                      repeated: false,
+                      optional: false,
+                      map: false,
+                      options: {}
+                    }
+                  ],
+                  nestedMessages: [],
+                  nestedEnums: [],
+                  oneofs: [],
+                  options: {}
+                }
+              ],
+              nestedEnums: [],
+              oneofs: [],
+              options: {}
+            }
+          ],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(deeplyNestedMessage);
+
+        expect(result).toContain('export interface Level1');
+        expect(result).toContain('level2: Level2;');
+        expect(result).toContain('export namespace Level1');
+        expect(result).toContain('export interface Level2');
+        expect(result).toContain('level3: Level3;');
+      });
+
+      it('should generate correct namespaces for nested types', () => {
+        const messageWithNested: MessageDefinition = {
+          name: 'OuterMessage',
+          fields: [
+            {
+              name: 'inner',
+              number: 1,
+              type: 'InnerMessage',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [
+            {
+              name: 'InnerMessage',
+              fields: [
+                {
+                  name: 'data',
+                  number: 1,
+                  type: 'string',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                }
+              ],
+              nestedMessages: [],
+              nestedEnums: [],
+              oneofs: [],
+              options: {}
+            }
+          ],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(messageWithNested);
+
+        expect(result).toContain('export namespace OuterMessage');
+        expect(result).toContain('inner: InnerMessage;');
+      });
+    });
+
+    describe('Complex Oneof Fields', () => {
+      it('should handle oneof with complex types', () => {
+        const message: MessageDefinition = {
+          name: 'ComplexOneof',
+          fields: [],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [
+            {
+              name: 'data',
+              fields: [
+                {
+                  name: 'user_info',
+                  number: 1,
+                  type: 'UserInfo',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                },
+                {
+                  name: 'admin_info',
+                  number: 2,
+                  type: 'AdminInfo',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                },
+                {
+                  name: 'guest_mode',
+                  number: 3,
+                  type: 'bool',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                }
+              ]
+            }
+          ],
+          options: {}
+        };
+
+        const result = generator.generateInterface(message);
+
+        expect(result).toContain('{ data: \'user_info\'; user_info: UserInfo }');
+        expect(result).toContain('{ data: \'admin_info\'; admin_info: AdminInfo }');
+        expect(result).toContain('{ data: \'guest_mode\'; guest_mode: boolean }');
+        expect(result).toContain('{ data: undefined }');
+      });
+
+      it('should handle multiple oneofs in same message', () => {
+        const message: MessageDefinition = {
+          name: 'MultipleOneofs',
+          fields: [
+            {
+              name: 'id',
+              number: 1,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [
+            {
+              name: 'auth_method',
+              fields: [
+                {
+                  name: 'password',
+                  number: 2,
+                  type: 'string',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                },
+                {
+                  name: 'token',
+                  number: 3,
+                  type: 'string',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                }
+              ]
+            },
+            {
+              name: 'contact_method',
+              fields: [
+                {
+                  name: 'email',
+                  number: 4,
+                  type: 'string',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                },
+                {
+                  name: 'phone',
+                  number: 5,
+                  type: 'string',
+                  repeated: false,
+                  optional: false,
+                  map: false,
+                  options: {}
+                }
+              ]
+            }
+          ],
+          options: {}
+        };
+
+        const result = generator.generateInterface(message);
+
+        expect(result).toContain('id: string;');
+        expect(result).toContain('authMethod');
+        expect(result).toContain('contactMethod');
+        expect(result).toContain('{ auth_method: \'password\'; password: string }');
+        expect(result).toContain('{ contact_method: \'email\'; email: string }');
+      });
+    });
+
+    describe('Circular References', () => {
+      it('should handle self-referencing messages', () => {
+        const message: MessageDefinition = {
+          name: 'TreeNode',
+          fields: [
+            {
+              name: 'value',
+              number: 1,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'children',
+              number: 2,
+              type: 'TreeNode',
+              repeated: true,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'parent',
+              number: 3,
+              type: 'TreeNode',
+              repeated: false,
+              optional: true,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(message);
+
+        expect(result).toContain('export interface TreeNode');
+        expect(result).toContain('value: string;');
+        expect(result).toContain('children: TreeNode[];');
+        expect(result).toContain('parent?: TreeNode | undefined;');
+      });
+    });
+
+    describe('Serialization Edge Cases', () => {
+      it('should generate serialization for messages with all field types', () => {
+        const complexMessage: MessageDefinition = {
+          name: 'ComplexSerialization',
+          fields: [
+            {
+              name: 'string_field',
+              number: 1,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'repeated_field',
+              number: 2,
+              type: 'int32',
+              repeated: true,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'optional_field',
+              number: 3,
+              type: 'double',
+              repeated: false,
+              optional: true,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'map_field',
+              number: 4,
+              type: 'map<string, bool>',
+              repeated: false,
+              optional: false,
+              map: true,
+              mapKeyType: 'string',
+              mapValueType: 'bool',
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateSerialization(complexMessage);
+
+        expect(result).toContain('export namespace ComplexSerialization');
+        expect(result).toContain('export function encode');
+        expect(result).toContain('export function decode');
+        expect(result).toContain('writer.writeString');
+        expect(result).toContain('writer.writePackedInt32');
+        expect(result).toContain('writer.beginSubMessage');
+      });
+
+      it('should handle empty messages for serialization', () => {
+        const emptyMessage: MessageDefinition = {
+          name: 'EmptyMessage',
+          fields: [],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateSerialization(emptyMessage);
+
+        expect(result).toContain('export namespace EmptyMessage');
+        expect(result).toContain('export function encode');
+        expect(result).toContain('export function decode');
+        // Should still have basic structure even if empty
+        expect(result).toContain('const writer = new BinaryWriter()');
+        expect(result).toContain('const reader = new BinaryReader(bytes)');
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should handle invalid field types gracefully', () => {
+        const messageWithInvalidType: MessageDefinition = {
+          name: 'InvalidType',
+          fields: [
+            {
+              name: 'invalid_field',
+              number: 1,
+              type: 'UnknownType',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        // Should not throw but handle gracefully
+        expect(() => generator.generateInterface(messageWithInvalidType)).not.toThrow();
+        const result = generator.generateInterface(messageWithInvalidType);
+        expect(result).toContain('invalidField: UnknownType;');
+      });
+
+      it('should handle messages with no fields', () => {
+        const emptyMessage: MessageDefinition = {
+          name: 'EmptyFields',
+          fields: [],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(emptyMessage);
+
+        expect(result).toContain('export interface EmptyFields');
+        expect(result).toContain('{\n}'); // Empty interface body with newline
+      });
+    });
+
+    describe('Field Name Conflicts', () => {
+      it('should handle reserved TypeScript keywords', () => {
+        const messageWithKeywords: MessageDefinition = {
+          name: 'KeywordFields',
+          fields: [
+            {
+              name: 'class',
+              number: 1,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'function',
+              number: 2,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'const',
+              number: 3,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(messageWithKeywords);
+
+        // Should escape or handle reserved keywords appropriately
+        expect(result).toContain('KeywordFields');
+        // The exact handling depends on implementation, but should be safe TypeScript
+        expect(result).not.toContain('function function'); // No syntax errors
+      });
+
+      it('should handle camelCase conversion edge cases', () => {
+        const messageWithEdgeCases: MessageDefinition = {
+          name: 'CamelCaseEdges',
+          fields: [
+            {
+              name: 'UPPER_CASE_FIELD',
+              number: 1,
+              type: 'string',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'field_with_numbers_123',
+              number: 2,
+              type: 'int32',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            },
+            {
+              name: 'field__with__double__underscores',
+              number: 3,
+              type: 'bool',
+              repeated: false,
+              optional: false,
+              map: false,
+              options: {}
+            }
+          ],
+          nestedMessages: [],
+          nestedEnums: [],
+          oneofs: [],
+          options: {}
+        };
+
+        const result = generator.generateInterface(messageWithEdgeCases);
+
+        // Should handle various underscore patterns correctly
+        expect(result).toContain('upperCaseField');
+        expect(result).toContain('fieldWithNumbers123');
+        expect(result).toContain('fieldWithDoubleUnderscores');
+      });
+    });
+  });
 });

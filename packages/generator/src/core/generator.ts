@@ -25,6 +25,15 @@ export class Generator {
       generateComments: options.generateComments ?? true,
       templateDir: options.templateDir || '',
       treeShaking: options.treeShaking ?? false,
+      includeOptionMetadata: options.includeOptionMetadata ?? false,
+      optionProcessing: {
+        includeStandard: options.optionProcessing?.includeStandard ?? true,
+        includeCustom: options.optionProcessing?.includeCustom ?? true,
+        excludeStandard: options.optionProcessing?.excludeStandard ?? [],
+        excludeCustom: options.optionProcessing?.excludeCustom ?? [],
+        processNestedObjects: options.optionProcessing?.processNestedObjects ?? true,
+        ...options.optionProcessing,
+      },
     };
     
     // Initialize service generator
