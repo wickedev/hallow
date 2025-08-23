@@ -99,7 +99,7 @@ export class ImportManager {
       groupByCategory: true,
       sortAlphabetically: true,
       addBlankLinesBetweenGroups: true,
-      ...config
+      ...config,
     };
   }
   
@@ -159,7 +159,7 @@ export class ImportManager {
       'Code',
       'Metadata',
       'Request',
-      'UnaryOutput'
+      'UnaryOutput',
     ]);
     
     this.addNamespaceImport('google-protobuf', 'pb');
@@ -198,7 +198,7 @@ export class ImportManager {
     
     // External package imports
     const externalImports = this.generateImportGroup(
-      source => this.isExternalPackage(source)
+      source => this.isExternalPackage(source),
     );
     if (externalImports.length > 0) {
       importGroups.push(externalImports);
@@ -206,7 +206,7 @@ export class ImportManager {
     
     // Internal/relative imports
     const internalImports = this.generateImportGroup(
-      source => !this.isExternalPackage(source)
+      source => !this.isExternalPackage(source),
     );
     if (internalImports.length > 0) {
       importGroups.push(internalImports);
@@ -230,12 +230,12 @@ export class ImportManager {
         const defaultImport = this.defaultImports.get(source);
         const namespaceImport = this.namespaceImports.get(source);
         
-        let importStr = this.buildImportStatement(
+        const importStr = this.buildImportStatement(
           source,
           Array.from(names),
           defaultImport,
           namespaceImport,
-          false
+          false,
         );
         
         imports.push(importStr);
@@ -251,7 +251,7 @@ export class ImportManager {
           Array.from(names),
           undefined,
           undefined,
-          true
+          true,
         );
         
         imports.push(importStr);
@@ -291,7 +291,7 @@ export class ImportManager {
     names: string[],
     defaultName?: string,
     namespaceName?: string,
-    typeOnly: boolean = false
+    typeOnly: boolean = false,
   ): string {
     const parts: string[] = [];
     
@@ -323,7 +323,7 @@ export class ImportManager {
     parts.push(importParts.join(', '));
     parts.push(`from '${source}'`);
     
-    return parts.join(' ') + ';';
+    return `${parts.join(' ')  };`;
   }
   
   /**

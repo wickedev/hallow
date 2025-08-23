@@ -156,7 +156,7 @@ describe('ServiceGenerator', () => {
       expect(result.content).toContain('useGetUser(request: GetUserRequest): GetUserResponse');
     });
     
-    it('should throw error for service without name', async () => {
+    it('should throw error for service without name', () => {
       const invalidService: ServiceDefinition = {
         name: '',
         methods: [],
@@ -164,12 +164,11 @@ describe('ServiceGenerator', () => {
       };
       const protoFile = createTestProtoFile();
       
-      await expect(generator.generateStub(invalidService, protoFile))
-        .rejects
+      expect(() => generator.generateStub(invalidService, protoFile))
         .toThrow(GenerationError);
     });
     
-    it('should throw error for service without methods', async () => {
+    it('should throw error for service without methods', () => {
       const invalidService: ServiceDefinition = {
         name: 'EmptyService',
         methods: [],
@@ -177,12 +176,11 @@ describe('ServiceGenerator', () => {
       };
       const protoFile = createTestProtoFile();
       
-      await expect(generator.generateStub(invalidService, protoFile))
-        .rejects
+      expect(() => generator.generateStub(invalidService, protoFile))
         .toThrow('Service "EmptyService" has no methods');
     });
     
-    it('should throw error for method without input type', async () => {
+    it('should throw error for method without input type', () => {
       const invalidService: ServiceDefinition = {
         name: 'TestService',
         methods: [
@@ -199,12 +197,11 @@ describe('ServiceGenerator', () => {
       };
       const protoFile = createTestProtoFile();
       
-      await expect(generator.generateStub(invalidService, protoFile))
-        .rejects
+      expect(() => generator.generateStub(invalidService, protoFile))
         .toThrow('Method "TestMethod" in service "TestService" has no input type');
     });
     
-    it('should throw error for method without output type', async () => {
+    it('should throw error for method without output type', () => {
       const invalidService: ServiceDefinition = {
         name: 'TestService',
         methods: [
@@ -221,12 +218,11 @@ describe('ServiceGenerator', () => {
       };
       const protoFile = createTestProtoFile();
       
-      await expect(generator.generateStub(invalidService, protoFile))
-        .rejects
+      expect(() => generator.generateStub(invalidService, protoFile))
         .toThrow('Method "TestMethod" in service "TestService" has no output type');
     });
     
-    it('should handle streaming methods correctly', async () => {
+    it('should handle streaming methods correctly', () => {
       const streamingService: ServiceDefinition = {
         name: 'StreamingService',
         methods: [
@@ -260,7 +256,7 @@ describe('ServiceGenerator', () => {
       const protoFile = createTestProtoFile();
       protoFile.services = [streamingService];
       
-      const result = await generator.generateStub(streamingService, protoFile);
+      const result = generator.generateStub(streamingService, protoFile);
       
       expect(result.content).toContain('Client streaming not yet implemented');
       expect(result.content).toContain('Server streaming not yet implemented');

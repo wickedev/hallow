@@ -179,7 +179,7 @@ export class TypeMapper {
   /**
    * Map a field definition to TypeScript type
    */
-  public mapFieldType(field: FieldDefinition, context?: TypeContext): TypeScriptType {
+  public mapFieldType(field: FieldDefinition, _context?: TypeContext): TypeScriptType {
     const imports = new Set<string>();
     let baseType = this.mapScalarType(field.type);
     const nullable = !!(field.optional && this.config.strictNullChecks);
@@ -217,10 +217,8 @@ export class TypeMapper {
       baseType = `${baseType} | undefined`;
     }
     
-    // Add readonly modifier if configured
-    if (this.config.readonlyProperties) {
-      baseType = `readonly ${baseType}`;
-    }
+    // Don't add readonly here - it's handled at the property level in the template
+    // Only arrays get readonly modifier at the type level (handled above)
     
     return {
       type: baseType,
@@ -329,7 +327,7 @@ export class TypeMapper {
     // Check if it's a built-in TypeScript type
     const builtInTypes = [
       'string', 'number', 'boolean', 'any', 'void', 'undefined', 'null',
-      'object', 'bigint', 'symbol', 'never', 'unknown'
+      'object', 'bigint', 'symbol', 'never', 'unknown',
     ];
     
     if (builtInTypes.includes(typeName)) {
@@ -338,7 +336,7 @@ export class TypeMapper {
     
     // Check if it's a built-in JavaScript type
     const jsBuiltInTypes = [
-      'Array', 'Map', 'Set', 'Date', 'RegExp', 'Promise', 'Uint8Array'
+      'Array', 'Map', 'Set', 'Date', 'RegExp', 'Promise', 'Uint8Array',
     ];
     
     if (jsBuiltInTypes.some(type => typeName.includes(type))) {
@@ -365,7 +363,7 @@ export class TypeMapper {
       throw new GenerationError(
         `Field "${field.name}" cannot be both map and repeated`,
         GenerationErrorCode.TYPE_MAPPING_ERROR,
-        { field }
+        { field },
       );
     }
     
@@ -373,7 +371,7 @@ export class TypeMapper {
       throw new GenerationError(
         `Map field "${field.name}" must have both key and value types`,
         GenerationErrorCode.TYPE_MAPPING_ERROR,
-        { field }
+        { field },
       );
     }
     
@@ -381,14 +379,14 @@ export class TypeMapper {
     if (field.map && field.mapKeyType) {
       const validKeyTypes = [
         'int32', 'int64', 'uint32', 'uint64', 'sint32', 'sint64',
-        'fixed32', 'fixed64', 'sfixed32', 'sfixed64', 'bool', 'string'
+        'fixed32', 'fixed64', 'sfixed32', 'sfixed64', 'bool', 'string',
       ];
       
       if (!validKeyTypes.includes(field.mapKeyType)) {
         throw new GenerationError(
           `Invalid map key type "${field.mapKeyType}" for field "${field.name}"`,
           GenerationErrorCode.TYPE_MAPPING_ERROR,
-          { field }
+          { field },
         );
       }
     }

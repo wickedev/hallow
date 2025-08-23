@@ -5,7 +5,8 @@
  * for converting Protocol Buffer names to TypeScript identifiers.
  */
 
-import { MessageDefinition, ServiceDefinition, EnumDefinition } from '../core/proto-types';
+// Note: These types might be used in future implementations
+// import { MessageDefinition, ServiceDefinition, EnumDefinition } from '../core/proto-types';
 
 /**
  * Name resolution configuration
@@ -54,7 +55,7 @@ export class NameResolver {
     'package', 'private', 'protected', 'public', 'readonly', 'require', 'return',
     'set', 'static', 'string', 'super', 'switch', 'symbol', 'this', 'throw',
     'true', 'try', 'type', 'typeof', 'undefined', 'unique', 'unknown', 'var',
-    'void', 'while', 'with', 'yield'
+    'void', 'while', 'with', 'yield',
   ]);
   
   /**
@@ -62,7 +63,7 @@ export class NameResolver {
    */
   private static readonly COMMON_CONFLICTS = new Set([
     'toString', 'valueOf', 'constructor', 'hasOwnProperty', 'isPrototypeOf',
-    'propertyIsEnumerable', 'toLocaleString', '__proto__', 'prototype'
+    'propertyIsEnumerable', 'toLocaleString', '__proto__', 'prototype',
   ]);
   
   private config: NameResolverConfig;
@@ -74,9 +75,9 @@ export class NameResolver {
       preserveProtoCase: false,
       reservedWords: new Set([
         ...NameResolver.TS_RESERVED_WORDS,
-        ...NameResolver.COMMON_CONFLICTS
+        ...NameResolver.COMMON_CONFLICTS,
       ]),
-      ...config
+      ...config,
     };
     
     this.nameRegistry = new Map();
@@ -116,7 +117,7 @@ export class NameResolver {
     
     // Add 'I' prefix for interfaces if needed
     if (isInterface && !tsName.startsWith('I')) {
-      tsName = 'I' + tsName;
+      tsName = `I${  tsName}`;
     }
     
     // Handle reserved words and conflicts
@@ -331,7 +332,7 @@ export class NameResolver {
     }
     
     if (downPath.length > 0) {
-      relativePath += downPath.join('/') + '/';
+      relativePath += `${downPath.join('/')  }/`;
     }
     
     return `${relativePath}${typeName}`;

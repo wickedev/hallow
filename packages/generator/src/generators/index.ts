@@ -8,12 +8,12 @@
 export { 
   ServiceGenerator, 
   createServiceGenerator,
-  type ServiceGeneratorOptions 
+  type ServiceGeneratorOptions, 
 } from './ServiceGenerator';
 
 export {
   MessageGenerator,
   createMessageGenerator,
   type MessageGeneratorOptions,
-  type GeneratedMessage
+  type GeneratedMessage,
 } from './MessageGenerator';

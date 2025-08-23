@@ -42,7 +42,7 @@
   - Create message templates for interface generation
   - _Requirements: 2.1, 2.3_
 
-- [ ] 7. Add google-protobuf serialization code generation
+- [x] 7. Add google-protobuf serialization code generation
   - Implement serialization code generation in MessageGenerator
   - Create encode/decode methods using google-protobuf Writer/Reader
   - Handle different field types in serialization (scalar, repeated, oneof)

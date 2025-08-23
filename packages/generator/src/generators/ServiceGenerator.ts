@@ -9,12 +9,12 @@
 import { 
   ServiceDefinition, 
   MethodDefinition, 
-  ProtoFile 
+  ProtoFile, 
 } from '../core/proto-types';
 import { 
   GeneratedFile, 
   GenerationError, 
-  GenerationErrorCode 
+  GenerationErrorCode, 
 } from '../core/types';
 import { TemplateEngine } from '../core/template-engine';
 import { TypeMapper } from '../utils/TypeMapper';
@@ -130,10 +130,10 @@ export class ServiceGenerator {
    * @param protoFile Parent proto file for context
    * @returns Generated TypeScript file
    */
-  public async generateStub(
+  public generateStub(
     service: ServiceDefinition, 
-    protoFile: ProtoFile
-  ): Promise<GeneratedFile> {
+    protoFile: ProtoFile,
+  ): GeneratedFile {
     try {
       // Validate service definition
       this.validateService(service);
@@ -142,7 +142,7 @@ export class ServiceGenerator {
       const context = this.prepareTemplateContext(service, protoFile);
       
       // Render the template
-      const content = await this.renderServiceTemplate(context);
+      const content = this.renderServiceTemplate(context);
       
       // Generate file metadata
       const fileName = this.generateFileName(service, protoFile);
@@ -159,7 +159,7 @@ export class ServiceGenerator {
       throw new GenerationError(
         `Failed to generate service stub for "${service.name}": ${error instanceof Error ? error.message : String(error)}`,
         GenerationErrorCode.INVALID_PROTO,
-        error
+        error,
       );
     }
   }
@@ -185,7 +185,7 @@ export class ServiceGenerator {
    */
   private prepareTemplateContext(
     service: ServiceDefinition, 
-    protoFile: ProtoFile
+    protoFile: ProtoFile,
   ): ServiceTemplateContext {
     // Reset import manager for this service
     this.importManager.clear();
@@ -217,11 +217,11 @@ export class ServiceGenerator {
     // For now, manually add the imports we need
     imports.push({
       imports: ['grpc'],
-      source: '@improbable-eng/grpc-web'
+      source: '@improbable-eng/grpc-web',
     });
     imports.push({
       imports: ['Message'],
-      source: 'google-protobuf'
+      source: 'google-protobuf',
     });
     
     return {
@@ -271,7 +271,7 @@ export class ServiceGenerator {
     // Check if it's a message from the same file
     const localMessage = protoFile.messages.find(msg => 
       msg.name === cleanTypeName || 
-      (protoFile.package && `${protoFile.package}.${msg.name}` === cleanTypeName)
+      (protoFile.package && `${protoFile.package}.${msg.name}` === cleanTypeName),
     );
     
     if (localMessage) {
@@ -288,7 +288,7 @@ export class ServiceGenerator {
   /**
    * Render the service template
    */
-  private async renderServiceTemplate(context: ServiceTemplateContext): Promise<string> {
+  private renderServiceTemplate(context: ServiceTemplateContext): string {
     return this.templateEngine.render('service', context);
   }
   
@@ -343,14 +343,14 @@ export class ServiceGenerator {
     if (!service.name) {
       throw new GenerationError(
         'Service name is required',
-        GenerationErrorCode.INVALID_PROTO
+        GenerationErrorCode.INVALID_PROTO,
       );
     }
     
     if (!service.methods || service.methods.length === 0) {
       throw new GenerationError(
         `Service "${service.name}" has no methods`,
-        GenerationErrorCode.INVALID_PROTO
+        GenerationErrorCode.INVALID_PROTO,
       );
     }
     
@@ -359,21 +359,21 @@ export class ServiceGenerator {
       if (!method.name) {
         throw new GenerationError(
           `Method in service "${service.name}" has no name`,
-          GenerationErrorCode.INVALID_PROTO
+          GenerationErrorCode.INVALID_PROTO,
         );
       }
       
       if (!method.inputType) {
         throw new GenerationError(
           `Method "${method.name}" in service "${service.name}" has no input type`,
-          GenerationErrorCode.INVALID_PROTO
+          GenerationErrorCode.INVALID_PROTO,
         );
       }
       
       if (!method.outputType) {
         throw new GenerationError(
           `Method "${method.name}" in service "${service.name}" has no output type`,
-          GenerationErrorCode.INVALID_PROTO
+          GenerationErrorCode.INVALID_PROTO,
         );
       }
     });

@@ -341,9 +341,9 @@ describe('MessageGenerator', () => {
 
       const result = generator.generateSerialization(message);
 
-      expect(result).toContain('for (const item of message.items)');
-      expect(result).toContain('writer.writeInt32(1, item)');
-      expect(result).toContain('message.items.push(reader.readInt32())');
+      // int32 repeated fields are packed by default in protobuf3
+      expect(result).toContain('writer.writePackedInt32(1, message.items)');
+      expect(result).toContain('message.items = reader.readPackedInt32() || []');
     });
 
     it('should generate serialization for map fields', () => {
@@ -371,8 +371,12 @@ describe('MessageGenerator', () => {
       const result = generator.generateSerialization(message);
 
       expect(result).toContain('for (const [key, value] of message.data)');
-      expect(result).toContain('writer.writeMessage(1, entry)');
-      expect(result).toContain('message.data.set(entry.key, entry.value)');
+      expect(result).toContain('writer.beginSubMessage(1)');
+      expect(result).toContain('writer.writeString(1, key)');
+      expect(result).toContain('writer.writeInt32(2, value)');
+      expect(result).toContain('writer.endSubMessage(1)');
+      expect(result).toContain('reader.readMessage((r) => {');
+      expect(result).toContain('message.data.set(key, value)');
     });
 
     it('should generate serialization for oneof fields', () => {
@@ -414,7 +418,8 @@ describe('MessageGenerator', () => {
       expect(result).toContain("if (message.choice === 'text')");
       expect(result).toContain('writer.writeString(1, message.text)');
       expect(result).toContain("if (message.choice === 'number')");
-      expect(result).toContain('writer.writeInt32(2, message.number)');
+      // 'number' is a reserved word in JS, so it gets escaped to _number
+      expect(result).toContain('writer.writeInt32(2, message._number)');
     });
 
     it('should handle all scalar types correctly', () => {
@@ -495,7 +500,7 @@ describe('MessageGenerator', () => {
       expect(result.serialization).toContain('export function encode');
       expect(result.serialization).toContain('export function decode');
 
-      expect(result.imports).toContain('import { Writer, Reader } from \'google-protobuf\';');
+      expect(result.imports).toContain('import { BinaryReader, BinaryWriter } from \'google-protobuf\';');
       expect(result.exports).toContain('export { CompleteMessage }');
     });
 

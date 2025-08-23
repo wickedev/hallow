@@ -5,18 +5,24 @@ export namespace {{interfaceName}} {
    * @returns Encoded bytes
    */
   export function encode(message: {{interfaceName}}): Uint8Array {
-    const writer = new Writer();
+    const writer = new BinaryWriter();
     
     {{#each fields}}
     if (message.{{camelCaseName}} !== undefined) {
       {{#if repeated}}
+      {{#if packed}}
+      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
+      {{else}}
       for (const item of message.{{camelCaseName}}) {
         writer.{{serializerMethod}}({{number}}, item);
       }
+      {{/if}}
       {{else if map}}
       for (const [key, value] of message.{{camelCaseName}}) {
-        const entry = { key, value };
-        writer.{{serializerMethod}}({{number}}, entry);
+        writer.beginSubMessage({{number}});
+        writer.{{mapKeyWriteMethod}}(1, key);
+        writer.{{mapValueWriteMethod}}(2, value);
+        writer.endSubMessage({{number}});
       }
       {{else}}
       writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
@@ -25,9 +31,9 @@ export namespace {{interfaceName}} {
     {{/each}}
     
     {{#each oneofs}}
-    {{#each fields}}
-    if (message.{{../camelCaseName}} === '{{name}}') {
-      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
+    {{#each this.fields}}
+    if (message.{{../camelCaseName}} === '{{this.name}}') {
+      writer.{{this.serializerMethod}}({{this.number}}, message.{{this.camelCaseName}});
     }
     {{/each}}
     {{/each}}
@@ -41,7 +47,7 @@ export namespace {{interfaceName}} {
    * @returns Decoded message
    */
   export function decode(bytes: Uint8Array): {{interfaceName}} {
-    const reader = new Reader(bytes);
+    const reader = new BinaryReader(bytes);
     const message: {{interfaceName}} = {
       {{#each fields}}
       {{#unless optional}}
@@ -51,32 +57,39 @@ export namespace {{interfaceName}} {
     };
 
     while (reader.nextField()) {
-      const tag = reader.getFieldNumber();
+      const fieldNumber = reader.getFieldNumber();
       
-      switch (tag) {
+      switch (fieldNumber) {
         {{#each fields}}
         case {{number}}:
           {{#if repeated}}
+          {{#if packed}}
+          message.{{camelCaseName}} = reader.{{deserializerMethod}}() || [];
+          {{else}}
           if (!message.{{camelCaseName}}) {
             message.{{camelCaseName}} = [];
           }
           message.{{camelCaseName}}.push(reader.{{deserializerMethod}}());
+          {{/if}}
           {{else if map}}
           if (!message.{{camelCaseName}}) {
             message.{{camelCaseName}} = new Map();
           }
-          const entry = reader.{{deserializerMethod}}();
-          message.{{camelCaseName}}.set(entry.key, entry.value);
+          reader.readMessage((r) => {
+            const key = r.{{mapKeyReadMethod}}();
+            const value = r.{{mapValueReadMethod}}();
+            message.{{camelCaseName}}.set(key, value);
+          });
           {{else}}
           message.{{camelCaseName}} = reader.{{deserializerMethod}}();
           {{/if}}
           break;
         {{/each}}
         {{#each oneofs}}
-        {{#each fields}}
-        case {{number}}:
-          message.{{../../camelCaseName}} = '{{name}}';
-          message.{{camelCaseName}} = reader.{{deserializerMethod}}();
+        {{#each this.fields}}
+        case {{this.number}}:
+          message.{{../camelCaseName}} = '{{this.name}}';
+          message.{{this.camelCaseName}} = reader.{{this.deserializerMethod}}();
           break;
         {{/each}}
         {{/each}}
