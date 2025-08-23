@@ -70,7 +70,7 @@
   - Resolve package namespace imports correctly
   - _Requirements: 5.3, 5.4_
 
-- [ ] 11. Implement streaming RPC support
+- [x] 11. Implement streaming RPC support
   - Extend ServiceGenerator to handle streaming methods
   - Create templates for client streaming, server streaming, and bidirectional streaming
   - Generate proper Observable/Stream-based APIs for streaming

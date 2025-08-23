@@ -4,13 +4,48 @@
  */
 
 {{#each imports}}
-import {{#if isDefault}}{{name}}{{else}}{{{join imports ", "}}}{{/if}} from '{{source}}';
+import {{#if isDefault}}{{name}}{{else}}{ {{join imports ", "}} }{{/if}} from '{{source}}';
 {{/each}}
+
+/**
+ * Cancellation token for streaming operations
+ */
+export interface CancellationToken {
+  cancel(): void;
+  readonly isCancelled: boolean;
+  onCancel(callback: () => void): void;
+}
+
+/**
+ * Implementation of cancellation token
+ */
+class CancellationTokenImpl implements CancellationToken {
+  private _isCancelled = false;
+  private readonly cancelCallbacks: Array<() => void> = [];
+  
+  get isCancelled(): boolean {
+    return this._isCancelled;
+  }
+  
+  cancel(): void {
+    if (this._isCancelled) return;
+    this._isCancelled = true;
+    this.cancelCallbacks.forEach(callback => callback());
+  }
+  
+  onCancel(callback: () => void): void {
+    if (this._isCancelled) {
+      callback();
+    } else {
+      this.cancelCallbacks.push(callback);
+    }
+  }
+}
 
 {{#each services}}
 /**
  * {{#if description}}{{description}}{{else}}{{pascalName}} service client{{/if}}
- * Generated gRPC service stub with Promise API
+ * Generated gRPC service stub with Promise and Streaming APIs
  */
 export class {{pascalName}}Stub {
   private readonly client: any;
@@ -28,19 +63,167 @@ export class {{pascalName}}Stub {
   }
 
   {{#each methods}}
+  {{#if serverStreaming}}
+  {{#if clientStreaming}}
+  /**
+   * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
+   * @returns Observable stream for bidirectional streaming
+   */
+  public {{camelName}}(): {
+    send: (request: {{inputType}}) => void;
+    responses: Observable<{{outputType}}>;
+    complete: () => void;
+    cancel: () => void;
+  } {
+    const requestSubject = new Subject<{{inputType}}>();
+    const responseSubject = new Subject<{{outputType}}>();
+    const cancellationToken = new CancellationTokenImpl();
+    
+    // Set up the bidirectional stream
+    // TODO: Implement actual gRPC-web bidirectional streaming
+    const subscription = requestSubject.pipe(
+      takeUntil(responseSubject.pipe(finalize(() => cancellationToken.cancel())))
+    ).subscribe({
+      next: (request) => {
+        // TODO: Send request to server
+        console.log('Sending request:', request);
+      },
+      error: (err) => {
+        responseSubject.error(err);
+      },
+      complete: () => {
+        // Signal stream completion to server
+        responseSubject.complete();
+      }
+    });
+    
+    cancellationToken.onCancel(() => {
+      subscription.unsubscribe();
+      responseSubject.complete();
+    });
+    
+    return {
+      send: (request: {{inputType}}) => {
+        if (!cancellationToken.isCancelled) {
+          requestSubject.next(request);
+        }
+      },
+      responses: responseSubject.asObservable(),
+      complete: () => {
+        requestSubject.complete();
+      },
+      cancel: () => {
+        cancellationToken.cancel();
+      }
+    };
+  }
+  {{else}}
+  /**
+   * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
+   * @param request - {{inputType}} request message
+   * @returns Observable stream of {{outputType}} messages
+   */
+  public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
+    return new Observable<{{outputType}}>(observer => {
+      const cancellationToken = new CancellationTokenImpl();
+      
+      // TODO: Implement actual gRPC-web server streaming call
+      // 1. Serialize request message
+      // 2. Open streaming connection to baseUrl + service/method
+      // 3. For each response:
+      //    - Deserialize response message
+      //    - Call observer.next(response)
+      // 4. On stream end: Call observer.complete()
+      // 5. On error: Call observer.error(error)
+      
+      // Placeholder implementation
+      const mockResponses = [
+        // Mock response data would go here
+      ];
+      
+      let index = 0;
+      const interval = setInterval(() => {
+        if (cancellationToken.isCancelled) {
+          clearInterval(interval);
+          return;
+        }
+        
+        if (index < mockResponses.length) {
+          observer.next(mockResponses[index++] as any);
+        } else {
+          clearInterval(interval);
+          observer.complete();
+        }
+      }, 100);
+      
+      cancellationToken.onCancel(() => {
+        clearInterval(interval);
+      });
+      
+      // Return teardown logic
+      return () => {
+        cancellationToken.cancel();
+      };
+    });
+  }
+  {{/if}}
+  {{else if clientStreaming}}
+  /**
+   * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
+   * @returns Object with send method and response promise
+   */
+  public {{camelName}}(): {
+    send: (request: {{inputType}}) => void;
+    complete: () => Promise<{{outputType}}>;
+    cancel: () => void;
+  } {
+    const requests: {{inputType}}[] = [];
+    const cancellationToken = new CancellationTokenImpl();
+    let isCompleted = false;
+    
+    return {
+      send: (request: {{inputType}}) => {
+        if (!isCompleted && !cancellationToken.isCancelled) {
+          requests.push(request);
+          // TODO: Stream request to server
+        }
+      },
+      complete: async () => {
+        if (isCompleted || cancellationToken.isCancelled) {
+          throw new Error('Stream already completed or cancelled');
+        }
+        isCompleted = true;
+        
+        // TODO: Implement actual gRPC-web client streaming
+        // 1. Send all accumulated requests
+        // 2. Signal stream completion
+        // 3. Wait for server response
+        // 4. Deserialize and return response
+        
+        return new Promise<{{outputType}}>((resolve, reject) => {
+          if (cancellationToken.isCancelled) {
+            reject(new Error('Stream cancelled'));
+            return;
+          }
+          
+          // Placeholder implementation
+          setTimeout(() => {
+            reject(new Error('Client streaming not yet implemented for {{camelName}}'));
+          }, 0);
+        });
+      },
+      cancel: () => {
+        cancellationToken.cancel();
+      }
+    };
+  }
+  {{else}}
   /**
    * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
    * @param request - {{inputType}} request message
    * @returns Promise<{{outputType}}> - Response message
    */
   public async {{camelName}}(request: {{inputType}}): Promise<{{outputType}}> {
-    {{#if serverStreaming}}
-    // Server streaming RPC
-    throw new Error('Server streaming not yet implemented for {{camelName}}');
-    {{else if clientStreaming}}
-    // Client streaming RPC
-    throw new Error('Client streaming not yet implemented for {{camelName}}');
-    {{else}}
     // Unary RPC call
     return new Promise((resolve, reject) => {
       // TODO: Implement actual gRPC-web call
@@ -54,8 +237,8 @@ export class {{pascalName}}Stub {
         reject(new Error('gRPC method {{../name}}.{{camelName}} not yet implemented'));
       }, 0);
     });
-    {{/if}}
   }
+  {{/if}}
 
   {{/each}}
 }
@@ -73,6 +256,44 @@ export class {{pascalName}}HookStub {
   }
 
   {{#each methods}}
+  {{#if serverStreaming}}
+  /**
+   * React Hook for {{camelName}} streaming method
+   * @param request - {{inputType}} request message
+   * @returns Hook state with stream, loading, and error
+   */
+  public use{{pascalName}}(request: {{inputType}}): {
+    data: {{outputType}}[];
+    loading: boolean;
+    error?: Error;
+    subscription?: Subscription;
+  } {
+    // TODO: Implement React Hook for streaming with useState and useEffect
+    // 1. Set loading to true
+    // 2. Subscribe to stub.{{camelName}}(request)
+    // 3. Accumulate responses in data array
+    // 4. Update error on failure
+    // 5. Set loading to false when stream completes
+    // 6. Return subscription for manual cancellation
+    
+    throw new Error('React Hook use{{pascalName}} not yet implemented for streaming');
+  }
+  {{else if clientStreaming}}
+  /**
+   * React Hook for {{camelName}} client streaming method
+   * @returns Hook state with send method and response data
+   */
+  public use{{pascalName}}(): {
+    send: (request: {{inputType}}) => void;
+    complete: () => Promise<{{outputType}}>;
+    data?: {{outputType}};
+    loading: boolean;
+    error?: Error;
+  } {
+    // TODO: Implement React Hook for client streaming
+    throw new Error('React Hook use{{pascalName}} not yet implemented for client streaming');
+  }
+  {{else}}
   /**
    * React Hook for {{camelName}} method
    * @param request - {{inputType}} request message
@@ -91,6 +312,7 @@ export class {{pascalName}}HookStub {
     
     throw new Error('React Hook use{{pascalName}} not yet implemented');
   }
+  {{/if}}
 
   {{/each}}
 }
@@ -109,6 +331,32 @@ export class {{pascalName}}SuspenseStub {
   }
 
   {{#each methods}}
+  {{#if serverStreaming}}
+  /**
+   * Suspense Hook for {{camelName}} streaming method
+   * Note: Suspense with streaming requires careful handling
+   * @param request - {{inputType}} request message
+   * @returns Observable stream (consider using regular hooks for streaming)
+   */
+  public use{{pascalName}}(request: {{inputType}}): Observable<{{outputType}}> {
+    // Streaming with Suspense is complex - returning Observable directly
+    return this.stub.{{camelName}}(request);
+  }
+  {{else if clientStreaming}}
+  /**
+   * Suspense Hook for {{camelName}} client streaming method
+   * Note: Client streaming with Suspense requires special handling
+   * @returns Streaming interface
+   */
+  public use{{pascalName}}(): {
+    send: (request: {{inputType}}) => void;
+    complete: () => Promise<{{outputType}}>;
+    cancel: () => void;
+  } {
+    // Client streaming with Suspense - returning interface directly
+    return this.stub.{{camelName}}();
+  }
+  {{else}}
   /**
    * Suspense Hook for {{camelName}} method
    * @param request - {{inputType}} request message
@@ -123,6 +371,7 @@ export class {{pascalName}}SuspenseStub {
     
     throw new Error('Suspense Hook use{{pascalName}} not yet implemented');
   }
+  {{/if}}
 
   {{/each}}
 }

@@ -17,6 +17,8 @@ describe('ServiceGenerator', () => {
     generator = new ServiceGenerator({
       serverUrl: 'http://localhost:8080',
       generateComments: true,
+      generateReactHooks: false,
+      generateSuspenseHooks: false,
     });
   });
   
@@ -129,7 +131,8 @@ describe('ServiceGenerator', () => {
       expect(result.path).toBe('test.service.ts');
       expect(result.content).toContain('export class TestServiceStub');
       expect(result.content).toContain('async getUser(request: GetUserRequest): Promise<GetUserResponse>');
-      expect(result.content).toContain('async listUsers(request: ListUsersRequest): Promise<ListUsersResponse>');
+      // ListUsers is a server streaming method, so it should return Observable
+      expect(result.content).toContain('listUsers(request: ListUsersRequest): Observable<ListUsersResponse>');
     });
     
     it('should include React hooks when option is enabled', async () => {
@@ -258,8 +261,125 @@ describe('ServiceGenerator', () => {
       
       const result = generator.generateStub(streamingService, protoFile);
       
-      expect(result.content).toContain('Client streaming not yet implemented');
-      expect(result.content).toContain('Server streaming not yet implemented');
+      // Check for streaming imports
+      expect(result.content).toContain('import { Observable, Subject, Subscription }');
+      expect(result.content).toContain('from \'rxjs\'');
+      
+      // Check for cancellation token
+      expect(result.content).toContain('export interface CancellationToken');
+      expect(result.content).toContain('class CancellationTokenImpl');
+      
+      // Check client streaming method signature
+      expect(result.content).toContain('public clientStream(): {');
+      expect(result.content).toContain('send: (request: Request) => void');
+      expect(result.content).toContain('complete: () => Promise<Response>');
+      expect(result.content).toContain('cancel: () => void');
+      
+      // Check server streaming method signature  
+      expect(result.content).toContain('public serverStream(request: Request): Observable<Response>');
+      
+      // Check bidirectional streaming method signature
+      expect(result.content).toContain('public bidiStream(): {');
+      expect(result.content).toContain('responses: Observable<Response>');
+    });
+    
+    it('should include streaming-specific error handling', () => {
+      const streamingService: ServiceDefinition = {
+        name: 'StreamService',
+        methods: [
+          {
+            name: 'StreamData',
+            inputType: 'StreamRequest',
+            outputType: 'StreamResponse',
+            clientStreaming: false,
+            serverStreaming: true,
+            options: {},
+          },
+        ],
+        options: {},
+      };
+      const protoFile = createTestProtoFile();
+      protoFile.services = [streamingService];
+      
+      const result = generator.generateStub(streamingService, protoFile);
+      
+      // Check for Observable error handling
+      expect(result.content).toContain('Observable<StreamResponse>');
+      expect(result.content).toContain('observer =>');
+      expect(result.content).toContain('observer.next');
+      expect(result.content).toContain('observer.complete');
+      expect(result.content).toContain('observer.error');
+      
+      // Check for cancellation token usage
+      expect(result.content).toContain('cancellationToken');
+      expect(result.content).toContain('cancellationToken.cancel()');
+      expect(result.content).toContain('cancellationToken.isCancelled');
+    });
+    
+    it('should handle React hooks for streaming methods', () => {
+      generator.updateOptions({ generateReactHooks: true });
+      
+      const streamingService: ServiceDefinition = {
+        name: 'HookStreamService',
+        methods: [
+          {
+            name: 'StreamUpdates',
+            inputType: 'UpdateRequest',
+            outputType: 'UpdateResponse',
+            clientStreaming: false,
+            serverStreaming: true,
+            options: {},
+          },
+        ],
+        options: {},
+      };
+      const protoFile = createTestProtoFile();
+      protoFile.services = [streamingService];
+      
+      const result = generator.generateStub(streamingService, protoFile);
+      
+      // Check for React Hook with streaming support
+      expect(result.content).toContain('export class HookStreamServiceHookStub');
+      expect(result.content).toContain('data: UpdateResponse[]');
+      expect(result.content).toContain('subscription?: Subscription');
+    });
+    
+    it('should handle mixed streaming and unary methods in same service', () => {
+      const mixedService: ServiceDefinition = {
+        name: 'MixedService',
+        methods: [
+          {
+            name: 'UnaryCall',
+            inputType: 'UnaryRequest',
+            outputType: 'UnaryResponse',
+            clientStreaming: false,
+            serverStreaming: false,
+            options: {},
+          },
+          {
+            name: 'StreamingCall',
+            inputType: 'StreamRequest',
+            outputType: 'StreamResponse',
+            clientStreaming: false,
+            serverStreaming: true,
+            options: {},
+          },
+        ],
+        options: {},
+      };
+      const protoFile = createTestProtoFile();
+      protoFile.services = [mixedService];
+      
+      const result = generator.generateStub(mixedService, protoFile);
+      
+      // Should include streaming imports even with unary methods
+      expect(result.content).toContain('import { Observable, Subject, Subscription }');
+      
+      // Check unary method signature
+      expect(result.content).toContain('public async unaryCall(request: UnaryRequest): Promise<UnaryResponse>');
+      
+      // Check streaming method signature
+      expect(result.content).toContain('public streamingCall(request: StreamRequest): Observable<StreamResponse>');
     });
   });
   
