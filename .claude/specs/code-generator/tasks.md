@@ -91,7 +91,7 @@
   - Test template engine with various template scenarios
   - _Requirements: 6.1, 6.3_
 
-- [ ] 14. Implement integration tests with real proto files
+- [x] 14. Implement integration tests with real proto files
   - Create test fixtures with complex proto definitions
   - Test end-to-end code generation from AST to working TypeScript
   - Verify generated code compiles without TypeScript errors
