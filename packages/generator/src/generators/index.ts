@@ -17,3 +17,9 @@ export {
   type MessageGeneratorOptions,
   type GeneratedMessage,
 } from './MessageGenerator';
+
+export {
+  ReactHookGenerator,
+  createReactHookGenerator,
+  type ReactHookGeneratorOptions,
+} from './ReactHookGenerator';
