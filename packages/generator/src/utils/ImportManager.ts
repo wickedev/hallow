@@ -5,6 +5,8 @@
  * import statements for the generated TypeScript code.
  */
 
+import { ImportDependency } from './ImportResolver';
+
 /**
  * Import type enumeration
  */
@@ -425,6 +427,138 @@ export class ImportManager {
     const cloned = new ImportManager(this.config);
     cloned.merge(this);
     return cloned;
+  }
+  
+  /**
+   * Add imports from ImportResolver dependencies
+   */
+  public addFromDependencies(dependencies: ImportDependency[]): void {
+    dependencies.forEach(dep => {
+      if (dep.useNamespace && dep.namespaceName) {
+        // Add namespace import
+        this.addNamespaceImport(dep.source, dep.namespaceName);
+      } else {
+        // Add named imports
+        dep.types.forEach(type => {
+          this.addNamedImport(dep.source, type, false);
+        });
+      }
+    });
+  }
+  
+  /**
+   * Add protobuf message imports
+   */
+  public addProtobufMessageImports(messages: string[], source: string = './messages'): void {
+    messages.forEach(message => {
+      this.addNamedImport(source, message, false);
+    });
+  }
+  
+  /**
+   * Add cross-file proto imports
+   */
+  public addCrossFileImport(
+    typeName: string,
+    fromFile: string,
+    isTypeOnly: boolean = false,
+  ): void {
+    const importPath = fromFile.replace(/\.proto$/, '');
+    this.addNamedImport(importPath, typeName, isTypeOnly);
+  }
+  
+  /**
+   * Add well-known protobuf type imports
+   */
+  public addWellKnownTypeImport(typeName: string, importPath: string): void {
+    this.addNamedImport(importPath, typeName, false);
+  }
+  
+  /**
+   * Generate organized imports for proto-generated code
+   */
+  public generateProtoImports(): string {
+    const importGroups: string[][] = [];
+    
+    // Side-effect imports
+    if (this.sideEffectImports.size > 0) {
+      const sideEffects = Array.from(this.sideEffectImports)
+        .sort()
+        .map(source => `import '${source}';`);
+      importGroups.push(sideEffects);
+    }
+    
+    // google-protobuf and grpc-web imports (external)
+    const coreImports = this.generateImportGroup(
+      source => source.startsWith('google-protobuf') || source.startsWith('@improbable-eng/grpc-web'),
+    );
+    if (coreImports.length > 0) {
+      importGroups.push(coreImports);
+    }
+    
+    // Other external package imports
+    const externalImports = this.generateImportGroup(
+      source => this.isExternalPackage(source) && 
+                !source.startsWith('google-protobuf') && 
+                !source.startsWith('@improbable-eng/grpc-web'),
+    );
+    if (externalImports.length > 0) {
+      importGroups.push(externalImports);
+    }
+    
+    // Internal/relative imports
+    const internalImports = this.generateImportGroup(
+      source => !this.isExternalPackage(source),
+    );
+    if (internalImports.length > 0) {
+      importGroups.push(internalImports);
+    }
+    
+    // Join groups with blank lines if configured
+    const separator = this.config.addBlankLinesBetweenGroups ? '\n\n' : '\n';
+    return importGroups.map(group => group.join('\n')).join(separator);
+  }
+  
+  /**
+   * Check if imports include a specific type
+   */
+  public hasType(typeName: string): boolean {
+    // Check in regular imports
+    for (const types of this.regularImports.values()) {
+      if (types.has(typeName)) {
+        return true;
+      }
+    }
+    
+    // Check in type imports
+    for (const types of this.typeImports.values()) {
+      if (types.has(typeName)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Get the source for a specific type
+   */
+  public getTypeSource(typeName: string): string | null {
+    // Check in regular imports
+    for (const [source, types] of this.regularImports.entries()) {
+      if (types.has(typeName)) {
+        return source;
+      }
+    }
+    
+    // Check in type imports
+    for (const [source, types] of this.typeImports.entries()) {
+      if (types.has(typeName)) {
+        return source;
+      }
+    }
+    
+    return null;
   }
 }
 

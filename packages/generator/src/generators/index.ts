@@ -23,3 +23,8 @@ export {
   createReactHookGenerator,
   type ReactHookGeneratorOptions,
 } from './ReactHookGenerator';
+
+export {
+  EnhancedServiceGenerator,
+  type EnhancedServiceGeneratorOptions,
+} from './EnhancedServiceGenerator';

@@ -63,7 +63,7 @@
   - Generate proper hook state management code
   - _Requirements: 3.3, 3.4_
 
-- [ ] 10. Add import and dependency management
+- [x] 10. Add import and dependency management
   - Create ImportManager class for managing import statements
   - Generate proper imports for google-protobuf and grpc-web
   - Handle cross-file type references and imports
