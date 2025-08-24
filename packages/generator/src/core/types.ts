@@ -156,6 +156,11 @@ export interface GeneratorOptions {
      */
     usedEnums?: string[];
   };
+  
+  /**
+   * Enable performance monitoring and optimization
+   */
+  enablePerformanceMonitoring?: boolean;
 }
 
 /**

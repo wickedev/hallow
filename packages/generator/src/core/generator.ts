@@ -9,6 +9,16 @@ import { ProtoFile } from './proto-types';
 import { ServiceGenerator } from '../generators/ServiceGenerator';
 import { CodeOptimizer, UsageTrackingOptions } from '../optimizers/CodeOptimizer';
 import { BundleAnalyzer } from '../optimizers/BundleAnalyzer';
+import { 
+  PerformanceMonitor, 
+  createPerformanceMonitor,
+  MemoryEfficientGenerator,
+  createMemoryEfficientGenerator,
+  TemplateOptimizer,
+  createTemplateOptimizer,
+  TypeResolutionCache,
+  createTypeResolutionCache,
+} from '../performance';
 
 /**
  * Main code generator class
@@ -18,6 +28,10 @@ export class Generator {
   private serviceGenerator: ServiceGenerator;
   private codeOptimizer?: CodeOptimizer;
   private bundleAnalyzer?: BundleAnalyzer;
+  private performanceMonitor?: PerformanceMonitor;
+  private memoryEfficientGenerator?: MemoryEfficientGenerator;
+  private templateOptimizer?: TemplateOptimizer;
+  private typeResolutionCache?: TypeResolutionCache;
   
   constructor(options: GeneratorOptions = {}) {
     this.options = {
@@ -52,6 +66,7 @@ export class Generator {
         ...options.optimization,
       },
       usageTracking: options.usageTracking || {},
+      enablePerformanceMonitoring: options.enablePerformanceMonitoring ?? false,
     };
     
     // Initialize service generator
@@ -83,6 +98,43 @@ export class Generator {
         sizeErrorThreshold: this.options.optimization.bundleSizeTarget || 500,
       });
     }
+    
+    // Initialize performance monitoring if enabled
+    if (options.enablePerformanceMonitoring) {
+      this.performanceMonitor = createPerformanceMonitor({
+        maxGenerationTime: 30000, // 30 seconds
+        maxMemoryUsage: 500 * 1024 * 1024, // 500MB
+        warnThresholds: {
+          generationTime: 10000, // 10 seconds
+          memoryUsage: 300 * 1024 * 1024, // 300MB
+        },
+      });
+      
+      // Initialize memory-efficient generator for large files
+      this.memoryEfficientGenerator = createMemoryEfficientGenerator({
+        chunkSize: 20,
+        memoryLimit: 400 * 1024 * 1024, // 400MB
+        useStreaming: true,
+        gcInterval: 50,
+        cacheStrategy: 'lru',
+      });
+      
+      // Initialize template optimizer
+      this.templateOptimizer = createTemplateOptimizer({
+        cacheCompiledTemplates: true,
+        maxCacheSize: 100,
+        precompile: true,
+        minifyOutput: this.options.optimization?.minify,
+      });
+      
+      // Initialize type resolution cache
+      this.typeResolutionCache = createTypeResolutionCache({
+        maxSize: 1000,
+        ttl: 60000,
+        detectCircular: true,
+        maxDepth: 20,
+      });
+    }
   }
   
   /**
@@ -91,8 +143,19 @@ export class Generator {
    * @returns Generated code result
    */
   async generateCode(protoFile: ProtoFile): Promise<GeneratedCode> {
+    // Start performance monitoring if enabled
+    if (this.performanceMonitor) {
+      this.performanceMonitor.start();
+    }
+    
     try {
+      if (this.performanceMonitor) {
+        this.performanceMonitor.startOperation('validation');
+      }
       this.validateProtoFile(protoFile);
+      if (this.performanceMonitor) {
+        this.performanceMonitor.endOperation();
+      }
       
       let files: GeneratedFile[] = [];
       const metadata = {
@@ -103,10 +166,62 @@ export class Generator {
         enumsCount: protoFile.enums.length,
       };
       
-      // Generate service stubs
-      if (protoFile.services.length > 0) {
-        const serviceFiles = await this.serviceGenerator.generateStubs(protoFile);
-        files.push(...serviceFiles);
+      // Check if we should use memory-efficient generation for large files
+      const isLargeFile = protoFile.services.length > 50 || 
+                         protoFile.messages.length > 200;
+      
+      if (isLargeFile && this.memoryEfficientGenerator) {
+        // Use memory-efficient chunked generation
+        if (this.performanceMonitor) {
+          this.performanceMonitor.startOperation('chunked_generation');
+        }
+        
+        for await (const chunk of this.memoryEfficientGenerator.generateInChunks(
+          protoFile,
+          async (items, type) => {
+            if (type === 'service') {
+              return await this.serviceGenerator.generateStubs({
+                ...protoFile,
+                services: items as any,
+              });
+            }
+            // TODO: Handle messages and enums
+            return [];
+          },
+        )) {
+          files.push(...chunk);
+        }
+        
+        if (this.performanceMonitor) {
+          this.performanceMonitor.endOperation();
+        }
+      } else {
+        // Standard generation
+        if (this.performanceMonitor) {
+          this.performanceMonitor.startOperation('service_generation');
+        }
+        
+        // Generate service stubs
+        if (protoFile.services.length > 0) {
+          const serviceFiles = await this.serviceGenerator.generateStubs(protoFile);
+          files.push(...serviceFiles);
+          
+          // Record file metrics
+          if (this.performanceMonitor) {
+            serviceFiles.forEach(file => {
+              this.performanceMonitor!.recordFileGeneration({
+                fileName: file.path,
+                fileSize: file.content.length,
+                generationTime: 0, // Will be calculated by operation
+                linesOfCode: file.content.split('\n').length,
+              });
+            });
+          }
+        }
+        
+        if (this.performanceMonitor) {
+          this.performanceMonitor.endOperation();
+        }
       }
       
       // TODO: Generate message types
@@ -114,11 +229,21 @@ export class Generator {
       
       // Apply optimizations if enabled
       if (this.codeOptimizer) {
+        if (this.performanceMonitor) {
+          this.performanceMonitor.startOperation('optimization');
+        }
         files = await this.optimizeFiles(files, protoFile);
+        if (this.performanceMonitor) {
+          this.performanceMonitor.endOperation();
+        }
       }
       
       // Analyze bundle if analyzer is enabled
       if (this.bundleAnalyzer) {
+        if (this.performanceMonitor) {
+          this.performanceMonitor.startOperation('bundle_analysis');
+        }
+        
         const metrics = this.bundleAnalyzer.analyzeBundle(files, protoFile);
         
         // Add bundle report as a separate file if requested
@@ -136,6 +261,28 @@ export class Generator {
           .forEach(suggestion => {
             console.warn(`[Bundle Analysis] ${suggestion.message}`);
           });
+        
+        if (this.performanceMonitor) {
+          this.performanceMonitor.endOperation();
+        }
+      }
+      
+      // Generate performance report if monitoring is enabled
+      if (this.performanceMonitor) {
+        const perfMetrics = this.performanceMonitor.stop();
+        
+        // Add performance report as a file in development mode
+        if (!this.options.optimization?.production) {
+          const perfReport = this.performanceMonitor.generateReport();
+          files.push({
+            path: 'performance-report.md',
+            content: perfReport,
+          });
+        }
+        
+        // Log performance summary
+        console.log(`[Performance] Generation completed in ${perfMetrics.duration}ms`);
+        console.log(`[Performance] Peak memory usage: ${(perfMetrics.peakMemoryUsage?.heapUsed || 0) / 1024 / 1024}MB`);
       }
       
       return {
@@ -143,6 +290,11 @@ export class Generator {
         metadata,
       };
     } catch (error) {
+      // Stop performance monitoring on error
+      if (this.performanceMonitor) {
+        this.performanceMonitor.stop();
+      }
+      
       if (error instanceof GenerationError) {
         throw error;
       }
@@ -302,6 +454,7 @@ export class Generator {
     this.options = {
       ...this.options,
       ...options,
+      enablePerformanceMonitoring: options.enablePerformanceMonitoring ?? this.options.enablePerformanceMonitoring,
     };
     
     // Update service generator options
@@ -312,5 +465,48 @@ export class Generator {
       generateComments: this.options.generateComments,
       templateDir: this.options.templateDir,
     });
+    
+    // Re-initialize performance monitoring if enabled state changed
+    if (options.enablePerformanceMonitoring !== undefined) {
+      if (options.enablePerformanceMonitoring && !this.performanceMonitor) {
+        // Initialize performance monitoring
+        this.performanceMonitor = createPerformanceMonitor({
+          maxGenerationTime: 30000,
+          maxMemoryUsage: 500 * 1024 * 1024,
+          warnThresholds: {
+            generationTime: 10000,
+            memoryUsage: 300 * 1024 * 1024,
+          },
+        });
+        
+        this.memoryEfficientGenerator = createMemoryEfficientGenerator({
+          chunkSize: 20,
+          memoryLimit: 400 * 1024 * 1024,
+          useStreaming: true,
+          gcInterval: 50,
+          cacheStrategy: 'lru',
+        });
+        
+        this.templateOptimizer = createTemplateOptimizer({
+          cacheCompiledTemplates: true,
+          maxCacheSize: 100,
+          precompile: true,
+          minifyOutput: this.options.optimization?.minify,
+        });
+        
+        this.typeResolutionCache = createTypeResolutionCache({
+          maxSize: 1000,
+          ttl: 60000,
+          detectCircular: true,
+          maxDepth: 20,
+        });
+      } else if (!options.enablePerformanceMonitoring && this.performanceMonitor) {
+        // Clean up performance monitoring
+        this.performanceMonitor = undefined;
+        this.memoryEfficientGenerator = undefined;
+        this.templateOptimizer = undefined;
+        this.typeResolutionCache = undefined;
+      }
+    }
   }
 }
