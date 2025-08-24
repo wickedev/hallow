@@ -76,6 +76,86 @@ export interface GeneratorOptions {
      */
     processNestedObjects?: boolean;
   };
+  
+  /**
+   * Code optimization options
+   */
+  optimization?: {
+    /**
+     * Enable dead code elimination
+     */
+    deadCodeElimination?: boolean;
+    
+    /**
+     * Enable minification for production
+     */
+    minify?: boolean;
+    
+    /**
+     * Remove comments in production
+     */
+    removeComments?: boolean;
+    
+    /**
+     * Inline small functions
+     */
+    inlineFunctions?: boolean;
+    
+    /**
+     * Optimize imports for tree-shaking
+     */
+    optimizeImports?: boolean;
+    
+    /**
+     * Production mode optimizations
+     */
+    production?: boolean;
+    
+    /**
+     * Conditional generation based on usage
+     */
+    conditionalGeneration?: boolean;
+    
+    /**
+     * Bundle size target in KB
+     */
+    bundleSizeTarget?: number;
+    
+    /**
+     * Enable code splitting
+     */
+    codeSplitting?: boolean;
+    
+    /**
+     * Enable lazy loading
+     */
+    lazyLoading?: boolean;
+  };
+  
+  /**
+   * Usage tracking for conditional generation
+   */
+  usageTracking?: {
+    /**
+     * Track which services are used
+     */
+    usedServices?: string[];
+    
+    /**
+     * Track which methods are used per service
+     */
+    usedMethods?: Record<string, string[]>;
+    
+    /**
+     * Track which message types are used
+     */
+    usedMessages?: string[];
+    
+    /**
+     * Track which enums are used
+     */
+    usedEnums?: string[];
+  };
 }
 
 /**
