@@ -105,14 +105,14 @@
   - Create minified output options for production builds
   - _Requirements: 7.1, 7.3, 7.4_
 
-- [ ] 16. Implement performance optimization and benchmarking
+- [x] 16. Implement performance optimization and benchmarking
   - Add performance monitoring for large proto file generation
   - Implement memory-efficient code generation for large schemas
   - Create benchmark tests for generation speed and memory usage
   - Optimize template processing and type resolution performance
   - _Requirements: 4.2, 4.4, 7.2_
 
-- [ ] 17. Create API documentation and usage examples
+- [x] 17. Create API documentation and usage examples
   - Generate TypeDoc documentation for all public Generator APIs
   - Create examples showing different generation patterns and options
   - Document template customization and extension points
