@@ -217,11 +217,13 @@ describe('Message Generation Integration', () => {
   - Document descriptor structure
   - Plan GrpcWebAdapter architecture
 
-- [ ] #### Task 3.2: Implement Unary RPC Logic (8h)
+- [x] #### Task 3.2: Implement Unary RPC Logic (8h)
   - Replace placeholder with grpc.unary() call
   - Handle serialization/deserialization
   - Implement error handling
   - **Requirements:** FR-3 AC 4, 6-7
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See [task-3.2-verification.md](./task-3.2-verification.md) for details
   - [Research](./task-3.1-research.md)
 
 - [ ] #### Task 3.3: Implement Server Streaming Logic (8h)
