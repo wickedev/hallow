@@ -356,6 +356,64 @@ class CancellationTokenImpl implements CancellationToken {
 }
 
 /**
+ * Service descriptor for UserService
+ * Contains metadata for all RPC methods in this service
+ */
+export const UserServiceService = {
+  serviceName: 'UserService',
+  fullServiceName: 'test.services.UserService',
+
+  /**
+   * Method descriptor for GetUser RPC
+   * @type {grpc.MethodDefinition<GetUserRequest, GetUserResponse>}
+   */
+  GetUserDescriptor: {
+    methodName: 'GetUser',
+    service: { serviceName: 'UserService' },
+    requestStream: false,
+    responseStream: false,
+    requestType: {} as any, // Message type placeholder
+    responseType: {} as any, // Message type placeholder
+  },
+  /**
+   * Method descriptor for ListUsers RPC
+   * @type {grpc.MethodDefinition<ListUsersRequest, ListUsersResponse>}
+   */
+  ListUsersDescriptor: {
+    methodName: 'ListUsers',
+    service: { serviceName: 'UserService' },
+    requestStream: false,
+    responseStream: true,
+    requestType: {} as any, // Message type placeholder
+    responseType: {} as any, // Message type placeholder
+  },
+  /**
+   * Method descriptor for CreateUsers RPC
+   * @type {grpc.MethodDefinition<CreateUserRequest, ListUsersResponse>}
+   */
+  CreateUsersDescriptor: {
+    methodName: 'CreateUsers',
+    service: { serviceName: 'UserService' },
+    requestStream: true,
+    responseStream: false,
+    requestType: {} as any, // Message type placeholder
+    responseType: {} as any, // Message type placeholder
+  },
+  /**
+   * Method descriptor for Chat RPC
+   * @type {grpc.MethodDefinition<StreamMessage, StreamMessage>}
+   */
+  ChatDescriptor: {
+    methodName: 'Chat',
+    service: { serviceName: 'UserService' },
+    requestStream: true,
+    responseStream: true,
+    requestType: {} as any, // Message type placeholder
+    responseType: {} as any, // Message type placeholder
+  },
+} as const;
+
+/**
  * UserService service client
  * Generated gRPC service stub with Promise and Streaming APIs
  */
@@ -377,113 +435,81 @@ export class UserServiceStub {
   /**
    * RPC method GetUser (unary)
    * @param request - GetUserRequest request message
-   * @returns Promise<GetUserResponse> - Response message
-      }, 0);
+   * @returns Promise resolving to GetUserResponse response message
+            }
+
+            // Response message is already deserialized by gRPC-web
+            resolve(response.message as GetUserResponse);
+          }
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
   }
   
   /**
    * RPC method ListUsers (server streaming)
    * @param request - ListUsersRequest request message
-   * @returns Observable stream of ListUsersResponse messages
-        }
-        
-        if (index < mockResponses.length) {
-          observer.next(mockResponses[index++] as any);
-        } else {
-          clearInterval(interval);
-          observer.complete();
-        }
-      }, 100);
-      
-      cancellationToken.onCancel(() => {
-        clearInterval(interval);
-      });
-      
-      // Return teardown logic
-      return () => {
-      };
+   * @returns Observable stream of ListUsersResponse response messages
+            }
+          },
+          onEnd: (code: grpc.Code, message: string) => {
+            if (code === grpc.Code.OK) {
+              observer.complete();
+            } else {
+              observer.error(new Error(
+                `gRPC stream error ${grpc.Code[code]}: ${message}`
+              ));
+            }
+          }
+        });
+
+        // Register cleanup for cancellation
+        cancellationToken.onCancel(() => {
+          client.close();
+        });
+
+        // Return teardown logic (called on unsubscribe)
+        return () => {
+        };
+      } catch (error) {
+        observer.error(error);
+        return () => {};
+      }
     });
   }
 
   /**
    * RPC method CreateUsers (client streaming)
-   * @returns Object with send method and response promise
+   *
+   * **IMPORTANT:** Client streaming is not fully supported over HTTP/1.1 in gRPC-web.
+   * This method requires WebSocket transport or HTTP/2.
+   *
+   * @returns Object with send(), complete(), and cancel() methods
   } {
-    const requests: CreateUserRequest[] = [];
-    const cancellationToken = new CancellationTokenImpl();
-    let isCompleted = false;
-    
-    return {
-        }
-      },
-      complete: async () => {
-        if (isCompleted || cancellationToken.isCancelled) {
-          throw new Error('Stream already completed or cancelled');
-        }
-        isCompleted = true;
-        
-        // TODO: Implement actual gRPC-web client streaming
-        // 1. Send all accumulated requests
-        // 2. Signal stream completion
-        // 3. Wait for server response
-        // 4. Deserialize and return response
-          }
-          
-          // Placeholder implementation
-          setTimeout(() => {
-            reject(new Error('Client streaming not yet implemented for createUsers'));
-          }, 0);
-        });
-      },
-      cancel: () => {
-        cancellationToken.cancel();
-      }
-    };
+    throw new Error(
+      'Client streaming RPC "CreateUsers" is not supported over HTTP/1.1. ' +
+      'gRPC-web requires WebSocket transport or HTTP/2 for client streaming. ' +
+      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
+      'See: https://github.com/grpc/grpc-web#streaming-support'
+    );
   }
 
   /**
    * RPC method Chat (bidirectional streaming)
-   * @returns Observable stream for bidirectional streaming
+   *
+   * **IMPORTANT:** Bidirectional streaming is not fully supported over HTTP/1.1 in gRPC-web.
+   * This method requires WebSocket transport or HTTP/2.
+   *
+   * @returns Object with send(), responses, complete(), and cancel() methods
   } {
-    const requestSubject = new Subject<StreamMessage>();
-    const responseSubject = new Subject<StreamMessage>();
-    const cancellationToken = new CancellationTokenImpl();
-    
-    // Set up the bidirectional stream
-    // TODO: Implement actual gRPC-web bidirectional streaming
-    const subscription = requestSubject.pipe(
-      takeUntil(responseSubject.pipe(finalize(() => cancellationToken.cancel())))
-    ).subscribe({
-      next: (request) => {
-        // TODO: Send request to server
-        console.log('Sending request:', request);
-      },
-      error: (err) => {
-        responseSubject.error(err);
-      },
-      complete: () => {
-        // Signal stream completion to server
-        responseSubject.complete();
-      }
-    });
-    
-    cancellationToken.onCancel(() => {
-      subscription.unsubscribe();
-      responseSubject.complete();
-    });
-    
-    return {
-        }
-      },
-      responses: responseSubject.asObservable(),
-      complete: () => {
-        requestSubject.complete();
-      },
-      cancel: () => {
-        cancellationToken.cancel();
-      }
-    };
+    throw new Error(
+      'Bidirectional streaming RPC "Chat" is not supported over HTTP/1.1. ' +
+      'gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming. ' +
+      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
+      'See: https://github.com/grpc/grpc-web#streaming-support'
+    );
   }
 
 }
