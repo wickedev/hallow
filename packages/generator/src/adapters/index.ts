@@ -14,3 +14,14 @@ export {
   CancellationToken,
   CancellationTokenImpl,
 } from './GrpcWebAdapter';
+
+// Export serialization adapters
+export {
+  ISerializationAdapter,
+  MessageDescriptor,
+  FieldDescriptor,
+  SerializationError,
+  isSerializationError,
+} from './SerializationAdapter';
+
+export { JsonSerializationAdapter } from './JsonSerializationAdapter';
