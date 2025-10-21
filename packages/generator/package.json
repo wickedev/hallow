@@ -44,6 +44,12 @@
     ],
     "collectCoverageFrom": [
       "src/**/*.ts"
-    ]
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@hallow)/)"
+    ],
+    "moduleNameMapper": {
+      "^@hallow/generator/(.*)$": "<rootDir>/src/$1"
+    }
   }
 }

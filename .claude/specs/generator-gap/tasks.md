@@ -205,10 +205,10 @@ describe('Message Generation Integration', () => {
 
 ---
 
-- [x] ## Phase 3: gRPC-Web Integration (Days 8-14)
+- [x] ## Phase 3: gRPC-Web Integration (Days 8-14) ✅ COMPLETED
 
 **Goal:** Implement actual gRPC communication using @improbable-eng/grpc-web
-**Priority:** P0 Critical | **Time:** 40 hours
+**Priority:** P0 Critical | **Time:** 40 hours | **Status:** 100% Complete (5/5 tasks)
 
 ### High-Level Tasks
 
@@ -244,12 +244,14 @@ describe('Message Generation Integration', () => {
   - **Verification:** See [task-3.4-verification.md](./task-3.4-verification.md) for details
   - [Research](./task-3.1-research.md)
 
-- [ ] #### Task 3.5: Integration Testing with Test Server (12h)
+- [x] #### Task 3.5: Integration Testing with Test Server (12h)
   - Start gRPC test server
   - Test unary calls end-to-end
   - Test server streaming end-to-end
   - Test error scenarios
   - **Requirements:** FR-3 AC 12, NFR-3 AC 4-6
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See [task-3.5-verification.md](./task-3.5-verification.md) for details
   - [Research](./task-3.1-research.md)
 
 ---
