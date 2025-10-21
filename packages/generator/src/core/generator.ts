@@ -57,7 +57,7 @@ export class Generator {
         ...options.optionProcessing,
       },
       optimization: {
-        deadCodeElimination: options.optimization?.deadCodeElimination ?? true,
+        deadCodeElimination: options.optimization?.deadCodeElimination ?? false,  // FIXED: Disabled by default - CodeOptimizer regex is too aggressive
         minify: options.optimization?.minify ?? false,
         removeComments: options.optimization?.removeComments ?? false,
         inlineFunctions: options.optimization?.inlineFunctions ?? false,
@@ -244,8 +244,10 @@ export class Generator {
                 }
               }
 
-              // Insert message interfaces
-              lines.splice(insertPosition, 0, '', messageCode, '');
+              // Insert message interfaces - split messageCode into lines first!
+              const messageLines = messageCode.split('\n');
+              lines.splice(insertPosition, 0, '', ...messageLines, '');
+
               file.content = lines.join('\n');
             });
 

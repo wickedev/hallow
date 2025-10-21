@@ -196,7 +196,7 @@ export class MessageGenerator {
       interfacesOnly: false,
       generateComments: true,
       readonlyProperties: false,
-      generateNamespaces: true,
+      generateNamespaces: false,  // FIXED: Don't wrap messages in package namespace - causes type errors
       inlineNestedMessages: false,
       includeOptionMetadata: false,
       optionProcessing: {},
@@ -458,16 +458,12 @@ export namespace {{interfaceName}} {
     if (this.options.interfacesOnly) {
       return '';
     }
-    
+
     const context = this.createMessageContext(message, namespace);
-    
-    try {
-      // Use template for serialization generation
-      return this.templateEngine.render('message-serialization', context);
-    } catch (error) {
-      // Fallback to programmatic generation if template fails
-      return this.generateSerializationProgrammatically(context);
-    }
+
+    // FIXED: Always use programmatic generation to avoid namespace conflicts
+    // Template-based generation creates duplicate namespaces that conflict with interface generation
+    return this.generateSerializationProgrammatically(context);
   }
   
   /**
@@ -480,13 +476,13 @@ export namespace {{interfaceName}} {
     const interfaceCode = this.generateInterface(message, namespace);
     const serializationCode = this.generateSerialization(message, namespace);
     const nestedTypes = this.generateNestedTypes(message, namespace);
-    
+
     // Collect all imports
     this.importManager.addNamedImports('google-protobuf', ['BinaryWriter', 'BinaryReader']);
-    
+
     const imports = this.importManager.generateImports().split('\n');
     const exports = this.generateExports(message, namespace);
-    
+
     return {
       interface: interfaceCode,
       serialization: serializationCode,
@@ -501,21 +497,19 @@ export namespace {{interfaceName}} {
    */
   public generateMessages(protoFile: ProtoFile): string {
     const messages = protoFile.messages;
-    const namespace = protoFile.package;
-    
+
     // Generate import statements
     const imports = this.generateImports(protoFile);
-    
-    // Generate message code
+
+    // Generate message code without namespace wrapping
+    // FIXED: Don't pass namespace to avoid generating export namespace Test.Services
     const messageCode = messages.map(message => {
-      const generated = this.generateMessage(message, namespace);
+      const generated = this.generateMessage(message);  // No namespace parameter
       return this.combineMessageCode(generated);
     }).join('\n\n');
-    
-    // Wrap in namespace if needed
-    const code = this.wrapInNamespace(messageCode, namespace);
-    
-    return `${imports}\n\n${code}`;
+
+    // Don't wrap in namespace (generateNamespaces is false by default now)
+    return `${imports}\n\n${messageCode}`;
   }
   
   /**
@@ -800,8 +794,13 @@ export namespace {{interfaceName}} {
         if (this.typeMapper.isScalarType(field.type) && field.type !== 'string' && field.type !== 'bytes') {
           // Use packed write for numeric arrays
           lines.push(`      writer.${field.serializerMethod}(${field.number}, message.${field.camelCaseName});`);
+        } else if (!this.typeMapper.isScalarType(field.type)) {
+          // For message types, use writeMessage with encoder function
+          lines.push(`      for (const item of message.${field.camelCaseName}) {`);
+          lines.push(`        writer.${field.serializerMethod}(${field.number}, item, ${field.type}.encode);`);
+          lines.push('      }');
         } else {
-          // Write each item individually for non-packed fields
+          // Write each item individually for non-packed scalar fields
           lines.push(`      for (const item of message.${field.camelCaseName}) {`);
           lines.push(`        writer.${field.serializerMethod}(${field.number}, item);`);
           lines.push('      }');
@@ -814,6 +813,9 @@ export namespace {{interfaceName}} {
         lines.push(`        writer.${this.getMapValueWriteMethod(field.mapValueType!)}(2, value);`);
         lines.push(`        writer.endSubMessage(${field.number});`);
         lines.push('      }');
+      } else if (!this.typeMapper.isScalarType(field.type)) {
+        // For message types, use writeMessage with encoder function
+        lines.push(`      writer.${field.serializerMethod}(${field.number}, message.${field.camelCaseName}, ${field.type}.encode);`);
       } else {
         lines.push(`      writer.${field.serializerMethod}(${field.number}, message.${field.camelCaseName});`);
       }
@@ -864,8 +866,15 @@ export namespace {{interfaceName}} {
         if (this.typeMapper.isScalarType(field.type) && field.type !== 'string' && field.type !== 'bytes') {
           // Use packed read for numeric arrays
           lines.push(`          message.${field.camelCaseName} = reader.${field.deserializerMethod}();`);
+        } else if (!this.typeMapper.isScalarType(field.type)) {
+          // For message types, use readMessage with callback to get bytes and decode
+          lines.push(`          if (!message.${field.camelCaseName}) {`);
+          lines.push(`            message.${field.camelCaseName} = [];`);
+          lines.push('          }');
+          lines.push(`          const bytes = reader.readBytes();`);
+          lines.push(`          message.${field.camelCaseName}.push(${field.type}.decode(bytes));`);
         } else {
-          // Read individual items for non-packed fields
+          // Read individual items for non-packed scalar fields
           lines.push(`          if (!message.${field.camelCaseName}) {`);
           lines.push(`            message.${field.camelCaseName} = [];`);
           lines.push('          }');
@@ -896,6 +905,10 @@ export namespace {{interfaceName}} {
         lines.push('          if (key !== undefined && value !== undefined) {');
         lines.push(`            message.${field.camelCaseName}.set(key, value);`);
         lines.push('          }');
+      } else if (!this.typeMapper.isScalarType(field.type)) {
+        // For message types, read bytes and decode
+        lines.push(`          const bytes = reader.readBytes();`);
+        lines.push(`          message.${field.camelCaseName} = ${field.type}.decode(bytes);`);
       } else {
         lines.push(`          message.${field.camelCaseName} = reader.${field.deserializerMethod}();`);
       }
@@ -1011,15 +1024,15 @@ export namespace {{interfaceName}} {
       'double': 'writeDouble',
       'float': 'writeFloat',
       'int32': 'writeInt32',
-      'int64': 'writeInt64',
+      'int64': 'writeInt64String',  // FIXED: Accepts string for 64-bit integers
       'uint32': 'writeUint32',
-      'uint64': 'writeUint64',
+      'uint64': 'writeUint64String',  // FIXED: Accepts string for 64-bit integers
       'sint32': 'writeSint32',
-      'sint64': 'writeSint64',
+      'sint64': 'writeSint64String',  // FIXED: Accepts string for 64-bit integers
       'fixed32': 'writeFixed32',
-      'fixed64': 'writeFixed64',
+      'fixed64': 'writeFixed64String',  // FIXED: Accepts string for 64-bit integers
       'sfixed32': 'writeSfixed32',
-      'sfixed64': 'writeSfixed64',
+      'sfixed64': 'writeSfixed64String',  // FIXED: Accepts string for 64-bit integers
       'bool': 'writeBool',
       'string': 'writeString',
       'bytes': 'writeBytes',
@@ -1061,15 +1074,15 @@ export namespace {{interfaceName}} {
       'double': 'readDouble',
       'float': 'readFloat',
       'int32': 'readInt32',
-      'int64': 'readInt64',
+      'int64': 'readInt64String',  // FIXED: Returns string for 64-bit integers
       'uint32': 'readUint32',
-      'uint64': 'readUint64',
+      'uint64': 'readUint64String',  // FIXED: Returns string for 64-bit integers
       'sint32': 'readSint32',
-      'sint64': 'readSint64',
+      'sint64': 'readSint64String',  // FIXED: Returns string for 64-bit integers
       'fixed32': 'readFixed32',
-      'fixed64': 'readFixed64',
+      'fixed64': 'readFixed64String',  // FIXED: Returns string for 64-bit integers
       'sfixed32': 'readSfixed32',
-      'sfixed64': 'readSfixed64',
+      'sfixed64': 'readSfixed64String',  // FIXED: Returns string for 64-bit integers
       'bool': 'readBool',
       'string': 'readString',
       'bytes': 'readBytes',
@@ -1131,15 +1144,15 @@ export namespace {{interfaceName}} {
       'double': 'writeDouble',
       'float': 'writeFloat',
       'int32': 'writeInt32',
-      'int64': 'writeInt64',
+      'int64': 'writeInt64String',  // FIXED: Accepts string for 64-bit integers
       'uint32': 'writeUint32',
-      'uint64': 'writeUint64',
+      'uint64': 'writeUint64String',  // FIXED: Accepts string for 64-bit integers
       'sint32': 'writeSint32',
-      'sint64': 'writeSint64',
+      'sint64': 'writeSint64String',  // FIXED: Accepts string for 64-bit integers
       'fixed32': 'writeFixed32',
-      'fixed64': 'writeFixed64',
+      'fixed64': 'writeFixed64String',  // FIXED: Accepts string for 64-bit integers
       'sfixed32': 'writeSfixed32',
-      'sfixed64': 'writeSfixed64',
+      'sfixed64': 'writeSfixed64String',  // FIXED: Accepts string for 64-bit integers
       'bool': 'writeBool',
       'string': 'writeString',
       'bytes': 'writeBytes',
@@ -1176,15 +1189,15 @@ export namespace {{interfaceName}} {
       'double': 'readDouble',
       'float': 'readFloat',
       'int32': 'readInt32',
-      'int64': 'readInt64',
+      'int64': 'readInt64String',  // FIXED: Returns string for 64-bit integers
       'uint32': 'readUint32',
-      'uint64': 'readUint64',
+      'uint64': 'readUint64String',  // FIXED: Returns string for 64-bit integers
       'sint32': 'readSint32',
-      'sint64': 'readSint64',
+      'sint64': 'readSint64String',  // FIXED: Returns string for 64-bit integers
       'fixed32': 'readFixed32',
-      'fixed64': 'readFixed64',
+      'fixed64': 'readFixed64String',  // FIXED: Returns string for 64-bit integers
       'sfixed32': 'readSfixed32',
-      'sfixed64': 'readSfixed64',
+      'sfixed64': 'readSfixed64String',  // FIXED: Returns string for 64-bit integers
       'bool': 'readBool',
       'string': 'readString',
       'bytes': 'readBytes',
@@ -1296,22 +1309,22 @@ export namespace {{interfaceName}} {
    */
   private combineMessageCode(generated: GeneratedMessage): string {
     const parts: string[] = [];
-    
+
     // Add interface
     parts.push(generated.interface);
-    
+
     // Add serialization if present
     if (generated.serialization) {
       parts.push(generated.serialization);
     }
-    
+
     // Add nested types
     if (generated.nestedTypes) {
       generated.nestedTypes.forEach(nested => {
         parts.push(this.combineMessageCode(nested));
       });
     }
-    
+
     return parts.join('\n\n');
   }
   

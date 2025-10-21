@@ -304,21 +304,18 @@ export class ServiceGenerator {
     // Resolve input and output types
     const inputType = this.resolveMessageType(method.inputType, protoFile);
     const outputType = this.resolveMessageType(method.outputType, protoFile);
-    
+
     const camelName = this.nameResolver.resolveMethodName(method.name);
     // For pascalName in the template, we want to keep the original Pascal case (e.g., GetUser -> GetUser)
     const pascalName = method.name.charAt(0).toUpperCase() + method.name.slice(1);
-    
+
     // Process method-level options if enabled
     let methodOptions: TemplateOptionMetadata | undefined;
     if (this.options.includeOptionMetadata && method.options) {
       const optionMetadata = this.optionProcessor.processOptions(method.options);
       methodOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
     }
-    
-    // Debug: log the name conversions
-    // console.log(`Method ${method.name} -> camel: ${camelName}, pascal: ${pascalName}`);
-    
+
     return {
       name: method.name,
       pascalName,
@@ -484,11 +481,11 @@ export const {{pascalName}}Service = {
    */
   {{pascalName}}Descriptor: {
     methodName: '{{name}}',
-    service: { serviceName: '{{../name}}' },
+    serviceName: '{{../name}}',  // FIXED: serviceName at top level, not nested
+    requestType: '{{inputType}}',
+    responseType: '{{outputType}}',
     requestStream: {{clientStreaming}},
     responseStream: {{serverStreaming}},
-    requestType: {} as any, // Message type placeholder
-    responseType: {} as any, // Message type placeholder
   },
   {{/each}}
 } as const;
@@ -566,7 +563,7 @@ export class {{pascalName}}Stub {
    *              Unsubscribe to cancel the stream and clean up resources.
    */
   public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
-    return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
+    return this.adapter.serverStreaming<{{inputType}}, {{outputType}}>(
       {{../pascalName}}Service.{{pascalName}}Descriptor,
       request
     );

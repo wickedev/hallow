@@ -162,12 +162,12 @@ export class CodeOptimizer {
   
   constructor(options: OptimizationOptions = {}) {
     this.options = {
-      deadCodeElimination: options.deadCodeElimination ?? true,
+      deadCodeElimination: options.deadCodeElimination ?? false,  // FIXED: Disabled by default - regex too aggressive for multi-line methods
       treeShaking: options.treeShaking ?? true,
       minify: options.minify ?? false,
       removeComments: options.removeComments ?? false,
       inlineFunctions: options.inlineFunctions ?? false,
-      collapseDuplicates: options.collapseDuplicates ?? true,
+      collapseDuplicates: options.collapseDuplicates ?? false,  // FIXED: Disabled by default - regex doesn't handle nested braces
       esModules: options.esModules ?? true,
       optimizeImports: options.optimizeImports ?? true,
       production: options.production ?? false,
