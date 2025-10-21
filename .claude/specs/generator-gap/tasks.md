@@ -169,11 +169,13 @@ describe('Message Generation Integration', () => {
   - Add JSDoc comments with parameter and return type descriptions
   - **Requirements:** FR-2 AC 1, 5-10
 
-- [ ] #### Task 2.2: Fix Server Streaming Method Template (4h)
+- [x] #### Task 2.2: Fix Server Streaming Method Template (4h)
   - Generate `methodName(request: RequestType): Observable<ResponseType>`
   - Add cancellation token support
   - Ensure proper Observable typing
   - **Requirements:** FR-2 AC 2, 5-10
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See task-2.2-verification.md for details
 
 - [ ] #### Task 2.3: Fix Client/Bidirectional Streaming Templates (4h)
   - Client streaming: Return interface with send(), complete(), cancel()

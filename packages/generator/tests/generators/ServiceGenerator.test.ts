@@ -261,13 +261,12 @@ describe('ServiceGenerator', () => {
       
       const result = generator.generateStub(streamingService, protoFile);
       
-      // Check for streaming imports
-      expect(result.content).toContain('import { Observable, Subject, Subscription }');
+      // Check for streaming imports (Observable only - Subject/Subscription are in GrpcWebAdapter)
+      expect(result.content).toContain('import { Observable }');
       expect(result.content).toContain('from \'rxjs\'');
-      
-      // Check for cancellation token
-      expect(result.content).toContain('export interface CancellationToken');
-      expect(result.content).toContain('class CancellationTokenImpl');
+
+      // Cancellation token is now handled internally by GrpcWebAdapter
+      // No need to generate it in every service file
       
       // Check client streaming method signature
       expect(result.content).toContain('public clientStream(): {');
@@ -302,18 +301,16 @@ describe('ServiceGenerator', () => {
       protoFile.services = [streamingService];
       
       const result = generator.generateStub(streamingService, protoFile);
-      
-      // Check for Observable error handling
+
+      // Check for Observable return type
       expect(result.content).toContain('Observable<StreamResponse>');
-      expect(result.content).toContain('observer =>');
-      expect(result.content).toContain('observer.next');
-      expect(result.content).toContain('observer.complete');
-      expect(result.content).toContain('observer.error');
-      
-      // Check for cancellation token usage
-      expect(result.content).toContain('cancellationToken');
-      expect(result.content).toContain('cancellationToken.cancel()');
-      expect(result.content).toContain('cancellationToken.isCancelled');
+
+      // Check that method delegates to adapter.serverStream
+      expect(result.content).toContain('this.adapter.serverStream');
+      expect(result.content).toContain('StreamDataDescriptor');
+
+      // Observable error handling and cancellation are now handled internally by GrpcWebAdapter
+      // The generated code is simpler and just calls adapter.serverStream()
     });
     
     it('should handle React hooks for streaming methods', () => {
@@ -372,8 +369,8 @@ describe('ServiceGenerator', () => {
       
       const result = generator.generateStub(mixedService, protoFile);
       
-      // Should include streaming imports even with unary methods
-      expect(result.content).toContain('import { Observable, Subject, Subscription }');
+      // Should include Observable import when there are streaming methods
+      expect(result.content).toContain('import { Observable }');
       
       // Check unary method signature
       expect(result.content).toContain('public async unaryCall(request: UnaryRequest): Promise<UnaryResponse>');
