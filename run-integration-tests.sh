@@ -7,6 +7,11 @@ set -e  # Exit on error
 echo "🚀 Starting integration tests..."
 echo ""
 
+# 0. Build packages
+echo "Building packages..."
+echo ""
+yarn build
+
 # 1. Generate service stubs
 echo "📝 Step 1: Generating service stubs from proto files..."
 cd packages/test-client

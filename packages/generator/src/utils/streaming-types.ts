@@ -45,6 +45,8 @@ export class CancellationTokenImpl implements CancellationToken {
         console.error('Error in cancellation callback:', error);
       }
     });
+    // Clear callbacks to prevent memory leaks
+    this.cancelCallbacks.length = 0;
   }
   
   onCancel(callback: () => void): void {

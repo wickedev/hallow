@@ -306,11 +306,14 @@ describe('Message Generation Integration', () => {
   - **Verification:** See [task-5.1-verification.md](./task-5.1-verification.md) for details
   - **Test Results:** 48/48 tests passing (100%)
 
-- [ ] #### Task 5.2: Complete CancellationToken (3h)
+- [x] #### Task 5.2: Complete CancellationToken (3h)
   - Fix cancel() method (execute callbacks, clear array)
   - Add error handling in callbacks
   - Test cancellation scenarios
   - **Requirements:** FR-5 AC 1-4, 9-10
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See [task-5.2-verification.md](./task-5.2-verification.md) for details
+  - **Test Results:** 32/32 tests passing (100%)
 
 - [ ] #### Task 5.3: Stream Resource Cleanup (3h)
   - Implement proper Observable teardown
