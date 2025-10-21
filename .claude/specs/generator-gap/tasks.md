@@ -205,14 +205,14 @@ describe('Message Generation Integration', () => {
 
 ---
 
-- [ ] ## Phase 3: gRPC-Web Integration (Days 8-14)
+- [x] ## Phase 3: gRPC-Web Integration (Days 8-14)
 
 **Goal:** Implement actual gRPC communication using @improbable-eng/grpc-web
 **Priority:** P0 Critical | **Time:** 40 hours
 
 ### High-Level Tasks
 
-- [ ] #### Task 3.1: Research & Design (4h)
+- [x] #### Task 3.1: Research & Design (4h)
   - Study @improbable-eng/grpc-web API
   - Document descriptor structure
   - Plan GrpcWebAdapter architecture
@@ -222,18 +222,21 @@ describe('Message Generation Integration', () => {
   - Handle serialization/deserialization
   - Implement error handling
   - **Requirements:** FR-3 AC 4, 6-7
+  - [Research](./task-3.1-research.md)
 
 - [ ] #### Task 3.3: Implement Server Streaming Logic (8h)
   - Use grpc.invoke() for streaming
   - Convert gRPC events to Observable
   - Handle stream completion and errors
   - **Requirements:** FR-3 AC 5, 8-10
+  - [Research](./task-3.1-research.md)
 
 - [ ] #### Task 3.4: Add Cancellation Support (8h)
   - Implement Observable teardown
   - Close gRPC client on unsubscribe
   - Test resource cleanup
   - **Requirements:** FR-3 AC 11-12, FR-5 AC 1-6
+  - [Research](./task-3.1-research.md)
 
 - [ ] #### Task 3.5: Integration Testing with Test Server (12h)
   - Start gRPC test server
@@ -241,6 +244,7 @@ describe('Message Generation Integration', () => {
   - Test server streaming end-to-end
   - Test error scenarios
   - **Requirements:** FR-3 AC 12, NFR-3 AC 4-6
+  - [Research](./task-3.1-research.md)
 
 ---
 
