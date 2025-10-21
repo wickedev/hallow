@@ -155,3 +155,31 @@ export class SerializationError extends Error {
 export function isSerializationError(error: any): error is SerializationError {
   return error instanceof SerializationError;
 }
+
+/**
+ * Validation error for invalid requests
+ *
+ * Thrown when message validation fails (e.g., required fields missing,
+ * invalid field values, constraint violations).
+ */
+export class ValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly field: string,
+    public readonly constraint: string
+  ) {
+    super(message);
+    this.name = 'ValidationError';
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ValidationError);
+    }
+  }
+}
+
+/**
+ * Type guard for ValidationError
+ */
+export function isValidationError(error: any): error is ValidationError {
+  return error instanceof ValidationError;
+}
