@@ -8,6 +8,41 @@ import {{#if isDefault}}{{name}}{{else}}{ {{join imports ", "}} }{{/if}} from '{
 {{/each}}
 
 /**
+ * Method descriptor for gRPC-web method calls
+ */
+export interface MethodDescriptor<TRequest, TResponse> {
+  /**
+   * Method name (e.g., "GetUser")
+   */
+  readonly methodName: string;
+
+  /**
+   * Fully qualified service name (e.g., "test.services.UserService")
+   */
+  readonly serviceName: string;
+
+  /**
+   * Request type name
+   */
+  readonly requestType: string;
+
+  /**
+   * Response type name
+   */
+  readonly responseType: string;
+
+  /**
+   * Whether this is a client streaming RPC
+   */
+  readonly requestStream: boolean;
+
+  /**
+   * Whether this is a server streaming RPC
+   */
+  readonly responseStream: boolean;
+}
+
+/**
  * Cancellation token for streaming operations
  */
 export interface CancellationToken {
@@ -43,6 +78,40 @@ class CancellationTokenImpl implements CancellationToken {
 }
 
 {{#each services}}
+/**
+ * Service descriptor for {{pascalName}}
+ */
+export const {{pascalName}}ServiceDescriptor = {
+  /**
+   * Service name
+   */
+  serviceName: '{{name}}',
+
+  /**
+   * Fully qualified service name
+   */
+  fullServiceName: '{{#if ../packageName}}{{../packageName}}.{{/if}}{{name}}',
+
+  /**
+   * Method descriptors
+   */
+  methods: {
+    {{#each methods}}
+    /**
+     * {{#if description}}{{description}}{{else}}{{pascalName}} method descriptor{{/if}}
+     */
+    {{pascalName}}: {
+      methodName: '{{name}}',
+      serviceName: '{{#if ../../packageName}}{{../../packageName}}.{{/if}}{{../name}}',
+      requestType: '{{inputType}}',
+      responseType: '{{outputType}}',
+      requestStream: {{clientStreaming}},
+      responseStream: {{serverStreaming}},
+    } as MethodDescriptor<{{inputType}}, {{outputType}}>,
+    {{/each}}
+  }
+} as const;
+
 /**
  * {{#if description}}{{description}}{{else}}{{pascalName}} service client{{/if}}
  * Generated gRPC service stub with Promise and Streaming APIs

@@ -185,11 +185,13 @@ describe('Message Generation Integration', () => {
   - **Status:** ✅ COMPLETED (2025-10-21)
   - **Verification:** See task-2.3-verification.md for details
 
-- [ ] #### Task 2.4: Add Method Descriptors (4h)
+- [x] #### Task 2.4: Add Method Descriptors (4h)
   - Generate service descriptor constant
   - Generate method descriptor for each RPC
   - Include metadata (method name, request/response types, streaming flags)
   - **Requirements:** FR-3 AC 2-3
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See task-2.4-verification.md for details
 
 - [ ] #### Task 2.5: Validation & Testing (8h)
   - Compile generated code with `tsc --strict`
