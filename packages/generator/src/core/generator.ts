@@ -7,10 +7,12 @@ import {
 } from './types';
 import { ProtoFile } from './proto-types';
 import { ServiceGenerator } from '../generators/ServiceGenerator';
+import { MessageGenerator } from '../generators/MessageGenerator';
+import { TemplateEngine } from './template-engine';
 import { CodeOptimizer, UsageTrackingOptions } from '../optimizers/CodeOptimizer';
 import { BundleAnalyzer } from '../optimizers/BundleAnalyzer';
-import { 
-  PerformanceMonitor, 
+import {
+  PerformanceMonitor,
   createPerformanceMonitor,
   MemoryEfficientGenerator,
   createMemoryEfficientGenerator,
@@ -26,13 +28,15 @@ import {
 export class Generator {
   private options: Required<GeneratorOptions>;
   private serviceGenerator: ServiceGenerator;
+  private messageGenerator: MessageGenerator;
+  private templateEngine: TemplateEngine;
   private codeOptimizer?: CodeOptimizer;
   private bundleAnalyzer?: BundleAnalyzer;
   private performanceMonitor?: PerformanceMonitor;
   private memoryEfficientGenerator?: MemoryEfficientGenerator;
   private templateOptimizer?: TemplateOptimizer;
   private typeResolutionCache?: TypeResolutionCache;
-  
+
   constructor(options: GeneratorOptions = {}) {
     this.options = {
       outputFormat: options.outputFormat || 'typescript',
@@ -69,6 +73,19 @@ export class Generator {
       enablePerformanceMonitoring: options.enablePerformanceMonitoring ?? false,
     };
     
+    // Initialize template engine
+    this.templateEngine = new TemplateEngine();
+
+    // Initialize message generator
+    this.messageGenerator = new MessageGenerator(this.templateEngine, {
+      interfacesOnly: false,
+      generateComments: this.options.generateComments,
+      readonlyProperties: false,
+      generateNamespaces: true,
+      includeOptionMetadata: this.options.includeOptionMetadata,
+      optionProcessing: this.options.optionProcessing,
+    });
+
     // Initialize service generator
     this.serviceGenerator = new ServiceGenerator({
       serverUrl: this.options.serverUrl,
@@ -201,11 +218,44 @@ export class Generator {
           this.performanceMonitor.startOperation('service_generation');
         }
         
-        // Generate service stubs
+        // Generate service stubs (includes message interfaces inline)
         if (protoFile.services.length > 0) {
           const serviceFiles = await this.serviceGenerator.generateStubs(protoFile);
+
+          // Inject message interfaces at the top of each service file
+          if (protoFile.messages.length > 0) {
+            if (this.performanceMonitor) {
+              this.performanceMonitor.startOperation('message_generation');
+            }
+
+            const messageCode = this.messageGenerator.generateMessages(protoFile);
+
+            // Inject message interfaces into service files
+            serviceFiles.forEach(file => {
+              // Find the position after imports but before the service class
+              const lines = file.content.split('\n');
+              let insertPosition = 0;
+
+              // Find where to insert (after imports, before service stub)
+              for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes('/**') && lines[i + 1]?.includes('* Generated gRPC service stubs')) {
+                  insertPosition = i;
+                  break;
+                }
+              }
+
+              // Insert message interfaces
+              lines.splice(insertPosition, 0, '', messageCode, '');
+              file.content = lines.join('\n');
+            });
+
+            if (this.performanceMonitor) {
+              this.performanceMonitor.endOperation();
+            }
+          }
+
           files.push(...serviceFiles);
-          
+
           // Record file metrics
           if (this.performanceMonitor) {
             serviceFiles.forEach(file => {
@@ -218,14 +268,13 @@ export class Generator {
             });
           }
         }
-        
+
         if (this.performanceMonitor) {
           this.performanceMonitor.endOperation();
         }
       }
-      
-      // TODO: Generate message types
-      // TODO: Generate enum types
+
+      // TODO: Generate enum types (standalone enums, not nested in messages)
       
       // Apply optimizations if enabled
       if (this.codeOptimizer) {
