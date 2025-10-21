@@ -13,7 +13,11 @@
     "lint": "yarn workspaces run lint",
     "lint:fix": "yarn workspaces run lint:fix",
     "typecheck": "yarn workspaces run typecheck",
-    "clean": "yarn workspaces run clean"
+    "clean": "yarn workspaces run clean",
+    "test:server:start": "cd packages/test-server && ./scripts/start-test-server.sh",
+    "test:server:stop": "cd packages/test-server && docker-compose down",
+    "test:server:logs": "cd packages/test-server && docker-compose logs -f",
+    "test:integration": "yarn test:server:start && yarn workspace @hallow/generator test:integration"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

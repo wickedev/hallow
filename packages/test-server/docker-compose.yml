@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  nestjs-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hallow-nestjs-server
+    ports:
+      - "3000:3000"   # HTTP port (for health checks, etc.)
+      - "50051:50051" # gRPC port
+    environment:
+      - NODE_ENV=development
+      - HTTP_PORT=3000
+    networks:
+      - grpc-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection({port: 50051, host: 'localhost'}).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: hallow-envoy-proxy
+    depends_on:
+      nestjs-server:
+        condition: service_healthy
+    ports:
+      - "8080:8080"   # gRPC-Web port
+      - "9901:9901"   # Envoy admin port
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    command: /usr/local/bin/envoy -c /etc/envoy/envoy.yaml
+    networks:
+      - grpc-network
+
+networks:
+  grpc-network:
+    driver: bridge
