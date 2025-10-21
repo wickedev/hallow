@@ -482,7 +482,7 @@ export class UserServiceStub {
    *              Unsubscribe to cancel the stream and clean up resources.
    */
   public listUsers(request: ListUsersRequest): Observable<ListUsersResponse> {
-    return this.adapter.serverStreaming<ListUsersRequest, ListUsersResponse>(
+    return this.adapter.serverStream<ListUsersRequest, ListUsersResponse>(
       UserServiceService.ListUsersDescriptor,
       request
     );

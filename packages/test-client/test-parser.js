@@ -32,7 +32,7 @@ protoFile.services.forEach(service => {
   service.methods.forEach(method => {
     console.log(`     • ${method.name}(${method.inputType}) → ${method.outputType}`);
     console.log(`       clientStreaming: ${method.clientStreaming}`);
-    console.log(`       serverStreaming: ${method.serverStreaming}`);
+    console.log(`       serverStream: ${method.serverStream}`);
   });
 });
 console.log();
@@ -77,7 +77,7 @@ if (protoFile.services.length > 0) {
   // Check method structure
   if (service.methods.length > 0) {
     const method = service.methods[0];
-    const methodFields = ['name', 'inputType', 'outputType', 'clientStreaming', 'serverStreaming', 'options'];
+    const methodFields = ['name', 'inputType', 'outputType', 'clientStreaming', 'serverStream', 'options'];
     const missingMethodFields = methodFields.filter(field => !(field in method));
 
     if (missingMethodFields.length === 0) {

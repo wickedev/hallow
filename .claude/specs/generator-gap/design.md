@@ -471,7 +471,7 @@ export class {{pascalName}}Stub {
   }
 
   {{#each methods}}
-  {{#if serverStreaming}}
+  {{#if serverStream}}
   {{#if clientStreaming}}
   {{> bidirectional-method this}}
   {{else}}
@@ -1093,7 +1093,7 @@ interface MethodTemplate {
   inputType: string;
   outputType: string;
   clientStreaming: boolean;
-  serverStreaming: boolean;
+  serverStream: boolean;
   description: string;
   jsdocParams: string[];
   jsdocReturns: string;
@@ -1566,7 +1566,7 @@ export const testServices: ServiceDefinition[] = [
         inputType: 'SimpleMessage',
         outputType: 'SimpleMessage',
         clientStreaming: false,
-        serverStreaming: false,
+        serverStream: false,
         options: {},
       },
       // ... more test methods

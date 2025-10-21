@@ -274,7 +274,7 @@ interface MethodDefinition {
   inputType: string;
   outputType: string;
   clientStreaming: boolean;
-  serverStreaming: boolean;
+  serverStream: boolean;
   options: ProtoOption[];
   comments?: CommentBlock;
 }

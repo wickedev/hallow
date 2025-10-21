@@ -29,7 +29,7 @@ describe('Performance Benchmarks', () => {
           inputType: `Request${i}_${j}`,
           outputType: `Response${i}_${j}`,
           clientStreaming: j % 4 === 1,
-          serverStreaming: j % 4 === 2,
+          serverStream: j % 4 === 2,
           options: {
             deprecated: j % 10 === 0,
           },

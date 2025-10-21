@@ -234,7 +234,7 @@ export class ServiceGenerator {
     
     // Process methods
     const methods = service.methods.map(method => this.processMethod(method, protoFile));
-    
+
     // Check if we have any streaming methods
     const hasStreaming = methods.some(m => m.clientStreaming || m.serverStreaming);
     
@@ -390,7 +390,7 @@ export class ServiceGenerator {
     }
     
     let description = `RPC method ${method.name}`;
-    
+
     if (method.clientStreaming && method.serverStreaming) {
       description += ' (bidirectional streaming)';
     } else if (method.clientStreaming) {
@@ -563,7 +563,7 @@ export class {{pascalName}}Stub {
    *              Unsubscribe to cancel the stream and clean up resources.
    */
   public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
-    return this.adapter.serverStreaming<{{inputType}}, {{outputType}}>(
+    return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
       {{../pascalName}}Service.{{pascalName}}Descriptor,
       request
     );

@@ -50,7 +50,7 @@ describe('Message Generation Integration (Task 1.4)', () => {
               inputType: protoFile.messages[0]?.name || 'Empty',
               outputType: protoFile.messages[0]?.name || 'Empty',
               clientStreaming: false,
-              serverStreaming: false,
+              serverStream: false,
               options: {}
             }
           ],
@@ -88,7 +88,7 @@ describe('Message Generation Integration (Task 1.4)', () => {
                 inputType: 'GetUserRequest',
                 outputType: 'GetUserResponse',
                 clientStreaming: false,
-                serverStreaming: false,
+                serverStream: false,
                 options: {}
               },
               {
@@ -96,7 +96,7 @@ describe('Message Generation Integration (Task 1.4)', () => {
                 inputType: 'ListUsersRequest',
                 outputType: 'ListUsersResponse',
                 clientStreaming: false,
-                serverStreaming: true,
+                serverStream: true,
                 options: {}
               },
               {
@@ -104,7 +104,7 @@ describe('Message Generation Integration (Task 1.4)', () => {
                 inputType: 'CreateUserRequest',
                 outputType: 'ListUsersResponse',
                 clientStreaming: true,
-                serverStreaming: false,
+                serverStream: false,
                 options: {}
               },
               {
@@ -112,7 +112,7 @@ describe('Message Generation Integration (Task 1.4)', () => {
                 inputType: 'StreamMessage',
                 outputType: 'StreamMessage',
                 clientStreaming: true,
-                serverStreaming: true,
+                serverStream: true,
                 options: {}
               }
             ],

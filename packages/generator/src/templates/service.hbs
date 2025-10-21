@@ -117,11 +117,18 @@ export const {{pascalName}}ServiceDescriptor = {
  * Generated gRPC service stub with Promise and Streaming APIs
  */
 export class {{pascalName}}Stub {
-  private readonly client: any;
-  
-  constructor(private readonly baseUrl: string) {
-    // Initialize gRPC-web client
-    // TODO: Properly initialize with @improbable-eng/grpc-web
+  private readonly adapter: GrpcWebAdapter;
+
+  /**
+   * Create a new {{pascalName}}Stub
+   * @param baseUrl - Base URL for the gRPC server (e.g., 'https://api.example.com')
+   * @param options - Optional client configuration (timeout, metadata, debug)
+   */
+  constructor(
+    private readonly baseUrl: string,
+    options?: GrpcClientOptions
+  ) {
+    this.adapter = new GrpcWebAdapter(baseUrl, options);
   }
 
   /**
@@ -132,11 +139,18 @@ export class {{pascalName}}Stub {
   }
 
   {{#each methods}}
-  {{#if serverStreaming}}
+  {{#if serverStream}}
   {{#if clientStreaming}}
   /**
    * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
-   * @returns Observable stream for bidirectional streaming
+   *
+   * **IMPORTANT**: Bidirectional streaming is not fully supported over HTTP/1.1 in gRPC-web.
+   * This method will throw an error. Consider using:
+   * - Server streaming for receiving multiple responses
+   * - Multiple unary calls as an alternative
+   * - WebSocket transport (requires additional server configuration)
+   *
+   * @throws {Error} Bidirectional streaming not supported over HTTP/1.1
    */
   public {{camelName}}(): {
     send: (request: {{inputType}}) => void;
@@ -144,47 +158,11 @@ export class {{pascalName}}Stub {
     complete: () => void;
     cancel: () => void;
   } {
-    const requestSubject = new Subject<{{inputType}}>();
-    const responseSubject = new Subject<{{outputType}}>();
-    const cancellationToken = new CancellationTokenImpl();
-    
-    // Set up the bidirectional stream
-    // TODO: Implement actual gRPC-web bidirectional streaming
-    const subscription = requestSubject.pipe(
-      takeUntil(responseSubject.pipe(finalize(() => cancellationToken.cancel())))
-    ).subscribe({
-      next: (request) => {
-        // TODO: Send request to server
-        console.log('Sending request:', request);
-      },
-      error: (err) => {
-        responseSubject.error(err);
-      },
-      complete: () => {
-        // Signal stream completion to server
-        responseSubject.complete();
-      }
-    });
-    
-    cancellationToken.onCancel(() => {
-      subscription.unsubscribe();
-      responseSubject.complete();
-    });
-    
-    return {
-      send: (request: {{inputType}}) => {
-        if (!cancellationToken.isCancelled) {
-          requestSubject.next(request);
-        }
-      },
-      responses: responseSubject.asObservable(),
-      complete: () => {
-        requestSubject.complete();
-      },
-      cancel: () => {
-        cancellationToken.cancel();
-      }
-    };
+    throw new Error(
+      'Bidirectional streaming RPC method "{{camelName}}" is not supported over HTTP/1.1. ' +
+      'gRPC-web bidirectional streaming requires HTTP/2 or WebSocket transport. ' +
+      'Consider using server streaming or multiple unary calls instead.'
+    );
   }
   {{else}}
   /**
@@ -193,119 +171,47 @@ export class {{pascalName}}Stub {
    * @returns Observable stream of {{outputType}} messages
    */
   public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
-    return new Observable<{{outputType}}>(observer => {
-      const cancellationToken = new CancellationTokenImpl();
-      
-      // TODO: Implement actual gRPC-web server streaming call
-      // 1. Serialize request message
-      // 2. Open streaming connection to baseUrl + service/method
-      // 3. For each response:
-      //    - Deserialize response message
-      //    - Call observer.next(response)
-      // 4. On stream end: Call observer.complete()
-      // 5. On error: Call observer.error(error)
-      
-      // Placeholder implementation
-      const mockResponses = [
-        // Mock response data would go here
-      ];
-      
-      let index = 0;
-      const interval = setInterval(() => {
-        if (cancellationToken.isCancelled) {
-          clearInterval(interval);
-          return;
-        }
-        
-        if (index < mockResponses.length) {
-          observer.next(mockResponses[index++] as any);
-        } else {
-          clearInterval(interval);
-          observer.complete();
-        }
-      }, 100);
-      
-      cancellationToken.onCancel(() => {
-        clearInterval(interval);
-      });
-      
-      // Return teardown logic
-      return () => {
-        cancellationToken.cancel();
-      };
-    });
+    return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
+      {{../pascalName}}ServiceDescriptor.methods.{{pascalName}} as any,
+      request
+    );
   }
   {{/if}}
   {{else if clientStreaming}}
   /**
    * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
-   * @returns Object with send method and response promise
+   *
+   * **IMPORTANT**: Client streaming is not fully supported over HTTP/1.1 in gRPC-web.
+   * This method will throw an error. Consider using:
+   * - Server streaming instead (if applicable)
+   * - Batch unary calls as an alternative
+   * - WebSocket transport (requires additional server configuration)
+   *
+   * @throws {Error} Client streaming not supported over HTTP/1.1
    */
   public {{camelName}}(): {
     send: (request: {{inputType}}) => void;
     complete: () => Promise<{{outputType}}>;
     cancel: () => void;
   } {
-    const requests: {{inputType}}[] = [];
-    const cancellationToken = new CancellationTokenImpl();
-    let isCompleted = false;
-    
-    return {
-      send: (request: {{inputType}}) => {
-        if (!isCompleted && !cancellationToken.isCancelled) {
-          requests.push(request);
-          // TODO: Stream request to server
-        }
-      },
-      complete: async () => {
-        if (isCompleted || cancellationToken.isCancelled) {
-          throw new Error('Stream already completed or cancelled');
-        }
-        isCompleted = true;
-        
-        // TODO: Implement actual gRPC-web client streaming
-        // 1. Send all accumulated requests
-        // 2. Signal stream completion
-        // 3. Wait for server response
-        // 4. Deserialize and return response
-        
-        return new Promise<{{outputType}}>((resolve, reject) => {
-          if (cancellationToken.isCancelled) {
-            reject(new Error('Stream cancelled'));
-            return;
-          }
-          
-          // Placeholder implementation
-          setTimeout(() => {
-            reject(new Error('Client streaming not yet implemented for {{camelName}}'));
-          }, 0);
-        });
-      },
-      cancel: () => {
-        cancellationToken.cancel();
-      }
-    };
+    throw new Error(
+      'Client streaming RPC method "{{camelName}}" is not supported over HTTP/1.1. ' +
+      'gRPC-web client streaming requires HTTP/2 or WebSocket transport. ' +
+      'Consider using server streaming or batch unary calls instead.'
+    );
   }
   {{else}}
   /**
    * {{#if description}}{{description}}{{else}}{{camelName}} RPC method{{/if}}
    * @param request - {{inputType}} request message
    * @returns Promise<{{outputType}}> - Response message
+   * @throws {GrpcError} If the gRPC call fails or returns a non-OK status
    */
   public async {{camelName}}(request: {{inputType}}): Promise<{{outputType}}> {
-    // Unary RPC call
-    return new Promise((resolve, reject) => {
-      // TODO: Implement actual gRPC-web call
-      // 1. Serialize request message
-      // 2. Make gRPC-web call to baseUrl + service/method
-      // 3. Deserialize response message
-      // 4. Resolve with typed response
-      
-      // Placeholder implementation
-      setTimeout(() => {
-        reject(new Error('gRPC method {{../name}}.{{camelName}} not yet implemented'));
-      }, 0);
-    });
+    return this.adapter.unary<{{inputType}}, {{outputType}}>(
+      {{../pascalName}}ServiceDescriptor.methods.{{pascalName}} as any,
+      request
+    );
   }
   {{/if}}
 
@@ -325,7 +231,7 @@ export class {{pascalName}}HookStub {
   }
 
   {{#each methods}}
-  {{#if serverStreaming}}
+  {{#if serverStream}}
   /**
    * React Hook for {{camelName}} streaming method
    * @param request - {{inputType}} request message
@@ -400,7 +306,7 @@ export class {{pascalName}}SuspenseStub {
   }
 
   {{#each methods}}
-  {{#if serverStreaming}}
+  {{#if serverStream}}
   /**
    * Suspense Hook for {{camelName}} streaming method
    * Note: Suspense with streaming requires careful handling

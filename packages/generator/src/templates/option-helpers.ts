@@ -229,7 +229,7 @@ export interface ServiceWithOptionsMetadata {
     inputType: string;
     outputType: string;
     clientStreaming: boolean;
-    serverStreaming: boolean;
+    serverStream: boolean;
     description?: string;
     options?: TemplateOptionMetadata;
   }>;

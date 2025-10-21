@@ -13,7 +13,7 @@ describe('ReactHookGenerator - Suspense Integration', () => {
     inputType: 'GetUserRequest',
     outputType: 'GetUserResponse',
     clientStreaming: false,
-    serverStreaming: false,
+    serverStream: false,
     options: {},
   };
   
@@ -22,7 +22,7 @@ describe('ReactHookGenerator - Suspense Integration', () => {
     inputType: 'StreamUsersRequest',
     outputType: 'User',
     clientStreaming: false,
-    serverStreaming: true,
+    serverStream: true,
     options: {},
   };
   
@@ -303,7 +303,7 @@ describe('ReactHookGenerator - Suspense Integration', () => {
                 inputType: 'GetProductRequest',
                 outputType: 'GetProductResponse',
                 clientStreaming: false,
-                serverStreaming: false,
+                serverStream: false,
                 options: {},
               },
             ],

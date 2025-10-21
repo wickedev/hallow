@@ -466,7 +466,7 @@ export class ReactHookGenerator {
     }
     
     let description = `React hook for ${method.name} RPC method`;
-    
+
     if (method.clientStreaming && method.serverStreaming) {
       description += ' (bidirectional streaming)';
     } else if (method.clientStreaming) {

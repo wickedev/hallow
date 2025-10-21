@@ -179,7 +179,7 @@ Generate syntactically correct method declarations for all RPC types.
 **Template:**
 ```handlebars
 {{#each methods}}
-{{#unless this.clientStreaming}}{{#unless this.serverStreaming}}
+{{#unless this.clientStreaming}}{{#unless this.serverStream}}
 /**
  * RPC method {{this.name}} (unary)
  * @param request - {{this.inputType}} request message
@@ -213,7 +213,7 @@ async {{this.name}}(request: {{this.inputType}}): Promise<{{this.outputType}}> {
 
 **Template:**
 ```handlebars
-{{#if this.serverStreaming}}{{#unless this.clientStreaming}}
+{{#if this.serverStream}}{{#unless this.clientStreaming}}
 /**
  * RPC method {{this.name}} (server streaming)
  * @param request - {{this.inputType}} request message
@@ -252,7 +252,7 @@ async {{this.name}}(request: {{this.inputType}}): Promise<{{this.outputType}}> {
 
 **Template:**
 ```handlebars
-{{#if this.clientStreaming}}{{#unless this.serverStreaming}}
+{{#if this.clientStreaming}}{{#unless this.serverStream}}
 /**
  * RPC method {{this.name}} (client streaming)
  * @returns Object with send method and response promise
@@ -299,7 +299,7 @@ async {{this.name}}(request: {{this.inputType}}): Promise<{{this.outputType}}> {
 
 **Template:**
 ```handlebars
-{{#if this.clientStreaming}}{{#if this.serverStreaming}}
+{{#if this.clientStreaming}}{{#if this.serverStream}}
 /**
  * RPC method {{this.name}} (bidirectional streaming)
  * @returns Observable stream for bidirectional streaming

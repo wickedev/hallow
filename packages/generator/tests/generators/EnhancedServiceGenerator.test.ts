@@ -52,7 +52,7 @@ describe('EnhancedServiceGenerator', () => {
           inputType: 'GetUserRequest',
           outputType: 'GetUserResponse',
           clientStreaming: false,
-          serverStreaming: false,
+          serverStream: false,
           options: {}
         },
         {
@@ -60,7 +60,7 @@ describe('EnhancedServiceGenerator', () => {
           inputType: 'ListUsersRequest',
           outputType: 'ListUsersResponse',
           clientStreaming: false,
-          serverStreaming: true,
+          serverStream: true,
           options: {}
         }
       ],
@@ -134,7 +134,7 @@ describe('EnhancedServiceGenerator', () => {
             inputType: 'ChatMessage',
             outputType: 'ChatResponse',
             clientStreaming: true,
-            serverStreaming: false,
+            serverStream: false,
             options: {}
           },
           {
@@ -142,7 +142,7 @@ describe('EnhancedServiceGenerator', () => {
             inputType: 'ChatSubscription',
             outputType: 'ChatMessage',
             clientStreaming: false,
-            serverStreaming: true,
+            serverStream: true,
             options: {}
           }
         ],
@@ -202,7 +202,7 @@ describe('EnhancedServiceGenerator', () => {
             inputType: 'GetUserRequest',
             outputType: 'GetUserResponse',
             clientStreaming: false,
-            serverStreaming: false,
+            serverStream: false,
             options: {}
           }
         ],
@@ -216,7 +216,7 @@ describe('EnhancedServiceGenerator', () => {
             inputType: 'CreatePostRequest',
             outputType: 'CreatePostResponse',
             clientStreaming: false,
-            serverStreaming: false,
+            serverStream: false,
             options: {}
           }
         ],
@@ -268,7 +268,7 @@ describe('EnhancedServiceGenerator', () => {
                 inputType: 'auth.AuthRequest',
                 outputType: 'auth.AuthResponse',
                 clientStreaming: false,
-                serverStreaming: false,
+                serverStream: false,
                 options: {}
               }
             ],

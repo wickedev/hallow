@@ -402,7 +402,7 @@ function addMinimalService(protoFile: ProtoFile): ProtoFile {
           inputType: protoFile.messages[0]?.name || 'Empty',
           outputType: protoFile.messages[0]?.name || 'Empty',
           clientStreaming: false,
-          serverStreaming: false,
+          serverStream: false,
           options: {}
         }],
         options: {}

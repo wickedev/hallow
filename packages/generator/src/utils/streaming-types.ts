@@ -146,7 +146,7 @@ export class StreamingError extends Error {
 export interface StreamingMethodInfo {
   name: string;
   clientStreaming: boolean;
-  serverStreaming: boolean;
+  serverStream: boolean;
   inputType: string;
   outputType: string;
 }
@@ -166,11 +166,11 @@ export class StreamingUtils {
    * Determine streaming type from method info
    */
   static getStreamingType(methodInfo: StreamingMethodInfo): 'unary' | 'client_streaming' | 'server_streaming' | 'bidirectional_streaming' {
-    if (methodInfo.clientStreaming && methodInfo.serverStreaming) {
+    if (methodInfo.clientStreaming && methodInfo.serverStream) {
       return 'bidirectional_streaming';
     } else if (methodInfo.clientStreaming) {
       return 'client_streaming';
-    } else if (methodInfo.serverStreaming) {
+    } else if (methodInfo.serverStream) {
       return 'server_streaming';
     } else {
       return 'unary';

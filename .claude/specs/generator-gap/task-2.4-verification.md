@@ -45,7 +45,7 @@ export const {{pascalName}}Service = {
     methodName: '{{name}}',
     service: { serviceName: '{{../name}}' },
     requestStream: {{clientStreaming}},
-    responseStream: {{serverStreaming}},
+    responseStream: {{serverStream}},
     requestType: {} as any, // Message type placeholder
     responseType: {} as any, // Message type placeholder
   },
