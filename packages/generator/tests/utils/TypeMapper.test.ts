@@ -470,11 +470,65 @@ describe('TypeMapper', () => {
     });
   });
   
+  describe('Message Type Mapping', () => {
+    it('should map custom message type without namespace', () => {
+      const message: MessageDefinition = {
+        name: 'UserMessage',
+        fields: [],
+        nestedMessages: [],
+        nestedEnums: [],
+        oneofs: [],
+        options: {}
+      };
+
+      expect(mapper.mapMessageType(message)).toBe('UserMessage');
+    });
+
+    it('should map custom message type with namespace', () => {
+      const message: MessageDefinition = {
+        name: 'UserMessage',
+        fields: [],
+        nestedMessages: [],
+        nestedEnums: [],
+        oneofs: [],
+        options: {}
+      };
+
+      expect(mapper.mapMessageType(message, 'com.example')).toBe('UserMessage');
+    });
+
+    it('should map well-known message type with namespace', () => {
+      const message: MessageDefinition = {
+        name: 'Timestamp',
+        fields: [],
+        nestedMessages: [],
+        nestedEnums: [],
+        oneofs: [],
+        options: {}
+      };
+
+      expect(mapper.mapMessageType(message, 'google.protobuf')).toBe('Date');
+    });
+
+    it('should map well-known Empty type', () => {
+      const message: MessageDefinition = {
+        name: 'Empty',
+        fields: [],
+        nestedMessages: [],
+        nestedEnums: [],
+        oneofs: [],
+        options: {}
+      };
+
+      expect(mapper.mapMessageType(message, 'google.protobuf')).toBe('{}');
+    });
+  });
+
   describe('Factory Function', () => {
     it('should create TypeMapper instance with createTypeMapper', () => {
       const mapper1 = createTypeMapper();
       expect(mapper1).toBeInstanceOf(TypeMapper);
-      
+
       const mapper2 = createTypeMapper({ useBigInt: true });
       expect(mapper2.mapScalarType('int64')).toBe('bigint');
     });
