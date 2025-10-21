@@ -272,16 +272,18 @@ export class ServiceGenerator {
       imports: ['Message'],
       source: 'google-protobuf',
     });
-    
+
+    // Add GrpcWebAdapter import from the generator package
+    imports.push({
+      imports: ['GrpcWebAdapter', 'GrpcError', 'isGrpcError', 'GrpcClientOptions'],
+      source: '@hallow/generator/adapters',
+    });
+
     // Add Observable imports for streaming methods
     if (hasStreaming) {
       imports.push({
-        imports: ['Observable', 'Subject', 'Subscription'],
+        imports: ['Observable'],
         source: 'rxjs',
-      });
-      imports.push({
-        imports: ['takeUntil', 'finalize'],
-        source: 'rxjs/operators',
       });
     }
     
@@ -462,41 +464,6 @@ export class ServiceGenerator {
 import {{#if isDefault}}{{name}}{{else}}{ {{join imports ", "}} }{{/if}} from '{{source}}';
 {{/each}}
 
-/**
- * Cancellation token for streaming operations
- */
-export interface CancellationToken {
-  cancel(): void;
-  readonly isCancelled: boolean;
-  onCancel(callback: () => void): void;
-}
-
-/**
- * Implementation of cancellation token
- */
-class CancellationTokenImpl implements CancellationToken {
-  private _isCancelled = false;
-  private readonly cancelCallbacks: Array<() => void> = [];
-  
-  get isCancelled(): boolean {
-    return this._isCancelled;
-  }
-  
-  cancel(): void {
-    if (this._isCancelled) return;
-    this._isCancelled = true;
-    this.cancelCallbacks.forEach(callback => callback());
-  }
-  
-  onCancel(callback: () => void): void {
-    if (this._isCancelled) {
-      callback();
-    } else {
-      this.cancelCallbacks.push(callback);
-    }
-  }
-}
-
 {{#each services}}
 /**
  * Service descriptor for {{pascalName}}
@@ -531,11 +498,18 @@ export const {{pascalName}}Service = {
  * Generated gRPC service stub with Promise and Streaming APIs
  */
 export class {{pascalName}}Stub {
-  private readonly client: any;
-  
-  constructor(private readonly baseUrl: string) {
-    // Initialize gRPC-web client
-    // TODO: Properly initialize with @improbable-eng/grpc-web
+  private readonly adapter: GrpcWebAdapter;
+
+  /**
+   * Create a new {{pascalName}}Stub
+   * @param baseUrl - Base URL for the gRPC server (e.g., 'https://api.example.com')
+   * @param options - Optional client configuration
+   */
+  constructor(
+    private readonly baseUrl: string,
+    options?: GrpcClientOptions
+  ) {
+    this.adapter = new GrpcWebAdapter(baseUrl, options);
   }
 
   /**
@@ -543,6 +517,13 @@ export class {{pascalName}}Stub {
    */
   public getBaseUrl(): string {
     return this.baseUrl;
+  }
+
+  /**
+   * Get the underlying GrpcWebAdapter for advanced usage
+   */
+  public getAdapter(): GrpcWebAdapter {
+    return this.adapter;
   }
 
   {{#each methods}}
@@ -575,51 +556,20 @@ export class {{pascalName}}Stub {
   {{else}}
   /**
    * {{#if description}}{{description}}{{else}}{{name}} - Server streaming RPC method{{/if}}
+   *
+   * Sends a single request and receives a stream of responses.
+   * Returns an RxJS Observable that emits each response message.
+   *
    * @param request - {{inputType}} request message
    * @returns Observable stream of {{outputType}} response messages
    * @description Opens a server stream and emits multiple response messages.
-   *              Unsubscribe to cancel the stream.
+   *              Unsubscribe to cancel the stream and clean up resources.
    */
   public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
-    return new Observable<{{outputType}}>(observer => {
-      const cancellationToken = new CancellationTokenImpl();
-
-      try {
-        // Create server streaming request using gRPC-web
-        const client = grpc.invoke({{../pascalName}}Service.{{pascalName}}Descriptor, {
-          request: request as any,
-          host: this.baseUrl,
-          onMessage: (message: any) => {
-            if (!cancellationToken.isCancelled) {
-              // Emit each message received from the stream
-              observer.next(message as {{outputType}});
-            }
-          },
-          onEnd: (code: grpc.Code, message: string) => {
-            if (code === grpc.Code.OK) {
-              observer.complete();
-            } else {
-              observer.error(new Error(
-                \`gRPC stream error \${grpc.Code[code]}: \${message}\`
-              ));
-            }
-          }
-        });
-
-        // Register cleanup for cancellation
-        cancellationToken.onCancel(() => {
-          client.close();
-        });
-
-        // Return teardown logic (called on unsubscribe)
-        return () => {
-          cancellationToken.cancel();
-        };
-      } catch (error) {
-        observer.error(error);
-        return () => {};
-      }
-    });
+    return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
+      {{../pascalName}}Service.{{pascalName}}Descriptor,
+      request
+    );
   }
   {{/if}}
   {{else if clientStreaming}}
@@ -649,33 +599,17 @@ export class {{pascalName}}Stub {
   {{else}}
   /**
    * {{#if description}}{{description}}{{else}}{{name}} - Unary RPC method{{/if}}
+   *
+   * Sends a single request and receives a single response.
+   *
    * @param request - {{inputType}} request message
    * @returns Promise resolving to {{outputType}} response message
-   * @throws {Error} If the gRPC call fails or returns a non-OK status
    */
   public async {{camelName}}(request: {{inputType}}): Promise<{{outputType}}> {
-    return new Promise<{{outputType}}>((resolve, reject) => {
-      try {
-        // Create unary request using gRPC-web
-        grpc.unary({{../pascalName}}Service.{{pascalName}}Descriptor, {
-          request: request as any,
-          host: this.baseUrl,
-          onEnd: (response) => {
-            if (response.status !== grpc.Code.OK) {
-              reject(new Error(
-                \`gRPC error \${grpc.Code[response.status]}: \${response.statusMessage}\`
-              ));
-              return;
-            }
-
-            // Response message is already deserialized by gRPC-web
-            resolve(response.message as {{outputType}});
-          }
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return this.adapter.unary<{{inputType}}, {{outputType}}>(
+      {{../pascalName}}Service.{{pascalName}}Descriptor,
+      request
+    );
   }
   {{/if}}
 

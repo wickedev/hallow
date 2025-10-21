@@ -1,7 +1,7 @@
 import { BinaryReader, BinaryWriter, Message } from 'google-protobuf';
 import { grpc } from '@improbable-eng/grpc-web';
-import { Observable, Subject, Subscription } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { GrpcClientOptions, GrpcError, GrpcWebAdapter, isGrpcError } from '@hallow/generator/adapters';
+import { Observable } from 'rxjs';
 
 
 ;
@@ -323,39 +323,6 @@ export namespace Test.Services {
 ;
 
 /**
- * Cancellation token for streaming operations
- */
-export interface CancellationToken {
-  cancel(): void;
-  readonly isCancelled: boolean;
-  onCancel(callback: () => void): void;
-}
-
-/**
- * Implementation of cancellation token
- */
-class CancellationTokenImpl implements CancellationToken {
-  private _isCancelled = false;
-  private readonly cancelCallbacks: Array<() => void> = [];
-  
-  get isCancelled(): boolean {
-    return this._isCancelled;
-  }
-  
-  cancel(): void {
-    if (this._isCancelled) return;
-  }
-  
-  onCancel(callback: () => void): void {
-    if (this._isCancelled) {
-      callback();
-    } else {
-      this.cancelCallbacks.push(callback);
-    }
-  }
-}
-
-/**
  * Service descriptor for UserService
  * Contains metadata for all RPC methods in this service
  */
@@ -418,11 +385,18 @@ export const UserServiceService = {
  * Generated gRPC service stub with Promise and Streaming APIs
  */
 export class UserServiceStub {
-  private readonly client: any;
-  
-  constructor(private readonly baseUrl: string) {
-    // Initialize gRPC-web client
-    // TODO: Properly initialize with @improbable-eng/grpc-web
+  private readonly adapter: GrpcWebAdapter;
+
+  /**
+   * Create a new UserServiceStub
+   * @param baseUrl - Base URL for the gRPC server (e.g., 'https://api.example.com')
+   * @param options - Optional client configuration
+   */
+  constructor(
+    private readonly baseUrl: string,
+    options?: GrpcClientOptions
+  ) {
+    this.adapter = new GrpcWebAdapter(baseUrl, options);
   }
 
   /**
@@ -433,51 +407,29 @@ export class UserServiceStub {
   }
 
   /**
+   * Get the underlying GrpcWebAdapter for advanced usage
+   */
+  public getAdapter(): GrpcWebAdapter {
+    return this.adapter;
+  }
+
+  /**
    * RPC method GetUser (unary)
+   *
+   * Sends a single request and receives a single response.
+   *
    * @param request - GetUserRequest request message
    * @returns Promise resolving to GetUserResponse response message
-            }
-
-            // Response message is already deserialized by gRPC-web
-            resolve(response.message as GetUserResponse);
-          }
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
   }
   
   /**
    * RPC method ListUsers (server streaming)
+   *
+   * Sends a single request and receives a stream of responses.
+   * Returns an RxJS Observable that emits each response message.
+   *
    * @param request - ListUsersRequest request message
    * @returns Observable stream of ListUsersResponse response messages
-            }
-          },
-          onEnd: (code: grpc.Code, message: string) => {
-            if (code === grpc.Code.OK) {
-              observer.complete();
-            } else {
-              observer.error(new Error(
-                `gRPC stream error ${grpc.Code[code]}: ${message}`
-              ));
-            }
-          }
-        });
-
-        // Register cleanup for cancellation
-        cancellationToken.onCancel(() => {
-          client.close();
-        });
-
-        // Return teardown logic (called on unsubscribe)
-        return () => {
-        };
-      } catch (error) {
-        observer.error(error);
-        return () => {};
-      }
-    });
   }
 
   /**
