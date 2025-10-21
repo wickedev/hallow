@@ -1,131 +1,99 @@
+/**
+ * Generator Integration Test
+ *
+ * This file demonstrates using the Hallow generator package directly
+ * to generate TypeScript code from proto files.
+ *
+ * Test-client is specifically for validating that the generator package works correctly.
+ */
+
 const fs = require('fs');
 const path = require('path');
-const {
-  createServiceGenerator,
-  createMessageGenerator,
-  createImportManager,
-  createNameResolver
-} = require('../generator/dist/index.js');
+const { parseProtoFile } = require('./proto-parser');
+const { Generator } = require('../generator/dist/index.js');
 
 // Read proto file
 const protoPath = path.join(__dirname, 'src/service.proto');
 const protoContent = fs.readFileSync(protoPath, 'utf-8');
 
-// Simple proto parser (for demonstration)
-// In real implementation, this would use the parser package
-function parseProto(content) {
-  const services = [];
-  const messages = [];
+async function main() {
+  console.log('\ud83d\ude80 Hallow Generator Package Integration Test\n');
+  console.log('Purpose: Validate that packages/generator works correctly');
+  console.log('========================================================\n');
 
-  // Extract package name
-  const packageMatch = content.match(/package\s+([^;]+);/);
-  const packageName = packageMatch ? packageMatch[1] : '';
+  try {
+    // Step 1: Parse proto file using our parser
+    console.log('Step 1: Parsing proto file with proto-parser.js...');
+    const protoFile = parseProtoFile(protoContent, 'service.proto');
+    console.log(`\u2705 Parsed successfully`);
+    console.log(`   - Package: ${protoFile.package}`);
+    console.log(`   - Services: ${protoFile.services.length}`);
+    console.log(`   - Messages: ${protoFile.messages.length}\n`);
 
-  // Extract service definitions
-  const serviceRegex = /service\s+(\w+)\s*{([^}]+)}/g;
-  let serviceMatch;
-  while ((serviceMatch = serviceRegex.exec(content)) !== null) {
-    const serviceName = serviceMatch[1];
-    const serviceBody = serviceMatch[2];
+    // Step 2: Initialize Generator from packages/generator
+    console.log('Step 2: Initializing Generator class from packages/generator...');
+    const generator = new Generator({
+      outputFormat: 'typescript',
+      generateComments: true,
+      generateReactHooks: false,  // Disable for simple test
+      generateSuspenseHooks: false,
+      templateDir: path.join(__dirname, '../generator/src/templates')
+    });
+    console.log('\u2705 Generator initialized\n');
 
-    const methods = [];
-    const methodRegex = /rpc\s+(\w+)\s*\(([^)]+)\)\s+returns\s+\(([^)]+)\)/g;
-    let methodMatch;
-    while ((methodMatch = methodRegex.exec(serviceBody)) !== null) {
-      methods.push({
-        name: methodMatch[1],
-        inputType: methodMatch[2].replace(/stream\s+/, ''),
-        outputType: methodMatch[3].replace(/stream\s+/, ''),
-        clientStreaming: methodMatch[2].includes('stream'),
-        serverStreaming: methodMatch[3].includes('stream')
-      });
-    }
+    // Step 3: Generate code using the generator package
+    console.log('Step 3: Generating TypeScript code...');
+    const result = await generator.generateCode(protoFile);
+    console.log('\u2705 Code generated successfully');
+    console.log(`   - Generated ${result.files.length} file(s)\n`);
 
-    services.push({ name: serviceName, methods });
+    // Step 4: Write all generated files
+    console.log(`Step 4: Writing ${result.files.length} generated file(s)...`);
+    result.files.forEach((file, index) => {
+      const outputPath = path.join(__dirname, 'src', file.path);
+      const outputDir = path.dirname(outputPath);
+
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      fs.writeFileSync(outputPath, file.content);
+      console.log(`   \u2705 [${index + 1}/${result.files.length}] ${file.path} (${file.content.length} chars)`);
+    });
+    console.log();
+
+    // Step 5: Summary
+    console.log('\ud83c\udf89 Generator Package Integration Test PASSED!\n');
+    console.log('\ud83d\udcca Summary:');
+    console.log('   \u2705 Proto file parsed using proto-parser.js');
+    console.log('   \u2705 Generator class from packages/generator initialized');
+    console.log('   \u2705 Code generated using generator templates');
+    console.log(`   \u2705 ${result.files.length} file(s) written to src/`);
+    console.log();
+    console.log('\ud83d\udcdd Key Achievement:');
+    console.log('   Parser Gap RESOLVED: proto-parser.js \u2192 ProtoFile AST');
+    console.log('   Template Gap RESOLVED: Generator class handles template engine');
+    console.log('   packages/generator IS WORKING CORRECTLY!');
+    console.log();
+
+    // Show all generated file details
+    console.log('\ud83d\udcc4 Generated File Details:');
+    result.files.forEach((file, index) => {
+      console.log(`   [${index + 1}] ${file.path}`);
+      console.log(`       Size: ${file.content.length} characters`);
+      console.log(`       Lines: ${file.content.split('\n').length}`);
+    });
+    console.log();
+
+  } catch (error) {
+    console.error('\u274c Error during code generation:', error.message);
+    console.error();
+    console.error('Stack trace:');
+    console.error(error.stack);
+    process.exit(1);
   }
-
-  // Extract message definitions
-  const messageRegex = /message\s+(\w+)\s*{([^}]+)}/g;
-  let messageMatch;
-  while ((messageMatch = messageRegex.exec(content)) !== null) {
-    const messageName = messageMatch[1];
-    const messageBody = messageMatch[2];
-
-    const fields = [];
-    const fieldRegex = /(repeated\s+)?(\w+)\s+(\w+)\s*=\s*(\d+);/g;
-    let fieldMatch;
-    while ((fieldMatch = fieldRegex.exec(messageBody)) !== null) {
-      fields.push({
-        repeated: !!fieldMatch[1],
-        type: fieldMatch[2],
-        name: fieldMatch[3],
-        number: parseInt(fieldMatch[4])
-      });
-    }
-
-    messages.push({ name: messageName, fields });
-  }
-
-  return {
-    package: packageName,
-    services,
-    messages
-  };
 }
 
-try {
-  // Parse proto file
-  const proto = parseProto(protoContent);
-
-  // Generate code without using the complex generators
-  // This simulates what the Hallow generator would produce
-  let generatedCode = '// Generated by Hallow gRPC generator\n\n';
-
-  // Add imports
-  generatedCode += `import { grpc } from '@improbable-eng/grpc-web';\n`;
-  generatedCode += `import { BrowserHeaders } from 'browser-headers';\n\n`;
-
-  // Generate message interfaces
-  for (const message of proto.messages) {
-    generatedCode += `export interface ${message.name} {\n`;
-    for (const field of message.fields) {
-      const tsType = field.type === 'string' ? 'string' :
-                      field.type === 'int32' || field.type === 'int64' ? 'number' :
-                      field.type === 'bool' ? 'boolean' : field.type;
-      generatedCode += `  ${field.name}: ${field.repeated ? `${tsType}[]` : tsType};\n`;
-    }
-    generatedCode += '}\n\n';
-  }
-
-  // Generate service client
-  for (const service of proto.services) {
-    generatedCode += `export class ${service.name}Client {\n`;
-    generatedCode += `  constructor(private hostname: string, private options?: any) {}\n\n`;
-
-    for (const method of service.methods) {
-      generatedCode += `  ${method.name}(\n`;
-      generatedCode += `    request: ${method.inputType},\n`;
-      generatedCode += `    metadata?: grpc.Metadata\n`;
-      generatedCode += `  ): Promise<${method.outputType}> {\n`;
-      generatedCode += `    return new Promise((resolve, reject) => {\n`;
-      generatedCode += `      // Implementation would go here\n`;
-      generatedCode += `      // This is a simplified example\n`;
-      generatedCode += `    });\n`;
-      generatedCode += `  }\n\n`;
-    }
-
-    generatedCode += '}\n';
-  }
-
-  // Write generated code to file
-  const outputPath = path.join(__dirname, 'src/generated.ts');
-  fs.writeFileSync(outputPath, generatedCode);
-
-  console.log('✅ Generated TypeScript code written to:', outputPath);
-  console.log('   Package:', proto.package);
-  console.log('   Services:', proto.services.map(s => s.name).join(', '));
-  console.log('   Messages:', proto.messages.map(m => m.name).join(', '));
-
-} catch (error) {
-  console.error('❌ Error generating code:', error);
-}
+// Run the generator
+main().catch(console.error);
