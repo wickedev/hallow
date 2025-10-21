@@ -8,7 +8,7 @@ import { finalize, takeUntil } from 'rxjs/operators';
 
 export namespace Test.Services {
   /**
-   * Interface for GetUserRequest message
+   * Interface for GetUserRequest message (nested)
    */
   export interface GetUserRequest {
     /** Field user_id (string) */
@@ -50,7 +50,7 @@ export namespace Test.Services {
   }
 
   /**
-   * Interface for GetUserResponse message
+   * Interface for GetUserResponse message (nested)
    */
   export interface GetUserResponse {
     /** Field id (string) */
@@ -108,7 +108,7 @@ export namespace Test.Services {
   }
 
   /**
-   * Interface for ListUsersRequest message
+   * Interface for ListUsersRequest message (nested)
    */
   export interface ListUsersRequest {
     /** Field page_size (int32) */
@@ -158,7 +158,7 @@ export namespace Test.Services {
   }
 
   /**
-   * Interface for ListUsersResponse message
+   * Interface for ListUsersResponse message (nested)
    */
   export interface ListUsersResponse {
     /** Field users (GetUserResponse) */
@@ -212,7 +212,7 @@ export namespace Test.Services {
   }
 
   /**
-   * Interface for CreateUserRequest message
+   * Interface for CreateUserRequest message (nested)
    */
   export interface CreateUserRequest {
     /** Field name (string) */
@@ -262,7 +262,7 @@ export namespace Test.Services {
   }
 
   /**
-   * Interface for StreamMessage message
+   * Interface for StreamMessage message (nested)
    */
   export interface StreamMessage {
     /** Field content (string) */

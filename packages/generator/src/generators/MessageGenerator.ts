@@ -677,7 +677,7 @@ export namespace {{interfaceName}} {
    */
   private generateInterfaceProgrammatically(
     context: MessageContext,
-    indentLevel: number = 0
+    indentLevel: number = 0,
   ): string {
     const lines: string[] = [];
     const indent = '  '.repeat(indentLevel);
@@ -727,7 +727,7 @@ export namespace {{interfaceName}} {
         }
         const nestedCode = this.generateInterfaceProgrammatically(
           nestedMessage,
-          indentLevel + 1
+          indentLevel + 1,
         );
         lines.push(nestedCode);
       });
