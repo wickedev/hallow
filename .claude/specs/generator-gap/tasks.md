@@ -235,11 +235,13 @@ describe('Message Generation Integration', () => {
   - **Verification:** See [task-3.3-verification.md](./task-3.3-verification.md) for details
   - [Research](./task-3.1-research.md)
 
-- [ ] #### Task 3.4: Add Cancellation Support (8h)
+- [x] #### Task 3.4: Add Cancellation Support (8h)
   - Implement Observable teardown
   - Close gRPC client on unsubscribe
   - Test resource cleanup
   - **Requirements:** FR-3 AC 11-12, FR-5 AC 1-6
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See [task-3.4-verification.md](./task-3.4-verification.md) for details
   - [Research](./task-3.1-research.md)
 
 - [ ] #### Task 3.5: Integration Testing with Test Server (12h)
