@@ -11,7 +11,7 @@ Transform the Hallow gRPC generator from producing syntactically invalid TypeScr
 
 ---
 
-- [ ] ## Phase 1: Message Type Generation (Days 1-3)
+- [x] ## Phase 1: Message Type Generation (Days 1-3)
 
 **Goal:** Generate complete TypeScript interfaces for all protobuf message types
 **Priority:** P0 Critical | **Time:** 16 hours
@@ -45,7 +45,7 @@ Transform the Hallow gRPC generator from producing syntactically invalid TypeScr
 
 ---
 
-- [ ] ### Task 1.2: Verify TypeMapper Coverage
+- [x] ### Task 1.2: Verify TypeMapper Coverage
 **Time:** 2 hours | **File:** `packages/generator/src/utils/TypeMapper.ts`
 
 **Objective:** Ensure all protobuf types have correct TypeScript mappings
@@ -71,7 +71,7 @@ Transform the Hallow gRPC generator from producing syntactically invalid TypeScr
 
 ---
 
-- [ ] ### Task 1.3: Add Nested Type Generation
+- [x] ### Task 1.3: Add Nested Type Generation
 **Time:** 3 hours | **File:** `packages/generator/src/generators/MessageGenerator.ts`
 
 **Objective:** Generate nested message interfaces and enums correctly

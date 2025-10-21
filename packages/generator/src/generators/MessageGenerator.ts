@@ -256,9 +256,63 @@ export interface {{interfaceName}} {
 {{#if hasNestedTypes}}
 
 export namespace {{interfaceName}} {
+  {{#each nestedMessages}}
+  {{#if ../generateComments}}
+  /**
+   * Interface for {{name}} message (nested in {{../name}})
+   */
+  {{/if}}
+  export interface {{interfaceName}} {
+    {{#each fields}}
+    {{#if comment}}/** {{comment}} */{{/if}}
+    {{#if ../../readonlyProperties}}readonly {{/if}}{{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
+    {{/each}}
+    {{#each oneofs}}
+    {{camelCaseName}}: {{unionType}};
+    {{/each}}
+  }
+  {{#if hasNestedTypes}}
+
+  export namespace {{interfaceName}} {
+    {{#each nestedEnums}}
+    {{#if ../../generateComments}}
+    /**
+     * Enum {{name}} (nested in {{../name}})
+     */
+    {{/if}}
+    export enum {{name}} {
+      {{#each values}}
+      {{#if comment}}/** {{comment}} */{{/if}}
+      {{name}} = {{number}},
+      {{/each}}
+    }
+    {{/each}}
+    {{#each nestedMessages}}
+    {{#if ../../generateComments}}
+    /**
+     * Interface for {{name}} message (nested in {{../name}})
+     */
+    {{/if}}
+    export interface {{interfaceName}} {
+      {{#each fields}}
+      {{#if comment}}/** {{comment}} */{{/if}}
+      {{#if ../../../../readonlyProperties}}readonly {{/if}}{{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
+      {{/each}}
+    }
+    {{/each}}
+  }
+  {{/if}}
+
+  {{/each}}
   {{#each nestedEnums}}
+  {{#if ../generateComments}}
+  /**
+   * Enum {{name}}
+   */
+  {{/if}}
   export enum {{name}} {
     {{#each values}}
+    {{#if comment}}/** {{comment}} */{{/if}}
     {{name}} = {{number}},
     {{/each}}
   }
@@ -621,71 +675,84 @@ export namespace {{interfaceName}} {
   /**
    * Generate interface code programmatically (fallback)
    */
-  private generateInterfaceProgrammatically(context: MessageContext): string {
+  private generateInterfaceProgrammatically(
+    context: MessageContext,
+    indentLevel: number = 0
+  ): string {
     const lines: string[] = [];
-    
+    const indent = '  '.repeat(indentLevel);
+    const innerIndent = '  '.repeat(indentLevel + 1);
+
     // Add comment if enabled
     if (context.generateComments) {
-      lines.push('/**');
-      lines.push(` * Interface for ${context.name} message`);
-      lines.push(' */');
+      lines.push(`${indent}/**`);
+      if (context.namespace) {
+        lines.push(`${indent} * Interface for ${context.name} message (nested)`);
+      } else {
+        lines.push(`${indent} * Interface for ${context.name} message`);
+      }
+      lines.push(`${indent} */`);
     }
-    
-    // Start interface
-    lines.push(`export interface ${context.interfaceName} {`);
-    
+
+    // Start interface - use 'export' for all interfaces
+    lines.push(`${indent}export interface ${context.interfaceName} {`);
+
     // Add fields
     context.fields.forEach(field => {
       if (field.comment) {
-        lines.push(`  /** ${field.comment} */`);
+        lines.push(`${innerIndent}/** ${field.comment} */`);
       }
       const optional = field.optional ? '?' : '';
       const readonly = this.options.readonlyProperties ? 'readonly ' : '';
-      lines.push(`  ${readonly}${field.camelCaseName}${optional}: ${field.tsType};`);
+      lines.push(`${innerIndent}${readonly}${field.camelCaseName}${optional}: ${field.tsType};`);
     });
-    
+
     // Add oneofs
     context.oneofs.forEach(oneof => {
-      lines.push(`  ${oneof.camelCaseName}: ${oneof.unionType};`);
+      lines.push(`${innerIndent}${oneof.camelCaseName}: ${oneof.unionType};`);
     });
-    
+
     // Close interface
-    lines.push('}');
-    
+    lines.push(`${indent}}`);
+
     // Add nested types if any
     if (context.hasNestedTypes) {
       lines.push('');
-      lines.push(`export namespace ${context.interfaceName} {`);
-      
-      // Add nested messages
-      context.nestedMessages.forEach(nestedMessage => {
-        const nestedLines = this.generateInterfaceProgrammatically(nestedMessage)
-          .split('\n')
-          .map(line => line ? `  ${line}` : '');
-        lines.push(...nestedLines);
+      lines.push(`${indent}export namespace ${context.interfaceName} {`);
+
+      // Add nested messages - recursively handle deeply nested structures
+      context.nestedMessages.forEach((nestedMessage, index) => {
+        if (index > 0) {
+          lines.push(''); // Add spacing between nested types
+        }
+        const nestedCode = this.generateInterfaceProgrammatically(
+          nestedMessage,
+          indentLevel + 1
+        );
+        lines.push(nestedCode);
       });
-      
+
       // Add nested enums
       context.nestedEnums.forEach(nestedEnum => {
         lines.push('');
         if (context.generateComments) {
-          lines.push('  /**');
-          lines.push(`   * Enum ${nestedEnum.name}`);
-          lines.push('   */');
+          lines.push(`${innerIndent}/**`);
+          lines.push(`${innerIndent} * Enum ${nestedEnum.name}`);
+          lines.push(`${innerIndent} */`);
         }
-        lines.push(`  export enum ${nestedEnum.name} {`);
+        lines.push(`${innerIndent}export enum ${nestedEnum.name} {`);
         nestedEnum.values.forEach(value => {
           if (value.comment) {
-            lines.push(`    /** ${value.comment} */`);
+            lines.push(`${innerIndent}  /** ${value.comment} */`);
           }
-          lines.push(`    ${value.name} = ${value.number},`);
+          lines.push(`${innerIndent}  ${value.name} = ${value.number},`);
         });
-        lines.push('  }');
+        lines.push(`${innerIndent}}`);
       });
-      
-      lines.push('}');
+
+      lines.push(`${indent}}`);
     }
-    
+
     return lines.join('\n');
   }
   
