@@ -374,12 +374,317 @@ describe('ServiceGenerator', () => {
       
       // Check unary method signature
       expect(result.content).toContain('public async unaryCall(request: UnaryRequest): Promise<UnaryResponse>');
-      
+
       // Check streaming method signature
       expect(result.content).toContain('public streamingCall(request: StreamRequest): Observable<StreamResponse>');
     });
+
+    describe('Client and Bidirectional Streaming Templates (Task 2.3)', () => {
+      describe('Client Streaming Template', () => {
+        it('should generate correct method signature for client streaming', () => {
+          const clientStreamingService: ServiceDefinition = {
+            name: 'UploadService',
+            methods: [
+              {
+                name: 'UploadFile',
+                inputType: 'FileChunk',
+                outputType: 'UploadResult',
+                clientStreaming: true,
+                serverStreaming: false,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+          protoFile.services = [clientStreamingService];
+
+          const result = generator.generateStub(clientStreamingService, protoFile);
+
+          // Verify method signature structure
+          expect(result.content).toContain('public uploadFile(): {');
+          expect(result.content).toContain('send: (request: FileChunk) => void');
+          expect(result.content).toContain('complete: () => Promise<UploadResult>');
+          expect(result.content).toContain('cancel: () => void');
+        });
+
+        it('should include HTTP/1.1 limitation error message', () => {
+          const clientStreamingService: ServiceDefinition = {
+            name: 'UploadService',
+            methods: [
+              {
+                name: 'UploadFile',
+                inputType: 'FileChunk',
+                outputType: 'UploadResult',
+                clientStreaming: true,
+                serverStreaming: false,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(clientStreamingService, protoFile);
+
+          // Verify error message
+          expect(result.content).toContain('Client streaming RPC "UploadFile" is not supported over HTTP/1.1');
+          expect(result.content).toContain('gRPC-web requires WebSocket transport or HTTP/2 for client streaming');
+          expect(result.content).toContain('https://github.com/grpc/grpc-web#streaming-support');
+        });
+
+        it('should include comprehensive JSDoc documentation', () => {
+          const clientStreamingService: ServiceDefinition = {
+            name: 'UploadService',
+            methods: [
+              {
+                name: 'UploadFile',
+                inputType: 'FileChunk',
+                outputType: 'UploadResult',
+                clientStreaming: true,
+                serverStreaming: false,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(clientStreamingService, protoFile);
+
+          // Verify JSDoc elements
+          expect(result.content).toContain('/**');
+          expect(result.content).toContain('* @returns Object with send(), complete(), and cancel() methods');
+          expect(result.content).toContain('* @throws {Error} Client streaming not supported over HTTP/1.1');
+          expect(result.content).toContain('* @see https://github.com/grpc/grpc-web#streaming-support');
+          expect(result.content).toContain('* **IMPORTANT:**');
+        });
+
+        it('should throw descriptive error in method body', () => {
+          const clientStreamingService: ServiceDefinition = {
+            name: 'UploadService',
+            methods: [
+              {
+                name: 'UploadFile',
+                inputType: 'FileChunk',
+                outputType: 'UploadResult',
+                clientStreaming: true,
+                serverStreaming: false,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(clientStreamingService, protoFile);
+
+          // Verify throw statement
+          expect(result.content).toContain('throw new Error(');
+          expect(result.content).toContain('Please use unary or server streaming RPCs');
+          expect(result.content).toContain('or configure your server for WebSocket support');
+        });
+      });
+
+      describe('Bidirectional Streaming Template', () => {
+        it('should generate correct method signature for bidirectional streaming', () => {
+          const bidiStreamingService: ServiceDefinition = {
+            name: 'ChatService',
+            methods: [
+              {
+                name: 'Chat',
+                inputType: 'ChatMessage',
+                outputType: 'ChatMessage',
+                clientStreaming: true,
+                serverStreaming: true,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+          protoFile.services = [bidiStreamingService];
+
+          const result = generator.generateStub(bidiStreamingService, protoFile);
+
+          // Verify method signature structure
+          expect(result.content).toContain('public chat(): {');
+          expect(result.content).toContain('send: (request: ChatMessage) => void');
+          expect(result.content).toContain('responses: Observable<ChatMessage>');
+          expect(result.content).toContain('complete: () => void');
+          expect(result.content).toContain('cancel: () => void');
+        });
+
+        it('should include HTTP/1.1 limitation error message', () => {
+          const bidiStreamingService: ServiceDefinition = {
+            name: 'ChatService',
+            methods: [
+              {
+                name: 'Chat',
+                inputType: 'ChatMessage',
+                outputType: 'ChatMessage',
+                clientStreaming: true,
+                serverStreaming: true,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(bidiStreamingService, protoFile);
+
+          // Verify error message
+          expect(result.content).toContain('Bidirectional streaming RPC "Chat" is not supported over HTTP/1.1');
+          expect(result.content).toContain('gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming');
+          expect(result.content).toContain('https://github.com/grpc/grpc-web#streaming-support');
+        });
+
+        it('should include comprehensive JSDoc documentation', () => {
+          const bidiStreamingService: ServiceDefinition = {
+            name: 'ChatService',
+            methods: [
+              {
+                name: 'Chat',
+                inputType: 'ChatMessage',
+                outputType: 'ChatMessage',
+                clientStreaming: true,
+                serverStreaming: true,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(bidiStreamingService, protoFile);
+
+          // Verify JSDoc elements
+          expect(result.content).toContain('/**');
+          expect(result.content).toContain('* @returns Object with send(), responses, complete(), and cancel() methods');
+          expect(result.content).toContain('* @throws {Error} Bidirectional streaming not supported over HTTP/1.1');
+          expect(result.content).toContain('* @see https://github.com/grpc/grpc-web#streaming-support');
+          expect(result.content).toContain('* **IMPORTANT:**');
+        });
+
+        it('should throw descriptive error in method body', () => {
+          const bidiStreamingService: ServiceDefinition = {
+            name: 'ChatService',
+            methods: [
+              {
+                name: 'Chat',
+                inputType: 'ChatMessage',
+                outputType: 'ChatMessage',
+                clientStreaming: true,
+                serverStreaming: true,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(bidiStreamingService, protoFile);
+
+          // Verify throw statement
+          expect(result.content).toContain('throw new Error(');
+          expect(result.content).toContain('Please use unary or server streaming RPCs');
+          expect(result.content).toContain('or configure your server for WebSocket support');
+        });
+
+        it('should include Observable type for responses property', () => {
+          const bidiStreamingService: ServiceDefinition = {
+            name: 'ChatService',
+            methods: [
+              {
+                name: 'Chat',
+                inputType: 'ChatMessage',
+                outputType: 'ChatMessage',
+                clientStreaming: true,
+                serverStreaming: true,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+
+          const result = generator.generateStub(bidiStreamingService, protoFile);
+
+          // Verify Observable import and usage
+          expect(result.content).toContain('import { Observable }');
+          expect(result.content).toContain('responses: Observable<ChatMessage>');
+        });
+      });
+
+      describe('Mixed Streaming Service', () => {
+        it('should correctly handle service with all streaming types', () => {
+          const mixedService: ServiceDefinition = {
+            name: 'MixedService',
+            methods: [
+              {
+                name: 'Unary',
+                inputType: 'Request',
+                outputType: 'Response',
+                clientStreaming: false,
+                serverStreaming: false,
+                options: {},
+              },
+              {
+                name: 'ServerStream',
+                inputType: 'Request',
+                outputType: 'Response',
+                clientStreaming: false,
+                serverStreaming: true,
+                options: {},
+              },
+              {
+                name: 'ClientStream',
+                inputType: 'Request',
+                outputType: 'Response',
+                clientStreaming: true,
+                serverStreaming: false,
+                options: {},
+              },
+              {
+                name: 'BidiStream',
+                inputType: 'Request',
+                outputType: 'Response',
+                clientStreaming: true,
+                serverStreaming: true,
+                options: {},
+              },
+            ],
+            options: {},
+          };
+          const protoFile = createTestProtoFile();
+          protoFile.services = [mixedService];
+
+          const result = generator.generateStub(mixedService, protoFile);
+
+          // Verify unary method (functional)
+          expect(result.content).toContain('public async unary(request: Request): Promise<Response>');
+          expect(result.content).toContain('this.adapter.unary');
+
+          // Verify server streaming method (functional)
+          expect(result.content).toContain('public serverStream(request: Request): Observable<Response>');
+          expect(result.content).toContain('this.adapter.serverStream');
+
+          // Verify client streaming method (error with documentation)
+          expect(result.content).toContain('public clientStream(): {');
+          expect(result.content).toContain('Client streaming RPC "ClientStream" is not supported');
+
+          // Verify bidirectional streaming method (error with documentation)
+          expect(result.content).toContain('public bidiStream(): {');
+          expect(result.content).toContain('Bidirectional streaming RPC "BidiStream" is not supported');
+
+          // Verify Observable import is included (for server and bidi streaming)
+          expect(result.content).toContain('import { Observable }');
+        });
+      });
+    });
   });
-  
+
   describe('generateStubs', () => {
     it('should generate stubs for all services in proto file', async () => {
       const protoFile: ProtoFile = {
@@ -468,9 +773,9 @@ describe('ServiceGenerator', () => {
           useBigInt: true,
         },
       });
-      
+
       const options = generator.getOptions();
-      
+
       expect(options.typeMapping).toEqual({
         strictNullChecks: false,
         useBigInt: true,

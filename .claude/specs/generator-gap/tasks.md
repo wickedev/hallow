@@ -177,11 +177,13 @@ describe('Message Generation Integration', () => {
   - **Status:** ✅ COMPLETED (2025-10-21)
   - **Verification:** See task-2.2-verification.md for details
 
-- [ ] #### Task 2.3: Fix Client/Bidirectional Streaming Templates (4h)
+- [x] #### Task 2.3: Fix Client/Bidirectional Streaming Templates (4h)
   - Client streaming: Return interface with send(), complete(), cancel()
   - Bidirectional: Return interface with send(), responses, complete(), cancel()
   - Add clear documentation about HTTP/1.1 limitations
   - **Requirements:** FR-2 AC 3-4, 5-10
+  - **Status:** ✅ COMPLETED (2025-10-21)
+  - **Verification:** See task-2.3-verification.md for details
 
 - [ ] #### Task 2.4: Add Method Descriptors (4h)
   - Generate service descriptor constant
