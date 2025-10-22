@@ -21,6 +21,19 @@ export class UserService {
 
   private initializeTestData(): void {
     const testUsers = [
+      // Test users for integration tests (matching test expectations)
+      { id: '123', name: 'Test User 123', email: 'test123@example.com' },
+      { id: '1', name: 'User One', email: 'user1@example.com' },
+      { id: '2', name: 'User Two', email: 'user2@example.com' },
+      { id: '3', name: 'User Three', email: 'user3@example.com' },
+      // Special test cases
+      { id: 'test-user-456', name: 'Test User 456', email: 'test456@example.com' },
+      { id: 'slow-response', name: 'Slow Response User', email: 'slow@example.com' },
+      { id: 'metadata-test', name: 'Metadata Test User', email: 'metadata@example.com' },
+      { id: 'trailers-test', name: 'Trailers Test User', email: 'trailers@example.com' },
+      { id: 'user@#$%^&*()', name: 'Special Chars User', email: 'special@example.com' },
+      { id: 'a'.repeat(1000), name: 'Long ID User', email: 'long@example.com' },
+      // Additional test users
       { id: 'user-1', name: 'Alice Johnson', email: 'alice@example.com' },
       { id: 'user-2', name: 'Bob Smith', email: 'bob@example.com' },
       { id: 'user-3', name: 'Charlie Davis', email: 'charlie@example.com' },
@@ -80,6 +93,12 @@ export class UserService {
           currentIndex,
           Math.min(currentIndex + batchSize, endIndex)
         );
+
+        // If batch is empty, complete the stream
+        if (batch.length === 0) {
+          observer.complete();
+          return;
+        }
 
         const response: ListUsersResponse = {
           users: batch,

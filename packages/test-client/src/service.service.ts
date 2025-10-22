@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter, Message } from 'google-protobuf';
 import { grpc } from '@improbable-eng/grpc-web';
-import { GrpcClientOptions, GrpcError, GrpcWebAdapter, isGrpcError } from '@hallow/generator/adapters';
+import { GrpcClientOptions, GrpcError, GrpcWebAdapter, isGrpcError } from '@hallow/generator';
 import { Observable } from 'rxjs';
 
 
@@ -51,6 +51,36 @@ export namespace GetUserRequest {
     }
 
     return message;
+  }
+
+  /**
+   * Protobuf Message class for GetUserRequest
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    userId: string;
+
+    constructor(init?: Partial<GetUserRequest>) {
+      this.userId = "";
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): GetUserRequest {
+      return {
+        userId: this.userId,
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
   }
 }
 
@@ -118,6 +148,42 @@ export namespace GetUserResponse {
 
     return message;
   }
+
+  /**
+   * Protobuf Message class for GetUserResponse
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    id: string;
+    name: string;
+    email: string;
+
+    constructor(init?: Partial<GetUserResponse>) {
+      this.id = "";
+      this.name = "";
+      this.email = "";
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): GetUserResponse {
+      return {
+        id: this.id,
+        name: this.name,
+        email: this.email,
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
+  }
 }
 
 /**
@@ -174,6 +240,39 @@ export namespace ListUsersRequest {
     }
 
     return message;
+  }
+
+  /**
+   * Protobuf Message class for ListUsersRequest
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    pageSize: number;
+    pageToken: string;
+
+    constructor(init?: Partial<ListUsersRequest>) {
+      this.pageSize = 0;
+      this.pageToken = "";
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): ListUsersRequest {
+      return {
+        pageSize: this.pageSize,
+        pageToken: this.pageToken,
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
   }
 }
 
@@ -238,6 +337,39 @@ export namespace ListUsersResponse {
 
     return message;
   }
+
+  /**
+   * Protobuf Message class for ListUsersResponse
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    users: GetUserResponse[];
+    nextPageToken: string;
+
+    constructor(init?: Partial<ListUsersResponse>) {
+      this.users = [];
+      this.nextPageToken = "";
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): ListUsersResponse {
+      return {
+        users: this.users,
+        nextPageToken: this.nextPageToken,
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
+  }
 }
 
 /**
@@ -294,6 +426,39 @@ export namespace CreateUserRequest {
     }
 
     return message;
+  }
+
+  /**
+   * Protobuf Message class for CreateUserRequest
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    name: string;
+    email: string;
+
+    constructor(init?: Partial<CreateUserRequest>) {
+      this.name = "";
+      this.email = "";
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): CreateUserRequest {
+      return {
+        name: this.name,
+        email: this.email,
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
   }
 }
 
@@ -352,6 +517,39 @@ export namespace StreamMessage {
 
     return message;
   }
+
+  /**
+   * Protobuf Message class for StreamMessage
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    content: string;
+    timestamp: string;
+
+    constructor(init?: Partial<StreamMessage>) {
+      this.content = "";
+      this.timestamp = "0";
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): StreamMessage {
+      return {
+        content: this.content,
+        timestamp: this.timestamp,
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
+  }
 }
 
 /**
@@ -378,11 +576,15 @@ export const UserServiceService = {
    */
   GetUserDescriptor: {
     methodName: 'GetUser',
-    serviceName: 'UserService',  // FIXED: serviceName at top level, not nested
-    requestType: 'GetUserRequest',
-    responseType: 'GetUserResponse',
+    service: {
+      serviceName: 'test.services.UserService'
+    },
+    requestType: GetUserRequest.Message,
+    responseType: GetUserResponse.Message,
     requestStream: false,
     responseStream: false,
+    requestSerializer: GetUserRequest,
+    responseSerializer: GetUserResponse,
   },
   /**
    * Method descriptor for ListUsers RPC
@@ -390,11 +592,15 @@ export const UserServiceService = {
    */
   ListUsersDescriptor: {
     methodName: 'ListUsers',
-    serviceName: 'UserService',  // FIXED: serviceName at top level, not nested
-    requestType: 'ListUsersRequest',
-    responseType: 'ListUsersResponse',
+    service: {
+      serviceName: 'test.services.UserService'
+    },
+    requestType: ListUsersRequest.Message,
+    responseType: ListUsersResponse.Message,
     requestStream: false,
     responseStream: true,
+    requestSerializer: ListUsersRequest,
+    responseSerializer: ListUsersResponse,
   },
   /**
    * Method descriptor for CreateUsers RPC
@@ -402,11 +608,15 @@ export const UserServiceService = {
    */
   CreateUsersDescriptor: {
     methodName: 'CreateUsers',
-    serviceName: 'UserService',  // FIXED: serviceName at top level, not nested
-    requestType: 'CreateUserRequest',
-    responseType: 'ListUsersResponse',
+    service: {
+      serviceName: 'test.services.UserService'
+    },
+    requestType: CreateUserRequest.Message,
+    responseType: ListUsersResponse.Message,
     requestStream: true,
     responseStream: false,
+    requestSerializer: CreateUserRequest,
+    responseSerializer: ListUsersResponse,
   },
   /**
    * Method descriptor for Chat RPC
@@ -414,11 +624,15 @@ export const UserServiceService = {
    */
   ChatDescriptor: {
     methodName: 'Chat',
-    serviceName: 'UserService',  // FIXED: serviceName at top level, not nested
-    requestType: 'StreamMessage',
-    responseType: 'StreamMessage',
+    service: {
+      serviceName: 'test.services.UserService'
+    },
+    requestType: StreamMessage.Message,
+    responseType: StreamMessage.Message,
     requestStream: true,
     responseStream: true,
+    requestSerializer: StreamMessage,
+    responseSerializer: StreamMessage,
   },
 } as const;
 

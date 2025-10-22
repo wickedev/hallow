@@ -101,4 +101,42 @@ export namespace {{interfaceName}} {
 
     return message;
   }
+
+  /**
+   * Protobuf Message class for {{name}}
+   * Compatible with @improbable-eng/grpc-web
+   */
+  export class Message {
+    {{#each fields}}
+    {{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
+    {{/each}}
+
+    constructor(init?: Partial<{{interfaceName}}>) {
+      {{#each fields}}
+      {{#unless optional}}
+      this.{{camelCaseName}} = {{defaultValue}};
+      {{/unless}}
+      {{/each}}
+      if (init) {
+        Object.assign(this, init);
+      }
+    }
+
+    toObject(): {{interfaceName}} {
+      return {
+        {{#each fields}}
+        {{camelCaseName}}: this.{{camelCaseName}},
+        {{/each}}
+      };
+    }
+
+    serializeBinary(): Uint8Array {
+      return encode(this.toObject());
+    }
+
+    static deserializeBinary(bytes: Uint8Array): Message {
+      const decoded = decode(bytes);
+      return new Message(decoded);
+    }
+  }
 }

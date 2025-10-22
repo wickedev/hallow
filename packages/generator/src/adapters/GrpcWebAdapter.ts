@@ -12,6 +12,14 @@ import { grpc } from '@improbable-eng/grpc-web';
 import { Observable } from 'rxjs';
 
 /**
+ * Serializer interface for converting between plain objects and Message instances
+ */
+export interface MessageSerializer<T> {
+  encode(message: T): Uint8Array;
+  decode(bytes: Uint8Array): T;
+}
+
+/**
  * Method descriptor for gRPC-web method calls
  */
 export interface MethodDescriptor<TRequest = any, TResponse = any> {
@@ -21,6 +29,8 @@ export interface MethodDescriptor<TRequest = any, TResponse = any> {
   responseStream: boolean;
   requestType: any;
   responseType: any;
+  requestSerializer?: MessageSerializer<TRequest>;
+  responseSerializer?: MessageSerializer<TResponse>;
 }
 
 /**
@@ -130,6 +140,14 @@ export class GrpcError extends Error {
   toUserMessage(): string {
     return `gRPC ${this.methodName} failed: ${this.message} (code: ${grpc.Code[this.code]})`;
   }
+
+  /**
+   * String representation for logging and debugging
+   */
+  toString(): string {
+    const codeName = grpc.Code[this.code] || `Unknown(${this.code})`;
+    return `GrpcError: ${this.message} [${codeName}] at ${this.methodName}`;
+  }
 }
 
 /**
@@ -202,15 +220,41 @@ export class GrpcWebAdapter {
     return new Promise<TResponse>((resolve, reject) => {
       try {
         if (this.options.debug) {
-          console.log(`[GrpcWebAdapter] Unary call to ${methodDescriptor.methodName}`, request);
+          console.log(`[GrpcWebAdapter] Unary call to ${methodDescriptor.methodName}`, {
+            request,
+            baseUrl: this.baseUrl,
+            serviceName: methodDescriptor.service?.serviceName,
+            requestType: methodDescriptor.requestType,
+            responseType: methodDescriptor.responseType
+          });
+        }
+
+        // Convert plain object to Message-like object with serializeBinary method
+        const messageRequest = this.createMessageWrapper(request, methodDescriptor.requestSerializer);
+
+        if (this.options.debug) {
+          console.log('[GrpcWebAdapter] Message wrapper created:', {
+            hasSerializeBinary: typeof messageRequest.serializeBinary === 'function',
+            requestKeys: Object.keys(messageRequest)
+          });
         }
 
         // Make gRPC-web unary call
         grpc.unary(methodDescriptor as any, {
-          request: request as any,
+          request: messageRequest as any,
           host: this.baseUrl,
           metadata: this.options.metadata,
           onEnd: (response) => {
+            if (this.options.debug) {
+              console.log('[GrpcWebAdapter] Response received:', {
+                status: response.status,
+                statusMessage: response.statusMessage,
+                hasMessage: !!response.message,
+                headers: response.headers,
+                trailers: response.trailers
+              });
+            }
+
             if (response.status !== grpc.Code.OK) {
               const error = new GrpcError(
                 response.statusMessage,
@@ -280,9 +324,12 @@ export class GrpcWebAdapter {
           console.log(`[GrpcWebAdapter] Server stream to ${methodDescriptor.methodName}`, request);
         }
 
+        // Convert plain object to Message-like object with serializeBinary method
+        const messageRequest = this.createMessageWrapper(request, methodDescriptor.requestSerializer);
+
         // Open streaming connection
         const client = grpc.invoke(methodDescriptor as any, {
-          request: request as any,
+          request: messageRequest as any,
           host: this.baseUrl,
           metadata: this.options.metadata,
           onMessage: (message: any) => {
@@ -353,5 +400,50 @@ export class GrpcWebAdapter {
    */
   getOptions(): Readonly<GrpcClientOptions> {
     return { ...this.options };
+  }
+
+  /**
+   * Create a Message-like wrapper object with serializeBinary method
+   * This allows plain objects to work with grpc-web which expects Message instances
+   */
+  private createMessageWrapper<T>(data: T, serializer?: MessageSerializer<T>): any {
+    // If no serializer provided or data already has serializeBinary, return as-is
+    if (!serializer || (data as any).serializeBinary) {
+      if (this.options.debug) {
+        console.log('[GrpcWebAdapter] Using data as-is (has serializeBinary):', {
+          hasSerializer: !!serializer,
+          hasSerializeBinary: !!(data as any).serializeBinary
+        });
+      }
+      return data;
+    }
+
+    if (this.options.debug) {
+      console.log('[GrpcWebAdapter] Creating message wrapper with serializer');
+    }
+
+    // Create a wrapper object with serializeBinary method
+    const self = this;
+    const wrapper = {
+      ...data,
+      serializeBinary(): Uint8Array {
+        try {
+          const encoded = serializer.encode(data);
+          if (self.options?.debug) {
+            console.log('[GrpcWebAdapter] Serialized message:', {
+              originalData: data,
+              encodedLength: encoded.length,
+              encodedBytes: Array.from(encoded.slice(0, 20))
+            });
+          }
+          return encoded;
+        } catch (error) {
+          console.error('[GrpcWebAdapter] Serialization error:', error);
+          throw error;
+        }
+      }
+    };
+
+    return wrapper;
   }
 }

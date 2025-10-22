@@ -26,12 +26,13 @@ echo ""
 
 # 2. Check if test server is needed
 echo "🔍 Step 2: Checking test server status..."
-if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo "✅ Test server is already running on port 3000"
+if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo "✅ Test server (Envoy) is already running on port 8080"
 else
-    echo "⚠️  Test server is not running on port 3000"
-    echo "   Tests will auto-start the server, or you can start it manually:"
-    echo "   cd packages/test-server && yarn start"
+    echo "⚠️  Test server (Envoy) is not running on port 8080"
+    echo "   Please start the test server with Docker:"
+    echo "   cd packages/test-server && docker-compose up -d"
+    exit 1
 fi
 echo ""
 

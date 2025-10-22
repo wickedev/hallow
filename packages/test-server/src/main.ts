@@ -7,28 +7,6 @@ async function bootstrap() {
   // Create hybrid application (HTTP + gRPC)
   const app = await NestFactory.create(AppModule);
 
-  // Configure CORS for gRPC-Web
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: [
-      'keep-alive',
-      'user-agent',
-      'cache-control',
-      'content-type',
-      'content-transfer-encoding',
-      'custom-header-1',
-      'x-accept-content-transfer-encoding',
-      'x-accept-response-streaming',
-      'x-user-agent',
-      'x-grpc-web',
-      'grpc-timeout',
-      'authorization'
-    ],
-    exposedHeaders: ['custom-header-1', 'grpc-status', 'grpc-message'],
-    credentials: true,
-  });
-
   // Configure gRPC microservice with custom reflection configuration
   const grpcOptionsWithReflection: MicroserviceOptions = {
     ...grpcClientOptions,

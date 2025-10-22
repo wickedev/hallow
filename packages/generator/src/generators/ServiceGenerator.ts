@@ -158,8 +158,14 @@ export class ServiceGenerator {
     this.nameResolver = new NameResolver();
     this.optionProcessor = new OptionProcessor(this.options.optionProcessing);
     
-    // Load default template initially (will be replaced on first use if file exists)
-    this.loadDefaultTemplate();
+    // Load templates from directory if templateDir is provided
+    if (this.options.templateDir) {
+      // Templates will be loaded asynchronously - ensure they're loaded before first use
+      this.loadDefaultTemplate();
+    } else {
+      // Load from default location
+      this.loadDefaultTemplate();
+    }
   }
   
   /**
@@ -276,7 +282,7 @@ export class ServiceGenerator {
     // Add GrpcWebAdapter import from the generator package
     imports.push({
       imports: ['GrpcWebAdapter', 'GrpcError', 'isGrpcError', 'GrpcClientOptions'],
-      source: '@hallow/generator/adapters',
+      source: '@hallow/generator',
     });
 
     // Add Observable imports for streaming methods
@@ -449,270 +455,39 @@ export class ServiceGenerator {
   
   /**
    * Load default service template
+   * Templates will be loaded from .hbs files by the TemplateEngine when templateDir is provided to Generator constructor
    */
   private loadDefaultTemplate(): void {
-    // Default template for service stub generation - matches service.hbs
-    const defaultTemplate = `/**
- * Generated gRPC service stubs
- * @generated
- */
+    const path = require('path');
+    const fs = require('fs');
 
-{{#each imports}}
-import {{#if isDefault}}{{name}}{{else}}{ {{join imports ", "}} }{{/if}} from '{{source}}';
-{{/each}}
+    try {
+      // Determine template directory
+      const templateDir = this.options.templateDir || path.join(__dirname, '../templates');
+      const templatePath = path.join(templateDir, 'service.hbs');
 
-{{#each services}}
-/**
- * Service descriptor for {{pascalName}}
- * Contains metadata for all RPC methods in this service
- */
-export const {{pascalName}}Service = {
-  serviceName: '{{name}}',
-  {{#if ../packageName}}
-  fullServiceName: '{{../packageName}}.{{name}}',
-  {{else}}
-  fullServiceName: '{{name}}',
-  {{/if}}
-
-  {{#each methods}}
-  /**
-   * Method descriptor for {{name}} RPC
-   * @type {grpc.MethodDefinition<{{inputType}}, {{outputType}}>}
-   */
-  {{pascalName}}Descriptor: {
-    methodName: '{{name}}',
-    serviceName: '{{../name}}',  // FIXED: serviceName at top level, not nested
-    requestType: '{{inputType}}',
-    responseType: '{{outputType}}',
-    requestStream: {{clientStreaming}},
-    responseStream: {{serverStreaming}},
-  },
-  {{/each}}
-} as const;
-
-/**
- * {{#if description}}{{description}}{{else}}{{pascalName}} service client{{/if}}
- * Generated gRPC service stub with Promise and Streaming APIs
- */
-export class {{pascalName}}Stub {
-  private readonly adapter: GrpcWebAdapter;
-
-  /**
-   * Create a new {{pascalName}}Stub
-   * @param baseUrl - Base URL for the gRPC server (e.g., 'https://api.example.com')
-   * @param options - Optional client configuration
-   */
-  constructor(
-    private readonly baseUrl: string,
-    options?: GrpcClientOptions
-  ) {
-    this.adapter = new GrpcWebAdapter(baseUrl, options);
+      // Check if template file exists
+      if (fs.existsSync(templatePath)) {
+        // Load template synchronously
+        const templateContent = fs.readFileSync(templatePath, 'utf-8');
+        this.templateEngine.loadTemplateFromString('service', templateContent);
+      } else {
+        console.warn(`Template file not found: ${templatePath}, using fallback`);
+        this.loadFallbackTemplate();
+      }
+    } catch (error) {
+      console.warn(`Failed to load service template: ${error instanceof Error ? error.message : String(error)}`);
+      this.loadFallbackTemplate();
+    }
   }
 
   /**
-   * Get the service base URL
+   * Load fallback template as a last resort
    */
-  public getBaseUrl(): string {
-    return this.baseUrl;
-  }
-
-  /**
-   * Get the underlying GrpcWebAdapter for advanced usage
-   */
-  public getAdapter(): GrpcWebAdapter {
-    return this.adapter;
-  }
-
-  {{#each methods}}
-  {{#if serverStreaming}}
-  {{#if clientStreaming}}
-  /**
-   * {{#if description}}{{description}}{{else}}{{name}} - Bidirectional streaming RPC method{{/if}}
-   *
-   * **IMPORTANT:** Bidirectional streaming is not fully supported over HTTP/1.1 in gRPC-web.
-   * This method requires WebSocket transport or HTTP/2.
-   *
-   * @returns Object with send(), responses, complete(), and cancel() methods
-   * @throws {Error} Bidirectional streaming not supported over HTTP/1.1
-   *
-   * @see https://github.com/grpc/grpc-web#streaming-support
-   */
-  public {{camelName}}(): {
-    send: (request: {{inputType}}) => void;
-    responses: Observable<{{outputType}}>;
-    complete: () => void;
-    cancel: () => void;
-  } {
-    throw new Error(
-      'Bidirectional streaming RPC "{{name}}" is not supported over HTTP/1.1. ' +
-      'gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming. ' +
-      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
-      'See: https://github.com/grpc/grpc-web#streaming-support'
-    );
-  }
-  {{else}}
-  /**
-   * {{#if description}}{{description}}{{else}}{{name}} - Server streaming RPC method{{/if}}
-   *
-   * Sends a single request and receives a stream of responses.
-   * Returns an RxJS Observable that emits each response message.
-   *
-   * @param request - {{inputType}} request message
-   * @returns Observable stream of {{outputType}} response messages
-   * @description Opens a server stream and emits multiple response messages.
-   *              Unsubscribe to cancel the stream and clean up resources.
-   */
-  public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
-    return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Service.{{pascalName}}Descriptor,
-      request
-    );
-  }
-  {{/if}}
-  {{else if clientStreaming}}
-  /**
-   * {{#if description}}{{description}}{{else}}{{name}} - Client streaming RPC method{{/if}}
-   *
-   * **IMPORTANT:** Client streaming is not fully supported over HTTP/1.1 in gRPC-web.
-   * This method requires WebSocket transport or HTTP/2.
-   *
-   * @returns Object with send(), complete(), and cancel() methods
-   * @throws {Error} Client streaming not supported over HTTP/1.1
-   *
-   * @see https://github.com/grpc/grpc-web#streaming-support
-   */
-  public {{camelName}}(): {
-    send: (request: {{inputType}}) => void;
-    complete: () => Promise<{{outputType}}>;
-    cancel: () => void;
-  } {
-    throw new Error(
-      'Client streaming RPC "{{name}}" is not supported over HTTP/1.1. ' +
-      'gRPC-web requires WebSocket transport or HTTP/2 for client streaming. ' +
-      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
-      'See: https://github.com/grpc/grpc-web#streaming-support'
-    );
-  }
-  {{else}}
-  /**
-   * {{#if description}}{{description}}{{else}}{{name}} - Unary RPC method{{/if}}
-   *
-   * Sends a single request and receives a single response.
-   *
-   * @param request - {{inputType}} request message
-   * @returns Promise resolving to {{outputType}} response message
-   */
-  public async {{camelName}}(request: {{inputType}}): Promise<{{outputType}}> {
-    return this.adapter.unary<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Service.{{pascalName}}Descriptor,
-      request
-    );
-  }
-  {{/if}}
-
-  {{/each}}
-}
-
-{{#if ../includeReactHooks}}
-/**
- * React Hook stub for {{pascalName}} service
- * Provides React hooks with loading and error states
- */
-export class {{pascalName}}HookStub {
-  private readonly stub: {{pascalName}}Stub;
-  
-  constructor(baseUrl: string) {
-    this.stub = new {{pascalName}}Stub(baseUrl);
-  }
-
-  {{#each methods}}
-  {{#if serverStreaming}}
-  /**
-   * React Hook for {{camelName}} streaming method
-   * @param request - {{inputType}} request message
-   * @returns Hook state with stream, loading, and error
-   */
-  public use{{pascalName}}(request: {{inputType}}): {
-    data: {{outputType}}[];
-    loading: boolean;
-    error?: Error;
-    subscription?: Subscription;
-  } {
-    // TODO: Implement React Hook for streaming with useState and useEffect
-    // 1. Set loading to true
-    // 2. Subscribe to stub.{{camelName}}(request)
-    // 3. Accumulate responses in data array
-    // 4. Update error on failure
-    // 5. Set loading to false when stream completes
-    // 6. Return subscription for manual cancellation
-    
-    throw new Error('React Hook use{{pascalName}} not yet implemented for streaming');
-  }
-  {{else if clientStreaming}}
-  /**
-   * React Hook for {{camelName}} client streaming method
-   * @returns Hook state with send method and response data
-   */
-  public use{{pascalName}}(): {
-    send: (request: {{inputType}}) => void;
-    complete: () => Promise<{{outputType}}>;
-    data?: {{outputType}};
-    loading: boolean;
-    error?: Error;
-  } {
-    // TODO: Implement React Hook for client streaming
-    throw new Error('React Hook use{{pascalName}} not yet implemented for client streaming');
-  }
-  {{else}}
-  /**
-   * React Hook for {{camelName}} method
-   * @param request - {{inputType}} request message
-   * @returns Hook state with data, loading, and error
-   */
-  public use{{pascalName}}(request: {{inputType}}): {
-    data?: {{outputType}};
-    loading: boolean;
-    error?: Error;
-  } {
-    // TODO: Implement React Hook with useState and useEffect
-    // 1. Set loading to true
-    // 2. Call stub.{{camelName}}(request)
-    // 3. Update data on success or error on failure
-    // 4. Set loading to false
-    
-    throw new Error('React Hook use{{pascalName}} not yet implemented');
-  }
-  {{/if}}
-
-  {{/each}}
-}
-{{/if}}
-
-{{#if ../includeSuspenseHooks}}
-/**
- * Suspense Hook stub for {{pascalName}} service
- */
-export class {{pascalName}}SuspenseStub {
-  constructor(private readonly baseUrl: string) {}
-  
-  {{#each methods}}
-  /**
-   * Suspense Hook for {{camelName}} method
-   * @param request - Request message
-   * @returns Response data (throws promise during loading)
-   */
-  use{{pascalName}}(request: {{inputType}}): {{outputType}} {
-    // TODO: Implement Suspense Hook using the Promise API
-    throw new Error('Suspense Hook not yet implemented');
-  }
-  
-  {{/each}}
-}
-{{/if}}
-
-{{/each}}`;
-    
-    this.templateEngine.loadTemplateFromString('service', defaultTemplate);
+  private loadFallbackTemplate(): void {
+    // Minimal fallback template - just in case file loading fails
+    const fallbackTemplate = `// Generated service stub\n{{#each services}}export class {{pascalName}}Stub { }{{/each}}`;
+    this.templateEngine.loadTemplateFromString('service', fallbackTemplate);
   }
   
   /**

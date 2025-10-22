@@ -1,8 +1,8 @@
-import { Controller, Post, Body, Headers, Res, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Post, Body, Headers, Res, Req, HttpStatus, RawBodyRequest } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { GrpcWebService } from './grpc-web.service';
 
-@Controller('grpc-web')
+@Controller()
 export class GrpcWebController {
   constructor(private readonly grpcWebService: GrpcWebService) {}
 
@@ -12,10 +12,11 @@ export class GrpcWebController {
    */
   @Post('*')
   async handleGrpcWeb(
-    @Body() body: Buffer,
+    @Req() request: Request,
     @Headers() headers: Record<string, string>,
     @Res() response: Response,
   ) {
+    const body = request.body as Buffer;
     try {
       // Extract service and method from the URL
       const path = headers['x-grpc-web'] || headers['content-type'];

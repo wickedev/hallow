@@ -221,215 +221,11 @@ export class MessageGenerator {
    * Load Handlebars templates for message generation
    */
   private loadTemplates(): void {
-    // Check if templates are already loaded
-    const loadedTemplates = this.templateEngine.getLoadedTemplates();
-    const hasMessageTemplates = loadedTemplates.some(t => 
-      t.name === 'message-interface' || t.name === 'message-serialization',
-    );
-    
-    if (!hasMessageTemplates) {
-      // Templates not loaded - load them from strings for now
-      // In production, these would be loaded from files
-      this.loadDefaultTemplates();
-    }
-  }
-  
-  /**
-   * Load default templates from strings
-   */
-  private loadDefaultTemplates(): void {
-    // Message interface template
-    const interfaceTemplate = `{{#if generateComments}}
-/**
- * Interface for {{name}} message
- */
-{{/if}}
-export interface {{interfaceName}} {
-  {{#each fields}}
-  {{#if comment}}/** {{comment}} */{{/if}}
-  {{#if ../readonlyProperties}}readonly {{/if}}{{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
-  {{/each}}
-  {{#each oneofs}}
-  {{camelCaseName}}: {{unionType}};
-  {{/each}}
-}
-{{#if hasNestedTypes}}
-
-export namespace {{interfaceName}} {
-  {{#each nestedMessages}}
-  {{#if ../generateComments}}
-  /**
-   * Interface for {{name}} message (nested in {{../name}})
-   */
-  {{/if}}
-  export interface {{interfaceName}} {
-    {{#each fields}}
-    {{#if comment}}/** {{comment}} */{{/if}}
-    {{#if ../../readonlyProperties}}readonly {{/if}}{{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
-    {{/each}}
-    {{#each oneofs}}
-    {{camelCaseName}}: {{unionType}};
-    {{/each}}
-  }
-  {{#if hasNestedTypes}}
-
-  export namespace {{interfaceName}} {
-    {{#each nestedEnums}}
-    {{#if ../../generateComments}}
-    /**
-     * Enum {{name}} (nested in {{../name}})
-     */
-    {{/if}}
-    export enum {{name}} {
-      {{#each values}}
-      {{#if comment}}/** {{comment}} */{{/if}}
-      {{name}} = {{number}},
-      {{/each}}
-    }
-    {{/each}}
-    {{#each nestedMessages}}
-    {{#if ../../generateComments}}
-    /**
-     * Interface for {{name}} message (nested in {{../name}})
-     */
-    {{/if}}
-    export interface {{interfaceName}} {
-      {{#each fields}}
-      {{#if comment}}/** {{comment}} */{{/if}}
-      {{#if ../../../../readonlyProperties}}readonly {{/if}}{{camelCaseName}}{{#if optional}}?{{/if}}: {{tsType}};
-      {{/each}}
-    }
-    {{/each}}
-  }
-  {{/if}}
-
-  {{/each}}
-  {{#each nestedEnums}}
-  {{#if ../generateComments}}
-  /**
-   * Enum {{name}}
-   */
-  {{/if}}
-  export enum {{name}} {
-    {{#each values}}
-    {{#if comment}}/** {{comment}} */{{/if}}
-    {{name}} = {{number}},
-    {{/each}}
-  }
-  {{/each}}
-}
-{{/if}}`;
-    
-    // Message serialization template
-    const serializationTemplate = `export namespace {{interfaceName}} {
-  /**
-   * Encode {{name}} message to protobuf format
-   * @param message Message to encode
-   * @returns Encoded bytes
-   */
-  export function encode(message: {{interfaceName}}): Uint8Array {
-    const writer = new BinaryWriter();
-    
-    {{#each fields}}
-    if (message.{{camelCaseName}} !== undefined) {
-      {{#if repeated}}
-      {{#if packed}}
-      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
-      {{else}}
-      for (const item of message.{{camelCaseName}}) {
-        writer.{{serializerMethod}}({{number}}, item);
-      }
-      {{/if}}
-      {{else if map}}
-      for (const [key, value] of message.{{camelCaseName}}) {
-        writer.beginSubMessage({{number}});
-        writer.{{mapKeyWriteMethod}}(1, key);
-        writer.{{mapValueWriteMethod}}(2, value);
-        writer.endSubMessage({{number}});
-      }
-      {{else}}
-      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
-      {{/if}}
-    }
-    {{/each}}
-    
-    {{#each oneofs}}
-    {{#each fields}}
-    if (message.{{../camelCaseName}} === '{{name}}') {
-      writer.{{serializerMethod}}({{number}}, message.{{camelCaseName}});
-    }
-    {{/each}}
-    {{/each}}
-    
-    return writer.getResultBuffer();
+    // Templates will be loaded from .hbs files by the TemplateEngine
+    // when templateDir is provided to Generator constructor.
+    // No need to load default string templates anymore.
   }
 
-  /**
-   * Decode {{name}} message from protobuf format
-   * @param bytes Encoded bytes
-   * @returns Decoded message
-   */
-  export function decode(bytes: Uint8Array): {{interfaceName}} {
-    const reader = new BinaryReader(bytes);
-    const message: {{interfaceName}} = {
-      {{#each fields}}
-      {{#unless optional}}
-      {{camelCaseName}}: {{defaultValue}},
-      {{/unless}}
-      {{/each}}
-    };
-
-    while (reader.nextField()) {
-      const fieldNumber = reader.getFieldNumber();
-      
-      switch (fieldNumber) {
-        {{#each fields}}
-        case {{number}}:
-          {{#if repeated}}
-          {{#if packed}}
-          message.{{camelCaseName}} = reader.{{deserializerMethod}}() || [];
-          {{else}}
-          if (!message.{{camelCaseName}}) {
-            message.{{camelCaseName}} = [];
-          }
-          message.{{camelCaseName}}.push(reader.{{deserializerMethod}}());
-          {{/if}}
-          {{else if map}}
-          if (!message.{{camelCaseName}}) {
-            message.{{camelCaseName}} = new Map();
-          }
-          reader.readMessage((r) => {
-            const key = r.{{mapKeyReadMethod}}();
-            const value = r.{{mapValueReadMethod}}();
-            message.{{camelCaseName}}.set(key, value);
-          });
-          {{else}}
-          message.{{camelCaseName}} = reader.{{deserializerMethod}}();
-          {{/if}}
-          break;
-        {{/each}}
-        {{#each oneofs}}
-        {{#each fields}}
-        case {{number}}:
-          message.{{../camelCaseName}} = '{{name}}';
-          message.{{camelCaseName}} = reader.{{deserializerMethod}}();
-          break;
-        {{/each}}
-        {{/each}}
-        default:
-          reader.skipField();
-          break;
-      }
-    }
-
-    return message;
-  }
-}`;
-    
-    this.templateEngine.loadTemplateFromString('message-interface', interfaceTemplate);
-    this.templateEngine.loadTemplateFromString('message-serialization', serializationTemplate);
-  }
-  
   /**
    * Generate TypeScript interface from message definition
    */
@@ -765,11 +561,73 @@ export namespace {{interfaceName}} {
     
     // Generate decode method
     lines.push(...this.generateDecodeMethod(context));
-    
+    lines.push('');
+
+    // Generate Message class for grpc-web compatibility
+    lines.push(...this.generateMessageClass(context));
+
     // Close namespace
     lines.push('}');
-    
+
     return lines.join('\n');
+  }
+
+  /**
+   * Generate Message class for grpc-web compatibility
+   */
+  private generateMessageClass(context: MessageContext): string[] {
+    const lines: string[] = [];
+
+    lines.push('  /**');
+    lines.push(`   * Protobuf Message class for ${context.name}`);
+    lines.push('   * Compatible with @improbable-eng/grpc-web');
+    lines.push('   */');
+    lines.push('  export class Message {');
+
+    // Add fields
+    context.fields.forEach(field => {
+      const optional = field.optional ? '?' : '';
+      lines.push(`    ${field.camelCaseName}${optional}: ${field.tsType};`);
+    });
+    lines.push('');
+
+    // Constructor
+    lines.push(`    constructor(init?: Partial<${context.interfaceName}>) {`);
+    context.fields.forEach(field => {
+      if (!field.optional) {
+        lines.push(`      this.${field.camelCaseName} = ${field.defaultValue};`);
+      }
+    });
+    lines.push('      if (init) {');
+    lines.push('        Object.assign(this, init);');
+    lines.push('      }');
+    lines.push('    }');
+    lines.push('');
+
+    // toObject method
+    lines.push(`    toObject(): ${context.interfaceName} {`);
+    lines.push('      return {');
+    context.fields.forEach(field => {
+      lines.push(`        ${field.camelCaseName}: this.${field.camelCaseName},`);
+    });
+    lines.push('      };');
+    lines.push('    }');
+    lines.push('');
+
+    // serializeBinary method
+    lines.push('    serializeBinary(): Uint8Array {');
+    lines.push('      return encode(this.toObject());');
+    lines.push('    }');
+    lines.push('');
+
+    // static deserializeBinary method
+    lines.push('    static deserializeBinary(bytes: Uint8Array): Message {');
+    lines.push('      const decoded = decode(bytes);');
+    lines.push('      return new Message(decoded);');
+    lines.push('    }');
+    lines.push('  }');
+
+    return lines;
   }
   
   /**
