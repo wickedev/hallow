@@ -22,6 +22,8 @@ import {
   createTypeResolutionCache,
 } from '../performance';
 import { loadVersion } from '../utils/VersionLoader';
+import { ProtoFileValidator } from '../validation/ProtoFileValidator';
+import { formatValidationResult } from '../validation/types';
 
 /**
  * Main code generator class
@@ -38,6 +40,7 @@ export class Generator {
   private templateOptimizer?: TemplateOptimizer;
   private typeResolutionCache?: TypeResolutionCache;
   private version: string;
+  private validator: ProtoFileValidator;
 
   constructor(options: GeneratorOptions = {}) {
     // Load version from package.json
@@ -86,6 +89,15 @@ export class Generator {
 
     // Initialize template engine
     this.templateEngine = new TemplateEngine();
+
+    // Initialize validator
+    this.validator = new ProtoFileValidator({
+      validateTypeReferences: true,
+      detectCircularDependencies: true,
+      validateImports: true,
+      maxCircularDepth: 100,
+      strictMode: false,
+    });
 
     // Initialize message generator
     this.messageGenerator = new MessageGenerator(this.templateEngine, {
@@ -499,7 +511,26 @@ export class Generator {
       throw new GenerationError('Proto file is required', GenerationErrorCode.INVALID_PROTO);
     }
 
-    // TODO: Add more validation
+    // Run comprehensive validation
+    const validationResult = this.validator.validate(protoFile);
+
+    // Log warnings to console if any
+    if (validationResult.warnings.length > 0) {
+      console.warn('[Validation] Proto file has warnings:');
+      validationResult.warnings.forEach(warning => {
+        console.warn(`  ${warning.message} (${warning.location.file}:${warning.location.line})`);
+      });
+    }
+
+    // Throw error if validation failed
+    if (!validationResult.valid) {
+      const formattedErrors = formatValidationResult(validationResult);
+      throw new GenerationError(
+        `Proto file validation failed:\n${formattedErrors}`,
+        GenerationErrorCode.INVALID_PROTO,
+        { validationResult },
+      );
+    }
   }
 
   /**

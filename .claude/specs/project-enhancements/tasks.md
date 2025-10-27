@@ -86,8 +86,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Proto File Validation System
 
-- [ ] 5. Implement comprehensive proto file validator
-- [ ] 5.1 Create validation framework and error types
+- [x] 5. Implement comprehensive proto file validator
+- [x] 5.1 Create validation framework and error types
   - Define `ValidationResult`, `ValidationError`, and `ValidationWarning` interfaces
   - Create `ValidationErrorCode` enum with all error types
   - Implement `SourceLocation` interface for error reporting
@@ -97,7 +97,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.2_
   - _Files: packages/generator/src/validation/types.ts (new), packages/generator/src/validation/ProtoFileValidator.ts (new)_
 
-- [ ] 5.2 Implement package name validation
+- [x] 5.2 Implement package name validation
   - Add `validatePackageName()` method to check naming conventions
   - Validate lowercase, dot-separated identifier format
   - Detect and report invalid characters
@@ -106,7 +106,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.2_
   - _Files: packages/generator/src/validation/ProtoFileValidator.ts_
 
-- [ ] 5.3 Implement service and method validation
+- [x] 5.3 Implement service and method validation
   - Add `validateServices()` method to check service definitions
   - Validate unique service names within file
   - Validate method names and signatures
@@ -116,7 +116,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.2_
   - _Files: packages/generator/src/validation/ProtoFileValidator.ts_
 
-- [ ] 5.4 Implement message field validation
+- [x] 5.4 Implement message field validation
   - Add `validateMessages()` method to check message definitions
   - Validate field types reference valid message types, enums, or scalars
   - Check for duplicate field numbers within messages
@@ -126,7 +126,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.2_
   - _Files: packages/generator/src/validation/ProtoFileValidator.ts_
 
-- [ ] 5.5 Implement enum validation
+- [x] 5.5 Implement enum validation
   - Add `validateEnums()` method to check enum definitions
   - Validate unique enum values within each enum
   - Check for duplicate enum names
@@ -136,7 +136,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.2_
   - _Files: packages/generator/src/validation/ProtoFileValidator.ts_
 
-- [ ] 5.6 Implement type reference validation
+- [x] 5.6 Implement type reference validation
   - Add `validateTypeReferences()` method to check custom types
   - Validate message field types exist in current or imported files
   - Build type registry from all available proto files
@@ -144,9 +144,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - Write unit tests for type resolution scenarios
   - _Time: 1.5 hours_
   - _Requirements: 1.2_
-  - _Files: packages/generator/src/validation/ProtoFileValidator.ts, packages/generator/src/validation/TypeRegistry.ts (new)_
+  - _Files: packages/generator/src/validation/ProtoFileValidator.ts_
 
-- [ ] 5.7 Implement circular dependency detection
+- [x] 5.7 Implement circular dependency detection
   - Add `detectCircularDependencies()` method
   - Build import dependency graph
   - Use DFS algorithm to detect cycles
@@ -154,9 +154,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - Write unit tests for circular dependency scenarios
   - _Time: 1.5 hours_
   - _Requirements: 1.2_
-  - _Files: packages/generator/src/validation/ProtoFileValidator.ts, packages/generator/src/validation/DependencyGraph.ts (new)_
+  - _Files: packages/generator/src/validation/ProtoFileValidator.ts_
 
-- [ ] 5.8 Integrate validator into Generator
+- [x] 5.8 Integrate validator into Generator
   - Import and instantiate `ProtoFileValidator` in Generator constructor
   - Call `validator.validate()` before code generation in `packages/generator/src/core/generator.ts:491`
   - Throw `GenerationError` with formatted validation errors if validation fails
