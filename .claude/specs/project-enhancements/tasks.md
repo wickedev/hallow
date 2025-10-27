@@ -21,7 +21,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Version Management & Setup
 
-- [ ] 1. Implement automatic version loading from package.json
+- [x] 1. Implement automatic version loading from package.json
   - Create utility function to read version from `packages/generator/package.json`
   - Add error handling for missing or invalid package.json
   - Integrate version loading into Generator constructor at `packages/generator/src/core/generator.ts:180`
@@ -31,7 +31,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.1_
   - _Files: packages/generator/src/core/generator.ts, packages/generator/src/utils/VersionLoader.ts (new)_
 
-- [ ] 2. Clean up unused imports in MessageGenerator
+- [x] 2. Clean up unused imports in MessageGenerator
   - Remove unused `GenerationError` and `GenerationErrorCode` imports from `packages/generator/src/generators/MessageGenerator.ts:17`
   - Run ESLint to verify no unused import warnings remain
   - Commit changes with descriptive message
@@ -39,7 +39,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 1.4_
   - _Files: packages/generator/src/generators/MessageGenerator.ts_
 
-- [ ] 3. Document reserved types in NameResolver
+- [x] 3. Document reserved types in NameResolver
   - Add JSDoc comments to reserved types in `packages/generator/src/utils/NameResolver.ts:8`
   - Document intended future use cases or mark for removal
   - Link to any related feature requests or design documents

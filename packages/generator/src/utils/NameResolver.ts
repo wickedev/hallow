@@ -5,8 +5,39 @@
  * for converting Protocol Buffer names to TypeScript identifiers.
  */
 
-// Note: These types might be used in future implementations
-// import { MessageDefinition, ServiceDefinition, EnumDefinition } from '../core/proto-types';
+/**
+ * Reserved for future enhancement: Context-aware name resolution
+ *
+ * The following types from '../core/proto-types' may be used in future implementations
+ * to enable context-aware name resolution and validation:
+ *
+ * - MessageDefinition: For validating message field references and detecting naming conflicts
+ *   within message hierarchies. Useful for implementing features like:
+ *   * Automatic namespace generation based on message nesting
+ *   * Detection of field name collisions with nested message names
+ *   * Validation of message type references in field definitions
+ *
+ * - ServiceDefinition: For service-level name transformations and RPC method validation.
+ *   Potential use cases:
+ *   * Service name uniqueness validation across proto files
+ *   * RPC method name conflict detection
+ *   * Service-specific naming conventions (e.g., gRPC-web vs native gRPC)
+ *
+ * - EnumDefinition: For enum value conflict detection and scoped enum generation.
+ *   Future features might include:
+ *   * Validation of enum value uniqueness within scope
+ *   * Detection of enum name conflicts with message/service names
+ *   * Scoped enum name resolution (nested vs top-level)
+ *
+ * These types are currently commented out to reduce import overhead until the features
+ * are implemented. If implementing context-aware resolution, uncomment and import:
+ * import { MessageDefinition, ServiceDefinition, EnumDefinition } from '../core/proto-types';
+ *
+ * Related tracking:
+ * - Feature request: Context-aware name resolution (Phase 2 enhancements)
+ * - Requirement 1.2: Comprehensive Proto File Validation
+ * - Design doc: .claude/specs/project-enhancements/design.md (Component 3)
+ */
 
 /**
  * Name resolution configuration

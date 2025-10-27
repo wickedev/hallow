@@ -21,6 +21,7 @@ import {
   TypeResolutionCache,
   createTypeResolutionCache,
 } from '../performance';
+import { loadVersion } from '../utils/VersionLoader';
 
 /**
  * Main code generator class
@@ -36,8 +37,18 @@ export class Generator {
   private memoryEfficientGenerator?: MemoryEfficientGenerator;
   private templateOptimizer?: TemplateOptimizer;
   private typeResolutionCache?: TypeResolutionCache;
+  private version: string;
 
   constructor(options: GeneratorOptions = {}) {
+    // Load version from package.json
+    try {
+      this.version = loadVersion();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to initialize generator: ${errorMessage}`,
+      );
+    }
     this.options = {
       outputFormat: options.outputFormat || 'typescript',
       generateReactHooks: options.generateReactHooks ?? false,
@@ -177,7 +188,7 @@ export class Generator {
       let files: GeneratedFile[] = [];
       const metadata = {
         generatedAt: new Date(),
-        generatorVersion: '0.1.0', // TODO: Get from package.json
+        generatorVersion: this.version,
         servicesCount: protoFile.services.length,
         messagesCount: protoFile.messages.length,
         enumsCount: protoFile.enums.length,

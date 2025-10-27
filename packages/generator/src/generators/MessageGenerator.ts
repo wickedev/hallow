@@ -14,13 +14,6 @@ import {
   OneofDefinition,
   ProtoFile,
 } from '../core/proto-types';
-// Note: GenerationError and GenerationErrorCode are imported but not used directly
-// They are used by the TemplateEngine for error handling
-// import {
-// GenerationError,
-// GenerationErrorCode,
-// GeneratorOptions,
-// } from '../core/types';
 import { TypeMapper, TypeMappingConfig } from '../utils/TypeMapper';
 import { NameResolver } from '../utils/NameResolver';
 import { ImportManager } from '../utils/ImportManager';
