@@ -63,7 +63,7 @@ export class JsonSerializationAdapter implements ISerializationAdapter {
       throw new SerializationError(
         `Failed to serialize message: ${error instanceof Error ? error.message : String(error)}`,
         undefined,
-        message
+        message,
       );
     }
   }
@@ -96,7 +96,7 @@ export class JsonSerializationAdapter implements ISerializationAdapter {
       return obj as T;
     } catch (error) {
       throw new SerializationError(
-        `Failed to deserialize message: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to deserialize message: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -181,15 +181,12 @@ export class JsonSerializationAdapter implements ISerializationAdapter {
     for (const field of messageDescriptor.fields) {
       if (obj[field.name] !== undefined) {
         try {
-          message[field.name] = this.convertField(
-            obj[field.name],
-            field
-          );
+          message[field.name] = this.convertField(obj[field.name], field);
         } catch (error) {
           throw new SerializationError(
             `Failed to convert field '${field.name}': ${error instanceof Error ? error.message : String(error)}`,
             field.name,
-            obj[field.name]
+            obj[field.name],
           );
         }
       } else if (!field.optional) {
@@ -211,9 +208,7 @@ export class JsonSerializationAdapter implements ISerializationAdapter {
   private convertField(value: any, field: FieldDescriptor): any {
     // Handle repeated fields (arrays)
     if (field.repeated) {
-      return Array.isArray(value)
-        ? value.map(item => this.convertFieldValue(item, field))
-        : [];
+      return Array.isArray(value) ? value.map(item => this.convertFieldValue(item, field)) : [];
     }
 
     // Handle map fields
@@ -250,9 +245,7 @@ export class JsonSerializationAdapter implements ISerializationAdapter {
     switch (field.type) {
       case 'bytes':
         // Convert base64 string back to Uint8Array
-        return typeof value === 'string'
-          ? this.base64ToUint8Array(value)
-          : value;
+        return typeof value === 'string' ? this.base64ToUint8Array(value) : value;
 
       case 'int64':
       case 'uint64':

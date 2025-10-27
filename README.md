@@ -5,6 +5,7 @@ A Seamless gRPC web client library without code generation by plugin system
 ## Usage
 
 ### Example Protobuf
+
 ```protobuf
 syntax = "proto3";
 
@@ -26,37 +27,39 @@ message GreetingResponse {
 ### Promise API
 
 ```tsx
-import { Client } from "@hallow/grpc-web"
-import { GreetingStub } from './greeting.proto'
+import { Client } from '@hallow/grpc-web';
+import { GreetingStub } from './greeting.proto';
 
-const client = new Client({ baseURL: "/api" })
-const greeter = new GreetingStub(client)
+const client = new Client({ baseURL: '/api' });
+const greeter = new GreetingStub(client);
 
-const res = await greeter.greeting({message: "Hello, Ryan!"})
-console.log(`hello from server: ${res.message}`)
+const res = await greeter.greeting({ message: 'Hello, Ryan!' });
+console.log(`hello from server: ${res.message}`);
 ```
 
 ### React Hook API (with Suspense)
 
 ```tsx
-import { Client } from "@hallow/grpc-web"
-import { GreetingHookStub } from './greeting.proto'
-import { ErrorBoundary } from "react-error-boundary";
+import { Client } from '@hallow/grpc-web';
+import { GreetingHookStub } from './greeting.proto';
+import { ErrorBoundary } from 'react-error-boundary';
 
-const client = new Client({ baseURL: "/api" })
-const greeter = new GreetingHookStub(client)
+const client = new Client({ baseURL: '/api' });
+const greeter = new GreetingHookStub(client);
 
 function Greeter() {
-    const res = greeter.useGreeting({message: "Hello, Ryan!"})
-    return <div>{`hello from server: ${res.message}`}</div>
+  const res = greeter.useGreeting({ message: 'Hello, Ryan!' });
+  return <div>{`hello from server: ${res.message}`}</div>;
 }
 
 function App() {
-    return <Suspense fallback={"loading"}>
-        <ErrorBoundary fallback={"Something went wrong"}>
-            <Greeter />
-        </ErrorBoundary>
+  return (
+    <Suspense fallback={'loading'}>
+      <ErrorBoundary fallback={'Something went wrong'}>
+        <Greeter />
+      </ErrorBoundary>
     </Suspense>
+  );
 }
 ```
 

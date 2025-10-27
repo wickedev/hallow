@@ -77,7 +77,7 @@ export class TemplateOptimizer {
    */
   async compileTemplate(name: string, source: string): Promise<HandlebarsTemplateDelegate> {
     const hash = this.hashTemplate(source);
-    
+
     // Check cache first
     if (this.options.cacheCompiledTemplates) {
       const cached = this.getCachedTemplate(name, hash);
@@ -87,14 +87,14 @@ export class TemplateOptimizer {
         return cached.compiled;
       }
     }
-    
+
     this.stats.cacheMisses++;
-    
+
     // Optimize template source before compilation
     const optimizedSource = this.optimizeTemplateSource(source);
-    
+
     const startTime = Date.now();
-    
+
     // Compile template
     const compiled = this.handlebars.compile(optimizedSource, {
       noEscape: false,
@@ -102,25 +102,25 @@ export class TemplateOptimizer {
       strict: true,
       assumeObjects: true,
       knownHelpers: {
-        'if': true,
-        'unless': true,
-        'each': true,
-        'with': true,
-        'eq': true,
-        'ne': true,
-        'lt': true,
-        'gt': true,
-        'and': true,
-        'or': true,
+        if: true,
+        unless: true,
+        each: true,
+        with: true,
+        eq: true,
+        ne: true,
+        lt: true,
+        gt: true,
+        and: true,
+        or: true,
       },
       knownHelpersOnly: false,
     });
-    
+
     const compilationTime = Date.now() - startTime;
     this.stats.templatesCompiled++;
     this.stats.totalCompilationTime += compilationTime;
     this.updateAverages();
-    
+
     // Cache the compiled template
     if (this.options.cacheCompiledTemplates) {
       this.cacheTemplate(name, {
@@ -132,7 +132,7 @@ export class TemplateOptimizer {
         size: source.length,
       });
     }
-    
+
     return compiled;
   }
 
@@ -141,39 +141,39 @@ export class TemplateOptimizer {
    */
   async render(templateName: string, data: any): Promise<string> {
     const startTime = Date.now();
-    
+
     try {
       // Get compiled template (from cache or compile)
       let template = this.templateCache.get(templateName)?.compiled;
-      
+
       if (!template) {
         // Template not in cache, need to compile
         // In real usage, the template source would be loaded from file system
         throw new Error(`Template ${templateName} not found in cache`);
       }
-      
+
       // Optimize data before rendering
       const optimizedData = this.optimizeRenderData(data);
-      
+
       // Render template
       let output = template(optimizedData);
-      
+
       // Post-process output if needed
       if (this.options.minifyOutput) {
         output = this.minifyOutput(output);
       }
-      
+
       const renderTime = Date.now() - startTime;
       this.stats.totalRenderTime += renderTime;
       this.updateAverages();
-      
+
       // Update cache usage stats
       const cached = this.templateCache.get(templateName);
       if (cached) {
         cached.lastUsed = Date.now();
         cached.useCount++;
       }
-      
+
       return output;
     } catch (error) {
       console.error(`[TemplateOptimizer] Error rendering template ${templateName}:`, error);
@@ -186,18 +186,16 @@ export class TemplateOptimizer {
    */
   async precompileTemplates(templates: Map<string, string>): Promise<void> {
     const compilationPromises: Promise<void>[] = [];
-    
+
     for (const [name, source] of templates) {
       if (this.options.lazyCompilation) {
         // Skip compilation, will compile on first use
         continue;
       }
-      
-      compilationPromises.push(
-        this.compileTemplate(name, source).then(() => {}),
-      );
+
+      compilationPromises.push(this.compileTemplate(name, source).then(() => {}));
     }
-    
+
     await Promise.all(compilationPromises);
   }
 
@@ -212,57 +210,57 @@ export class TemplateOptimizer {
     this.handlebars.registerHelper('gt', (a, b) => a > b);
     this.handlebars.registerHelper('lte', (a, b) => a <= b);
     this.handlebars.registerHelper('gte', (a, b) => a >= b);
-    
+
     // Logical helpers
     this.handlebars.registerHelper('and', (...args) => {
       const values = args.slice(0, -1); // Remove options object
       return values.every(v => v);
     });
-    
+
     this.handlebars.registerHelper('or', (...args) => {
       const values = args.slice(0, -1); // Remove options object
       return values.some(v => v);
     });
-    
+
     // String helpers
     this.handlebars.registerHelper('capitalize', (str: string) => {
       return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
     });
-    
+
     this.handlebars.registerHelper('lowercase', (str: string) => {
       return str ? str.toLowerCase() : '';
     });
-    
+
     this.handlebars.registerHelper('uppercase', (str: string) => {
       return str ? str.toUpperCase() : '';
     });
-    
+
     // Array helpers
     this.handlebars.registerHelper('join', (arr: any[], separator: string) => {
       return Array.isArray(arr) ? arr.join(separator || ', ') : '';
     });
-    
+
     this.handlebars.registerHelper('first', (arr: any[]) => {
       return Array.isArray(arr) ? arr[0] : undefined;
     });
-    
+
     this.handlebars.registerHelper('last', (arr: any[]) => {
       return Array.isArray(arr) ? arr[arr.length - 1] : undefined;
     });
-    
+
     // Performance-optimized helpers
     this.handlebars.registerHelper('cache', (key: string, options: any) => {
       // Cache helper output for repeated blocks
       const cacheKey = `helper_${key}`;
       let cached = this.partialCache.get(cacheKey);
-      
+
       if (!cached) {
         cached = options.fn(options.data.root);
         if (cached) {
           this.partialCache.set(cacheKey, cached);
         }
       }
-      
+
       return cached || '';
     });
   }
@@ -272,23 +270,20 @@ export class TemplateOptimizer {
    */
   private optimizeTemplateSource(source: string): string {
     let optimized = source;
-    
+
     // Remove unnecessary whitespace
     if (this.options.minifyOutput) {
-      optimized = optimized
-        .replace(/\s+/g, ' ')
-        .replace(/>\s+</g, '><')
-        .replace(/\n\s*/g, '');
+      optimized = optimized.replace(/\s+/g, ' ').replace(/>\s+</g, '><').replace(/\n\s*/g, '');
     }
-    
+
     // Inline small partials
     if (this.options.inlinePartials) {
       optimized = this.inlinePartials(optimized);
     }
-    
+
     // Optimize common patterns
     optimized = this.optimizePatterns(optimized);
-    
+
     return optimized;
   }
 
@@ -297,15 +292,15 @@ export class TemplateOptimizer {
    */
   private inlinePartials(source: string): string {
     const partialRegex = /\{\{>\s*(\w+)\s*\}\}/g;
-    
+
     return source.replace(partialRegex, (match, partialName) => {
       const partial = this.partialCache.get(partialName);
-      
+
       if (partial && partial.length < 500) {
         // Inline small partials
         return partial;
       }
-      
+
       return match;
     });
   }
@@ -324,13 +319,10 @@ export class TemplateOptimizer {
         return match;
       },
     );
-    
+
     // Optimize {{#each}} for arrays
-    source = source.replace(
-      /\{\{#each\s+(\w+)\}\}/g,
-      '{{#each $1 as |item index|}}',
-    );
-    
+    source = source.replace(/\{\{#each\s+(\w+)\}\}/g, '{{#each $1 as |item index|}}');
+
     return source;
   }
 
@@ -343,7 +335,7 @@ export class TemplateOptimizer {
       if (Array.isArray(obj)) {
         return obj.map(cleanData);
       }
-      
+
       if (obj && typeof obj === 'object') {
         const cleaned: any = {};
         for (const [key, value] of Object.entries(obj)) {
@@ -353,10 +345,10 @@ export class TemplateOptimizer {
         }
         return cleaned;
       }
-      
+
       return obj;
     };
-    
+
     return cleanData(data);
   }
 
@@ -377,11 +369,11 @@ export class TemplateOptimizer {
    */
   private getCachedTemplate(name: string, hash: string): CachedTemplate | undefined {
     const cached = this.templateCache.get(name);
-    
+
     if (cached && cached.hash === hash) {
       return cached;
     }
-    
+
     return undefined;
   }
 
@@ -393,7 +385,7 @@ export class TemplateOptimizer {
     if (this.templateCache.size >= this.options.maxCacheSize) {
       this.evictLeastUsed();
     }
-    
+
     this.templateCache.set(name, template);
     this.stats.templatesCached = this.templateCache.size;
   }
@@ -404,18 +396,18 @@ export class TemplateOptimizer {
   private evictLeastUsed(): void {
     let leastUsed: [string, CachedTemplate] | undefined;
     let minScore = Infinity;
-    
+
     for (const entry of this.templateCache.entries()) {
       const [name, template] = entry;
       // Score based on last used time and use count
-      const score = template.lastUsed + (template.useCount * 1000);
-      
+      const score = template.lastUsed + template.useCount * 1000;
+
       if (score < minScore) {
         minScore = score;
         leastUsed = entry;
       }
     }
-    
+
     if (leastUsed) {
       this.templateCache.delete(leastUsed[0]);
     }
@@ -441,10 +433,10 @@ export class TemplateOptimizer {
    */
   private updateAverages(): void {
     if (this.stats.templatesCompiled > 0) {
-      this.stats.averageCompilationTime = 
+      this.stats.averageCompilationTime =
         this.stats.totalCompilationTime / this.stats.templatesCompiled;
     }
-    
+
     const renderCount = this.stats.cacheHits + this.stats.cacheMisses;
     if (renderCount > 0) {
       this.stats.averageRenderTime = this.stats.totalRenderTime / renderCount;
@@ -472,13 +464,11 @@ export class TemplateOptimizer {
    */
   async warmCache(templates: Map<string, string>): Promise<void> {
     const warmupPromises: Promise<void>[] = [];
-    
+
     for (const [name, source] of templates) {
-      warmupPromises.push(
-        this.compileTemplate(name, source).then(() => {}),
-      );
+      warmupPromises.push(this.compileTemplate(name, source).then(() => {}));
     }
-    
+
     await Promise.all(warmupPromises);
   }
 
@@ -503,7 +493,7 @@ export class TemplateOptimizer {
       compilationTime: cached.compilationTime,
       size: cached.size,
     }));
-    
+
     return {
       size: this.templateCache.size,
       maxSize: this.options.maxCacheSize,
@@ -515,8 +505,6 @@ export class TemplateOptimizer {
 /**
  * Create a template optimizer instance
  */
-export function createTemplateOptimizer(
-  options?: TemplateOptimizationOptions,
-): TemplateOptimizer {
+export function createTemplateOptimizer(options?: TemplateOptimizationOptions): TemplateOptimizer {
   return new TemplateOptimizer(options);
 }

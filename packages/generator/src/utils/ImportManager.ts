@@ -1,6 +1,6 @@
 /**
  * ImportManager - Manages import statements for generated TypeScript code
- * 
+ *
  * This class handles the collection, deduplication, and generation of
  * import statements for the generated TypeScript code.
  */
@@ -15,7 +15,7 @@ export enum ImportType {
   Default = 'default',
   Namespace = 'namespace',
   Type = 'type',
-  SideEffect = 'side-effect'
+  SideEffect = 'side-effect',
 }
 
 /**
@@ -26,27 +26,27 @@ export interface ImportInfo {
    * Source module to import from
    */
   source: string;
-  
+
   /**
    * Type of import
    */
   type: ImportType;
-  
+
   /**
    * Names to import (for named imports)
    */
   names?: string[];
-  
+
   /**
    * Default import name
    */
   defaultName?: string;
-  
+
   /**
    * Namespace import name
    */
   namespaceName?: string;
-  
+
   /**
    * Whether this is a type-only import
    */
@@ -61,17 +61,17 @@ export interface ImportGroupConfig {
    * Group imports by category
    */
   groupByCategory?: boolean;
-  
+
   /**
    * Sort imports alphabetically
    */
   sortAlphabetically?: boolean;
-  
+
   /**
    * Add blank lines between groups
    */
   addBlankLinesBetweenGroups?: boolean;
-  
+
   /**
    * Custom import order
    */
@@ -89,7 +89,7 @@ export class ImportManager {
   private namespaceImports: Map<string, string>;
   private sideEffectImports: Set<string>;
   private config: ImportGroupConfig;
-  
+
   constructor(config: ImportGroupConfig = {}) {
     this.imports = new Map();
     this.typeImports = new Map();
@@ -104,27 +104,27 @@ export class ImportManager {
       ...config,
     };
   }
-  
+
   /**
    * Add a named import
    */
   public addNamedImport(source: string, name: string, typeOnly: boolean = false): void {
     const targetMap = typeOnly ? this.typeImports : this.regularImports;
-    
+
     if (!targetMap.has(source)) {
       targetMap.set(source, new Set());
     }
-    
+
     targetMap.get(source)!.add(name);
   }
-  
+
   /**
    * Add multiple named imports
    */
   public addNamedImports(source: string, names: string[], typeOnly: boolean = false): void {
     names.forEach(name => this.addNamedImport(source, name, typeOnly));
   }
-  
+
   /**
    * Add a default import
    */
@@ -134,7 +134,7 @@ export class ImportManager {
     }
     this.defaultImports.set(source, name);
   }
-  
+
   /**
    * Add a namespace import
    */
@@ -144,14 +144,14 @@ export class ImportManager {
     }
     this.namespaceImports.set(source, name);
   }
-  
+
   /**
    * Add a side-effect import
    */
   public addSideEffectImport(source: string): void {
     this.sideEffectImports.add(source);
   }
-  
+
   /**
    * Add common gRPC and protobuf imports
    */
@@ -163,33 +163,33 @@ export class ImportManager {
       'Request',
       'UnaryOutput',
     ]);
-    
+
     this.addNamespaceImport('google-protobuf', 'pb');
   }
-  
+
   /**
    * Add React imports
    */
   public addReactImports(hooks: string[] = []): void {
     const defaultHooks = ['useState', 'useEffect', 'useCallback', 'useMemo'];
     const allHooks = [...new Set([...defaultHooks, ...hooks])];
-    
+
     this.addNamedImports('react', allHooks);
   }
-  
+
   /**
    * Add React Suspense imports
    */
   public addSuspenseImports(): void {
     this.addNamedImports('react', ['Suspense', 'use']);
   }
-  
+
   /**
    * Generate import statements
    */
   public generateImports(): string {
     const importGroups: string[][] = [];
-    
+
     // Side-effect imports
     if (this.sideEffectImports.size > 0) {
       const sideEffects = Array.from(this.sideEffectImports)
@@ -197,41 +197,37 @@ export class ImportManager {
         .map(source => `import '${source}';`);
       importGroups.push(sideEffects);
     }
-    
+
     // External package imports
-    const externalImports = this.generateImportGroup(
-      source => this.isExternalPackage(source),
-    );
+    const externalImports = this.generateImportGroup(source => this.isExternalPackage(source));
     if (externalImports.length > 0) {
       importGroups.push(externalImports);
     }
-    
+
     // Internal/relative imports
-    const internalImports = this.generateImportGroup(
-      source => !this.isExternalPackage(source),
-    );
+    const internalImports = this.generateImportGroup(source => !this.isExternalPackage(source));
     if (internalImports.length > 0) {
       importGroups.push(internalImports);
     }
-    
+
     // Join groups with blank lines if configured
     const separator = this.config.addBlankLinesBetweenGroups ? '\n\n' : '\n';
     return importGroups.map(group => group.join('\n')).join(separator);
   }
-  
+
   /**
    * Generate a group of imports based on a filter
    */
   private generateImportGroup(filter: (source: string) => boolean): string[] {
     const imports: string[] = [];
     const processedSources = new Set<string>();
-    
+
     // Process regular named imports
     this.regularImports.forEach((names, source) => {
       if (filter(source) && !processedSources.has(source)) {
         const defaultImport = this.defaultImports.get(source);
         const namespaceImport = this.namespaceImports.get(source);
-        
+
         const importStr = this.buildImportStatement(
           source,
           Array.from(names),
@@ -239,12 +235,12 @@ export class ImportManager {
           namespaceImport,
           false,
         );
-        
+
         imports.push(importStr);
         processedSources.add(source);
       }
     });
-    
+
     // Process type-only imports
     this.typeImports.forEach((names, source) => {
       if (filter(source) && !processedSources.has(source)) {
@@ -255,12 +251,12 @@ export class ImportManager {
           undefined,
           true,
         );
-        
+
         imports.push(importStr);
         processedSources.add(source);
       }
     });
-    
+
     // Process standalone default imports
     this.defaultImports.forEach((name, source) => {
       if (filter(source) && !processedSources.has(source)) {
@@ -268,7 +264,7 @@ export class ImportManager {
         processedSources.add(source);
       }
     });
-    
+
     // Process standalone namespace imports
     this.namespaceImports.forEach((name, source) => {
       if (filter(source) && !processedSources.has(source)) {
@@ -276,15 +272,15 @@ export class ImportManager {
         processedSources.add(source);
       }
     });
-    
+
     // Sort if configured
     if (this.config.sortAlphabetically) {
       imports.sort();
     }
-    
+
     return imports;
   }
-  
+
   /**
    * Build an import statement
    */
@@ -296,23 +292,23 @@ export class ImportManager {
     typeOnly: boolean = false,
   ): string {
     const parts: string[] = [];
-    
+
     if (typeOnly) {
       parts.push('import type');
     } else {
       parts.push('import');
     }
-    
+
     const importParts: string[] = [];
-    
+
     if (defaultName) {
       importParts.push(defaultName);
     }
-    
+
     if (namespaceName) {
       importParts.push(`* as ${namespaceName}`);
     }
-    
+
     if (names.length > 0) {
       const sortedNames = this.config.sortAlphabetically ? names.sort() : names;
       if (defaultName || namespaceName) {
@@ -321,13 +317,13 @@ export class ImportManager {
         importParts.push(`{ ${sortedNames.join(', ')} }`);
       }
     }
-    
+
     parts.push(importParts.join(', '));
     parts.push(`from '${source}'`);
-    
-    return `${parts.join(' ')  };`;
+
+    return `${parts.join(' ')};`;
   }
-  
+
   /**
    * Check if a source is an external package
    */
@@ -336,22 +332,22 @@ export class ImportManager {
     if (source.startsWith('./') || source.startsWith('../')) {
       return false;
     }
-    
+
     // Absolute paths start with '/'
     if (source.startsWith('/')) {
       return false;
     }
-    
+
     // Alias paths might start with '@' but not be packages
     // This is a simple heuristic; might need refinement
     if (source.startsWith('@/') || source.startsWith('~/')) {
       return false;
     }
-    
+
     // Everything else is considered an external package
     return true;
   }
-  
+
   /**
    * Clear all imports
    */
@@ -363,7 +359,7 @@ export class ImportManager {
     this.namespaceImports.clear();
     this.sideEffectImports.clear();
   }
-  
+
   /**
    * Check if any imports have been added
    */
@@ -376,7 +372,7 @@ export class ImportManager {
       this.sideEffectImports.size > 0
     );
   }
-  
+
   /**
    * Get the count of imports
    */
@@ -389,7 +385,7 @@ export class ImportManager {
     count += this.sideEffectImports.size;
     return count;
   }
-  
+
   /**
    * Merge another ImportManager's imports into this one
    */
@@ -398,28 +394,28 @@ export class ImportManager {
     other.typeImports.forEach((names, source) => {
       names.forEach(name => this.addNamedImport(source, name, true));
     });
-    
+
     // Merge regular imports
     other.regularImports.forEach((names, source) => {
       names.forEach(name => this.addNamedImport(source, name, false));
     });
-    
+
     // Merge default imports
     other.defaultImports.forEach((name, source) => {
       this.addDefaultImport(source, name);
     });
-    
+
     // Merge namespace imports
     other.namespaceImports.forEach((name, source) => {
       this.addNamespaceImport(source, name);
     });
-    
+
     // Merge side-effect imports
     other.sideEffectImports.forEach(source => {
       this.addSideEffectImport(source);
     });
   }
-  
+
   /**
    * Create a clone of this ImportManager
    */
@@ -428,7 +424,7 @@ export class ImportManager {
     cloned.merge(this);
     return cloned;
   }
-  
+
   /**
    * Add imports from ImportResolver dependencies
    */
@@ -445,7 +441,7 @@ export class ImportManager {
       }
     });
   }
-  
+
   /**
    * Add protobuf message imports
    */
@@ -454,32 +450,28 @@ export class ImportManager {
       this.addNamedImport(source, message, false);
     });
   }
-  
+
   /**
    * Add cross-file proto imports
    */
-  public addCrossFileImport(
-    typeName: string,
-    fromFile: string,
-    isTypeOnly: boolean = false,
-  ): void {
+  public addCrossFileImport(typeName: string, fromFile: string, isTypeOnly: boolean = false): void {
     const importPath = fromFile.replace(/\.proto$/, '');
     this.addNamedImport(importPath, typeName, isTypeOnly);
   }
-  
+
   /**
    * Add well-known protobuf type imports
    */
   public addWellKnownTypeImport(typeName: string, importPath: string): void {
     this.addNamedImport(importPath, typeName, false);
   }
-  
+
   /**
    * Generate organized imports for proto-generated code
    */
   public generateProtoImports(): string {
     const importGroups: string[][] = [];
-    
+
     // Side-effect imports
     if (this.sideEffectImports.size > 0) {
       const sideEffects = Array.from(this.sideEffectImports)
@@ -487,38 +479,38 @@ export class ImportManager {
         .map(source => `import '${source}';`);
       importGroups.push(sideEffects);
     }
-    
+
     // google-protobuf and grpc-web imports (external)
     const coreImports = this.generateImportGroup(
-      source => source.startsWith('google-protobuf') || source.startsWith('@improbable-eng/grpc-web'),
+      source =>
+        source.startsWith('google-protobuf') || source.startsWith('@improbable-eng/grpc-web'),
     );
     if (coreImports.length > 0) {
       importGroups.push(coreImports);
     }
-    
+
     // Other external package imports
     const externalImports = this.generateImportGroup(
-      source => this.isExternalPackage(source) && 
-                !source.startsWith('google-protobuf') && 
-                !source.startsWith('@improbable-eng/grpc-web'),
+      source =>
+        this.isExternalPackage(source) &&
+        !source.startsWith('google-protobuf') &&
+        !source.startsWith('@improbable-eng/grpc-web'),
     );
     if (externalImports.length > 0) {
       importGroups.push(externalImports);
     }
-    
+
     // Internal/relative imports
-    const internalImports = this.generateImportGroup(
-      source => !this.isExternalPackage(source),
-    );
+    const internalImports = this.generateImportGroup(source => !this.isExternalPackage(source));
     if (internalImports.length > 0) {
       importGroups.push(internalImports);
     }
-    
+
     // Join groups with blank lines if configured
     const separator = this.config.addBlankLinesBetweenGroups ? '\n\n' : '\n';
     return importGroups.map(group => group.join('\n')).join(separator);
   }
-  
+
   /**
    * Check if imports include a specific type
    */
@@ -529,17 +521,17 @@ export class ImportManager {
         return true;
       }
     }
-    
+
     // Check in type imports
     for (const types of this.typeImports.values()) {
       if (types.has(typeName)) {
         return true;
       }
     }
-    
+
     return false;
   }
-  
+
   /**
    * Get the source for a specific type
    */
@@ -550,14 +542,14 @@ export class ImportManager {
         return source;
       }
     }
-    
+
     // Check in type imports
     for (const [source, types] of this.typeImports.entries()) {
       if (types.has(typeName)) {
         return source;
       }
     }
-    
+
     return null;
   }
 }

@@ -24,19 +24,19 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-non-null-assertion': 'off',
-    
+
     // General rules
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'prefer-const': 'error',
     'no-var': 'error',
     'object-shorthand': 'error',
     'prefer-template': 'error',
-    
+
     // Code style
-    'quotes': ['error', 'single', { avoidEscape: true }],
-    'semi': ['error', 'always'],
+    quotes: ['error', 'single', { avoidEscape: true }],
+    semi: ['error', 'always'],
     'comma-dangle': ['error', 'always-multiline'],
-    'indent': ['error', 2, { SwitchCase: 1 }],
+    indent: ['error', 2, { SwitchCase: 1 }],
     'max-len': ['error', { code: 120, ignoreStrings: true, ignoreTemplateLiterals: true }],
   },
   ignorePatterns: [

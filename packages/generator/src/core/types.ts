@@ -6,47 +6,47 @@ export interface GeneratorOptions {
    * Output format for the generated code
    */
   outputFormat?: 'typescript' | 'javascript';
-  
+
   /**
    * Whether to generate React hooks
    */
   generateReactHooks?: boolean;
-  
+
   /**
    * Whether to generate Suspense-compatible hooks
    */
   generateSuspenseHooks?: boolean;
-  
+
   /**
    * Base URL for the gRPC server
    */
   serverUrl?: string;
-  
+
   /**
    * Whether to include source maps
    */
   sourceMaps?: boolean;
-  
+
   /**
    * Whether to generate JSDoc comments
    */
   generateComments?: boolean;
-  
+
   /**
    * Custom template directory path
    */
   templateDir?: string;
-  
+
   /**
    * Whether to optimize generated code for tree-shaking
    */
   treeShaking?: boolean;
-  
+
   /**
    * Whether to include option metadata in generated code
    */
   includeOptionMetadata?: boolean;
-  
+
   /**
    * Configuration for option processing
    */
@@ -55,28 +55,28 @@ export interface GeneratorOptions {
      * Whether to include standard protobuf options
      */
     includeStandard?: boolean;
-    
+
     /**
      * Whether to include custom options
      */
     includeCustom?: boolean;
-    
+
     /**
      * List of standard options to exclude
      */
     excludeStandard?: string[];
-    
+
     /**
      * List of custom options to exclude
      */
     excludeCustom?: string[];
-    
+
     /**
      * Whether to process nested object values
      */
     processNestedObjects?: boolean;
   };
-  
+
   /**
    * Code optimization options
    */
@@ -85,53 +85,53 @@ export interface GeneratorOptions {
      * Enable dead code elimination
      */
     deadCodeElimination?: boolean;
-    
+
     /**
      * Enable minification for production
      */
     minify?: boolean;
-    
+
     /**
      * Remove comments in production
      */
     removeComments?: boolean;
-    
+
     /**
      * Inline small functions
      */
     inlineFunctions?: boolean;
-    
+
     /**
      * Optimize imports for tree-shaking
      */
     optimizeImports?: boolean;
-    
+
     /**
      * Production mode optimizations
      */
     production?: boolean;
-    
+
     /**
      * Conditional generation based on usage
      */
     conditionalGeneration?: boolean;
-    
+
     /**
      * Bundle size target in KB
      */
     bundleSizeTarget?: number;
-    
+
     /**
      * Enable code splitting
      */
     codeSplitting?: boolean;
-    
+
     /**
      * Enable lazy loading
      */
     lazyLoading?: boolean;
   };
-  
+
   /**
    * Usage tracking for conditional generation
    */
@@ -140,23 +140,23 @@ export interface GeneratorOptions {
      * Track which services are used
      */
     usedServices?: string[];
-    
+
     /**
      * Track which methods are used per service
      */
     usedMethods?: Record<string, string[]>;
-    
+
     /**
      * Track which message types are used
      */
     usedMessages?: string[];
-    
+
     /**
      * Track which enums are used
      */
     usedEnums?: string[];
   };
-  
+
   /**
    * Enable performance monitoring and optimization
    */
@@ -171,12 +171,12 @@ export interface GeneratedFile {
    * File path relative to output directory
    */
   path: string;
-  
+
   /**
    * Generated code content
    */
   content: string;
-  
+
   /**
    * Source map content if enabled
    */
@@ -191,7 +191,7 @@ export interface GeneratedCode {
    * List of generated files
    */
   files: GeneratedFile[];
-  
+
   /**
    * Metadata about the generation process
    */
@@ -200,22 +200,22 @@ export interface GeneratedCode {
      * Timestamp of generation
      */
     generatedAt: Date;
-    
+
     /**
      * Version of the generator
      */
     generatorVersion: string;
-    
+
     /**
      * Number of services processed
      */
     servicesCount: number;
-    
+
     /**
      * Number of messages processed
      */
     messagesCount: number;
-    
+
     /**
      * Number of enums processed
      */

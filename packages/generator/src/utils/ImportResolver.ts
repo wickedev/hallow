@@ -1,12 +1,17 @@
 /**
  * ImportResolver - Resolves cross-file type references and manages import dependencies
- * 
+ *
  * This class handles the resolution of type references across proto files,
  * manages package namespace imports, and generates proper import paths
  * for the generated TypeScript code.
  */
 
-import { ProtoFile, MessageDefinition, ServiceDefinition, EnumDefinition } from '../core/proto-types';
+import {
+  ProtoFile,
+  MessageDefinition,
+  ServiceDefinition,
+  EnumDefinition,
+} from '../core/proto-types';
 import { NameResolver } from './NameResolver';
 import { TypeMapper } from './TypeMapper';
 
@@ -18,27 +23,27 @@ export interface TypeReference {
    * Fully qualified type name (e.g., "google.protobuf.Timestamp")
    */
   fullName: string;
-  
+
   /**
    * Package name (e.g., "google.protobuf")
    */
   package: string;
-  
+
   /**
    * Type name without package (e.g., "Timestamp")
    */
   typeName: string;
-  
+
   /**
    * Source file where the type is defined
    */
   sourceFile?: string;
-  
+
   /**
    * Whether this is a well-known type
    */
   isWellKnown?: boolean;
-  
+
   /**
    * Whether this is an external import
    */
@@ -53,27 +58,27 @@ export interface ImportDependency {
    * Source file path (relative or absolute)
    */
   source: string;
-  
+
   /**
    * Types to import from this source
    */
   types: string[];
-  
+
   /**
    * Whether this is a proto file import
    */
   isProtoImport: boolean;
-  
+
   /**
    * Generated TypeScript module path
    */
   tsModulePath?: string;
-  
+
   /**
    * Whether to use namespace import
    */
   useNamespace?: boolean;
-  
+
   /**
    * Namespace name if using namespace import
    */
@@ -123,27 +128,27 @@ export interface ImportResolverConfig {
    * Base path for resolving imports
    */
   basePath?: string;
-  
+
   /**
    * Output directory for generated files
    */
   outputDir?: string;
-  
+
   /**
    * Whether to use relative imports
    */
   useRelativeImports?: boolean;
-  
+
   /**
    * Whether to generate namespace imports for packages
    */
   useNamespaceImports?: boolean;
-  
+
   /**
    * Custom import paths mapping
    */
   customImportPaths?: Record<string, string>;
-  
+
   /**
    * File extension for generated files
    */
@@ -160,7 +165,7 @@ export class ImportResolver {
   private config: ImportResolverConfig;
   private nameResolver: NameResolver;
   private typeMapper: TypeMapper;
-  
+
   constructor(
     config: ImportResolverConfig = {},
     nameResolver?: NameResolver,
@@ -178,33 +183,33 @@ export class ImportResolver {
     this.nameResolver = nameResolver || new NameResolver();
     this.typeMapper = typeMapper || new TypeMapper();
   }
-  
+
   /**
    * Register a proto file and its types
    */
   public registerProtoFile(file: ProtoFile): void {
     const fileName = file.fileName;
     this.fileRegistry.set(fileName, file);
-    
+
     // Register all messages
     this.registerMessages(file.messages, file, file.package || '');
-    
+
     // Register all enums
     this.registerEnums(file.enums, file, file.package || '');
-    
+
     // Register all services
     this.registerServices(file.services, file, file.package || '');
-    
+
     // Process imports to build dependency graph
     if (!this.dependencyGraph.has(fileName)) {
       this.dependencyGraph.set(fileName, new Set());
     }
-    
+
     file.imports.forEach(importPath => {
       this.dependencyGraph.get(fileName)!.add(importPath);
     });
   }
-  
+
   /**
    * Register message types recursively
    */
@@ -217,7 +222,7 @@ export class ImportResolver {
     messages.forEach(message => {
       const typeName = parentName ? `${parentName}.${message.name}` : message.name;
       const fullName = packageName ? `${packageName}.${typeName}` : typeName;
-      
+
       this.typeRegistry.set(fullName, {
         file,
         package: packageName,
@@ -226,19 +231,19 @@ export class ImportResolver {
         kind: 'message',
         definition: message,
       });
-      
+
       // Register nested messages
       if (message.nestedMessages) {
         this.registerMessages(message.nestedMessages, file, packageName, typeName);
       }
-      
+
       // Register nested enums
       if (message.nestedEnums) {
         this.registerEnums(message.nestedEnums, file, packageName, typeName);
       }
     });
   }
-  
+
   /**
    * Register enum types
    */
@@ -251,7 +256,7 @@ export class ImportResolver {
     enums.forEach(enumDef => {
       const typeName = parentName ? `${parentName}.${enumDef.name}` : enumDef.name;
       const fullName = packageName ? `${packageName}.${typeName}` : typeName;
-      
+
       this.typeRegistry.set(fullName, {
         file,
         package: packageName,
@@ -262,7 +267,7 @@ export class ImportResolver {
       });
     });
   }
-  
+
   /**
    * Register service types
    */
@@ -273,7 +278,7 @@ export class ImportResolver {
   ): void {
     services.forEach(service => {
       const fullName = packageName ? `${packageName}.${service.name}` : service.name;
-      
+
       this.typeRegistry.set(fullName, {
         file,
         package: packageName,
@@ -284,7 +289,7 @@ export class ImportResolver {
       });
     });
   }
-  
+
   /**
    * Resolve a type reference to its definition
    */
@@ -299,7 +304,7 @@ export class ImportResolver {
         isExternal: true,
       };
     }
-    
+
     // Try to resolve as fully qualified name
     if (this.typeRegistry.has(typeName)) {
       const entry = this.typeRegistry.get(typeName)!;
@@ -312,7 +317,7 @@ export class ImportResolver {
         isExternal: false,
       };
     }
-    
+
     // Try to resolve relative to current package
     if (currentPackage) {
       const fullName = `${currentPackage}.${typeName}`;
@@ -328,7 +333,7 @@ export class ImportResolver {
         };
       }
     }
-    
+
     // Try to resolve without package (for types in the same file)
     const entries = Array.from(this.typeRegistry.values());
     const match = entries.find(entry => entry.typeName === typeName);
@@ -342,10 +347,10 @@ export class ImportResolver {
         isExternal: false,
       };
     }
-    
+
     return null;
   }
-  
+
   /**
    * Get all import dependencies for a proto file
    */
@@ -354,10 +359,10 @@ export class ImportResolver {
     if (!file) {
       return [];
     }
-    
+
     const dependencies: Map<string, ImportDependency> = new Map();
     const processedTypes = new Set<string>();
-    
+
     // Process all type references in the file
     this.collectTypeReferences(file, processedTypes).forEach(typeRef => {
       if (typeRef.isWellKnown) {
@@ -389,7 +394,7 @@ export class ImportResolver {
         dependencies.get(importPath)!.types.push(tsTypeName);
       }
     });
-    
+
     // Add namespace imports if configured
     if (this.config.useNamespaceImports) {
       dependencies.forEach(dep => {
@@ -401,16 +406,16 @@ export class ImportResolver {
         }
       });
     }
-    
+
     return Array.from(dependencies.values());
   }
-  
+
   /**
    * Collect all type references from a proto file
    */
   private collectTypeReferences(file: ProtoFile, processedTypes: Set<string>): TypeReference[] {
     const references: TypeReference[] = [];
-    
+
     // Collect from services
     file.services.forEach(service => {
       service.methods.forEach(method => {
@@ -418,7 +423,7 @@ export class ImportResolver {
         this.addTypeReference(method.outputType, file.package, references, processedTypes);
       });
     });
-    
+
     // Collect from messages
     const collectFromMessage = (message: MessageDefinition) => {
       message.fields.forEach(field => {
@@ -432,16 +437,16 @@ export class ImportResolver {
           this.addTypeReference(field.mapValueType, file.package, references, processedTypes);
         }
       });
-      
+
       // Process nested messages
       message.nestedMessages?.forEach(collectFromMessage);
     };
-    
+
     file.messages.forEach(collectFromMessage);
-    
+
     return references;
   }
-  
+
   /**
    * Add a type reference if not already processed
    */
@@ -454,14 +459,14 @@ export class ImportResolver {
     if (processedTypes.has(typeName)) {
       return;
     }
-    
+
     const typeRef = this.resolveType(typeName, currentPackage);
     if (typeRef) {
       references.push(typeRef);
       processedTypes.add(typeName);
     }
   }
-  
+
   /**
    * Generate import path between two files
    */
@@ -470,15 +475,15 @@ export class ImportResolver {
       // Use absolute imports
       return this.stripProtoExtension(toFile);
     }
-    
+
     // Calculate relative path
     const fromParts = fromFile.split('/');
     const toParts = toFile.split('/');
-    
+
     // Remove file names
     fromParts.pop();
     const toFileName = toParts.pop()!;
-    
+
     // Find common path
     let commonLength = 0;
     while (
@@ -488,25 +493,25 @@ export class ImportResolver {
     ) {
       commonLength++;
     }
-    
+
     // Build relative path
     const upLevels = fromParts.length - commonLength;
     const downPath = toParts.slice(commonLength);
-    
+
     let relativePath = '';
     if (upLevels > 0) {
       relativePath = '../'.repeat(upLevels);
     } else if (downPath.length === 0) {
       relativePath = './';
     }
-    
+
     if (downPath.length > 0) {
-      relativePath += `${downPath.join('/')  }/`;
+      relativePath += `${downPath.join('/')}/`;
     }
-    
+
     return relativePath + this.stripProtoExtension(toFileName);
   }
-  
+
   /**
    * Strip .proto extension and add TypeScript extension
    */
@@ -514,7 +519,7 @@ export class ImportResolver {
     const base = fileName.replace(/\.proto$/, '');
     return base + (this.config.fileExtension || '');
   }
-  
+
   /**
    * Extract package name from file path
    */
@@ -523,16 +528,14 @@ export class ImportResolver {
     const fileName = parts[parts.length - 1];
     return fileName.replace(/\.(proto|ts|js)$/, '');
   }
-  
+
   /**
    * Get all types defined in a file
    */
   public getFileTypes(fileName: string): TypeRegistryEntry[] {
-    return Array.from(this.typeRegistry.values()).filter(
-      entry => entry.file.fileName === fileName,
-    );
+    return Array.from(this.typeRegistry.values()).filter(entry => entry.file.fileName === fileName);
   }
-  
+
   /**
    * Check if a type is defined locally in a file
    */
@@ -541,18 +544,18 @@ export class ImportResolver {
     if (!file) {
       return false;
     }
-    
+
     const typeRef = this.resolveType(typeName, file.package);
     return typeRef !== null && typeRef.sourceFile === fileName;
   }
-  
+
   /**
    * Get dependency graph for analysis
    */
   public getDependencyGraph(): Map<string, Set<string>> {
     return new Map(this.dependencyGraph);
   }
-  
+
   /**
    * Clear all registries
    */

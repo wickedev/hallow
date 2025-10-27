@@ -102,7 +102,7 @@ export class PerformanceMonitor {
     this.metrics.duration = this.metrics.endTime - this.metrics.startTime;
     this.metrics.memoryUsage = process.memoryUsage();
     this.metrics.peakMemoryUsage = { ...this.peakMemory };
-    
+
     this.checkThresholds();
     return { ...this.metrics };
   }
@@ -130,11 +130,11 @@ export class PerformanceMonitor {
     if (operation) {
       operation.endTime = Date.now();
       operation.duration = operation.endTime - operation.startTime;
-      
+
       if (operation.memoryDelta !== undefined) {
         operation.memoryDelta = process.memoryUsage().heapUsed - operation.memoryDelta;
       }
-      
+
       this.metrics.operations.push(operation);
       return operation;
     }
@@ -148,10 +148,12 @@ export class PerformanceMonitor {
       this.metrics.fileMetrics = [];
     }
     this.metrics.fileMetrics.push(metrics);
-    
+
     // Check file-specific thresholds
     if (this.thresholds?.maxFileSize && metrics.fileSize > this.thresholds.maxFileSize) {
-      console.warn(`[Performance] File ${metrics.fileName} exceeds size threshold: ${metrics.fileSize} bytes`);
+      console.warn(
+        `[Performance] File ${metrics.fileName} exceeds size threshold: ${metrics.fileSize} bytes`,
+      );
     }
   }
 
@@ -189,7 +191,7 @@ export class PerformanceMonitor {
   } {
     const current = process.memoryUsage();
     const delta = current.heapUsed - this.metrics.memoryUsage.heapUsed;
-    
+
     return {
       current,
       peak: { ...this.peakMemory },
@@ -215,11 +217,11 @@ export class PerformanceMonitor {
       if (!stats[op.name]) {
         stats[op.name] = { count: 0, totalTime: 0, avgTime: 0 };
       }
-      
+
       stats[op.name].count++;
       stats[op.name].totalTime += op.duration;
       totalDuration += op.duration;
-      
+
       if (!slowest || op.duration > slowest.duration) {
         slowest = op;
       }
@@ -233,9 +235,8 @@ export class PerformanceMonitor {
     return {
       totalOperations: this.metrics.operations.length,
       totalDuration,
-      averageDuration: this.metrics.operations.length > 0 
-        ? totalDuration / this.metrics.operations.length 
-        : 0,
+      averageDuration:
+        this.metrics.operations.length > 0 ? totalDuration / this.metrics.operations.length : 0,
       slowestOperation: slowest,
       operations: stats,
     };
@@ -248,7 +249,7 @@ export class PerformanceMonitor {
     const snapshot = this.getSnapshot();
     const memStats = this.getMemoryStats();
     const opStats = this.getOperationStats();
-    
+
     const report = [
       '# Performance Report',
       '',
@@ -287,7 +288,7 @@ export class PerformanceMonitor {
       report.push('', '## File Generation');
       const totalSize = snapshot.fileMetrics.reduce((sum, f) => sum + f.fileSize, 0);
       const totalLines = snapshot.fileMetrics.reduce((sum, f) => sum + f.linesOfCode, 0);
-      
+
       report.push(
         `- Files Generated: ${snapshot.fileMetrics.length}`,
         `- Total Size: ${this.formatBytes(totalSize)}`,
@@ -295,7 +296,7 @@ export class PerformanceMonitor {
         '',
         '### Files:',
       );
-      
+
       for (const file of snapshot.fileMetrics) {
         report.push(
           `- **${file.fileName}**:`,
@@ -342,23 +343,36 @@ export class PerformanceMonitor {
     if (!this.thresholds) return;
 
     const snapshot = this.getSnapshot();
-    
+
     // Check generation time
     if (this.thresholds.maxGenerationTime && snapshot.duration) {
       if (snapshot.duration > this.thresholds.maxGenerationTime) {
-        console.error(`[Performance] Generation time exceeded threshold: ${snapshot.duration}ms > ${this.thresholds.maxGenerationTime}ms`);
-      } else if (this.thresholds.warnThresholds?.generationTime && 
-                 snapshot.duration > this.thresholds.warnThresholds.generationTime) {
+        console.error(
+          `[Performance] Generation time exceeded threshold: ${snapshot.duration}ms > ${this.thresholds.maxGenerationTime}ms`,
+        );
+      } else if (
+        this.thresholds.warnThresholds?.generationTime &&
+        snapshot.duration > this.thresholds.warnThresholds.generationTime
+      ) {
         console.warn(`[Performance] Generation time warning: ${snapshot.duration}ms`);
       }
     }
 
     // Check memory usage
-    if (this.thresholds.maxMemoryUsage && this.peakMemory.heapUsed > this.thresholds.maxMemoryUsage) {
-      console.error(`[Performance] Memory usage exceeded threshold: ${this.formatBytes(this.peakMemory.heapUsed)}`);
-    } else if (this.thresholds.warnThresholds?.memoryUsage && 
-               this.peakMemory.heapUsed > this.thresholds.warnThresholds.memoryUsage) {
-      console.warn(`[Performance] Memory usage warning: ${this.formatBytes(this.peakMemory.heapUsed)}`);
+    if (
+      this.thresholds.maxMemoryUsage &&
+      this.peakMemory.heapUsed > this.thresholds.maxMemoryUsage
+    ) {
+      console.error(
+        `[Performance] Memory usage exceeded threshold: ${this.formatBytes(this.peakMemory.heapUsed)}`,
+      );
+    } else if (
+      this.thresholds.warnThresholds?.memoryUsage &&
+      this.peakMemory.heapUsed > this.thresholds.warnThresholds.memoryUsage
+    ) {
+      console.warn(
+        `[Performance] Memory usage warning: ${this.formatBytes(this.peakMemory.heapUsed)}`,
+      );
     }
   }
 
@@ -420,21 +434,17 @@ export function createPerformanceMonitor(thresholds?: PerformanceThresholds): Pe
  * Decorator to monitor method performance
  */
 export function MonitorPerformance(operationName?: string) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
-    
+
     descriptor.value = async function (...args: any[]) {
       const monitor = (this as any).performanceMonitor as PerformanceMonitor | undefined;
       const name = operationName || `${target.constructor.name}.${propertyKey}`;
-      
+
       if (monitor) {
         monitor.startOperation(name);
       }
-      
+
       try {
         const result = await originalMethod.apply(this, args);
         return result;
@@ -444,7 +454,7 @@ export function MonitorPerformance(operationName?: string) {
         }
       }
     };
-    
+
     return descriptor;
   };
 }

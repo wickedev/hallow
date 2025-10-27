@@ -138,7 +138,7 @@ export class SerializationError extends Error {
   constructor(
     message: string,
     public readonly field?: string,
-    public readonly value?: any
+    public readonly value?: any,
   ) {
     super(message);
     this.name = 'SerializationError';
@@ -166,7 +166,7 @@ export class ValidationError extends Error {
   constructor(
     message: string,
     public readonly field: string,
-    public readonly constraint: string
+    public readonly constraint: string,
   ) {
     super(message);
     this.name = 'ValidationError';

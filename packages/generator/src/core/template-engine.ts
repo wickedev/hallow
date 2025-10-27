@@ -19,17 +19,17 @@ export interface TemplateOptions {
    * Whether to enable strict mode for templates
    */
   strict?: boolean;
-  
+
   /**
    * Custom helper functions
    */
   helpers?: Record<string, Handlebars.HelperDelegate>;
-  
+
   /**
    * Custom partials
    */
   partials?: Record<string, string>;
-  
+
   /**
    * Enable template caching
    */
@@ -87,9 +87,9 @@ export class TemplateEngine {
 
       const content = await fs.promises.readFile(templatePath, 'utf-8');
       const stats = await fs.promises.stat(templatePath);
-      
+
       this.validateTemplate(content, templateName);
-      
+
       const compiled = this.handlebars.compile(content, {
         strict: this.options.strict,
         noEscape: true, // TypeScript code generation should not escape HTML
@@ -103,7 +103,6 @@ export class TemplateEngine {
         lastModified: stats.mtime,
         compiled: true,
       });
-
     } catch (error) {
       if (error instanceof GenerationError) {
         throw error;
@@ -124,7 +123,7 @@ export class TemplateEngine {
   loadTemplateFromString(templateName: string, content: string): void {
     try {
       this.validateTemplate(content, templateName);
-      
+
       const compiled = this.handlebars.compile(content, {
         strict: this.options.strict,
         noEscape: true,
@@ -137,7 +136,6 @@ export class TemplateEngine {
         lastModified: new Date(),
         compiled: true,
       });
-
     } catch (error) {
       throw new GenerationError(
         `Failed to compile template '${templateName}': ${error instanceof Error ? error.message : String(error)}`,
@@ -170,7 +168,7 @@ export class TemplateEngine {
         return file.includes(pattern.replace('*', ''));
       });
 
-      const loadPromises = templateFiles.map(async (file) => {
+      const loadPromises = templateFiles.map(async file => {
         const templateName = path.basename(file, path.extname(file));
         const templatePath = path.join(templateDir, file);
         await this.loadTemplate(templateName, templatePath);
@@ -330,16 +328,16 @@ export class TemplateEngine {
     // Snake case helper
     this.handlebars.registerHelper('snakeCase', (str: string) => {
       if (!str) return '';
-      return str.replace(/[A-Z]/g, (match, offset) => 
-        offset > 0 ? `_${  match.toLowerCase()}` : match.toLowerCase(),
+      return str.replace(/[A-Z]/g, (match, offset) =>
+        offset > 0 ? `_${match.toLowerCase()}` : match.toLowerCase(),
       );
     });
 
     // Kebab case helper
     this.handlebars.registerHelper('kebabCase', (str: string) => {
       if (!str) return '';
-      return str.replace(/[A-Z]/g, (match, offset) => 
-        offset > 0 ? `-${  match.toLowerCase()}` : match.toLowerCase(),
+      return str.replace(/[A-Z]/g, (match, offset) =>
+        offset > 0 ? `-${match.toLowerCase()}` : match.toLowerCase(),
       );
     });
 
@@ -354,7 +352,10 @@ export class TemplateEngine {
     this.handlebars.registerHelper('indent', (content: string, spaces: number = 2) => {
       if (!content) return '';
       const indentation = ' '.repeat(spaces);
-      return content.split('\n').map(line => line ? indentation + line : line).join('\n');
+      return content
+        .split('\n')
+        .map(line => (line ? indentation + line : line))
+        .join('\n');
     });
 
     // Comment helper for JSDoc generation
@@ -369,7 +370,7 @@ export class TemplateEngine {
     // Conditional helper for optional code generation
     /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, 
        @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-    this.handlebars.registerHelper('ifExists', function(this: any, value: any, options: any) {
+    this.handlebars.registerHelper('ifExists', function (this: any, value: any, options: any) {
       if (value !== undefined && value !== null && value !== '') {
         return options.fn(this);
       }
@@ -381,15 +382,15 @@ export class TemplateEngine {
     // Type mapping helper
     this.handlebars.registerHelper('mapType', (protoType: string) => {
       const typeMapping: Record<string, string> = {
-        'string': 'string',
-        'int32': 'number',
-        'int64': 'number',
-        'uint32': 'number',
-        'uint64': 'number',
-        'float': 'number',
-        'double': 'number',
-        'bool': 'boolean',
-        'bytes': 'Uint8Array',
+        string: 'string',
+        int32: 'number',
+        int64: 'number',
+        uint32: 'number',
+        uint64: 'number',
+        float: 'number',
+        double: 'number',
+        bool: 'boolean',
+        bytes: 'Uint8Array',
       };
       return typeMapping[protoType] || protoType;
     });

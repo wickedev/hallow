@@ -22,20 +22,14 @@ export class GrpcWebService {
 
     // Create gRPC client to connect to the gRPC server
     const UserService = protoDescriptor.test.services.UserService;
-    this.client = new UserService(
-      'localhost:50051',
-      grpc.credentials.createInsecure(),
-    );
+    this.client = new UserService('localhost:50051', grpc.credentials.createInsecure());
   }
 
   /**
    * Process gRPC-Web requests by forwarding to gRPC server
    * This is a basic implementation for testing purposes
    */
-  async processRequest(
-    body: Buffer,
-    headers: Record<string, string>,
-  ): Promise<Buffer> {
+  async processRequest(body: Buffer, headers: Record<string, string>): Promise<Buffer> {
     console.log('Processing gRPC-Web request');
     console.log('Headers:', headers);
     console.log('Body length:', body.length);

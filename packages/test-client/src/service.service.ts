@@ -3,9 +3,6 @@ import { grpc } from '@improbable-eng/grpc-web';
 import { GrpcClientOptions, GrpcError, GrpcWebAdapter, isGrpcError } from '@hallow/generator';
 import { Observable } from 'rxjs';
 
-
-;
-
 /**
  * Interface for GetUserRequest message
  */
@@ -34,7 +31,7 @@ export namespace GetUserRequest {
   export function decode(bytes: Uint8Array): GetUserRequest {
     const reader = new BinaryReader(bytes);
     const message: GetUserRequest = {
-      userId: "",
+      userId: '',
     };
 
     while (reader.nextField()) {
@@ -61,7 +58,7 @@ export namespace GetUserRequest {
     userId: string;
 
     constructor(init?: Partial<GetUserRequest>) {
-      this.userId = "";
+      this.userId = '';
       if (init) {
         Object.assign(this, init);
       }
@@ -122,9 +119,9 @@ export namespace GetUserResponse {
   export function decode(bytes: Uint8Array): GetUserResponse {
     const reader = new BinaryReader(bytes);
     const message: GetUserResponse = {
-      id: "",
-      name: "",
-      email: "",
+      id: '',
+      name: '',
+      email: '',
     };
 
     while (reader.nextField()) {
@@ -159,9 +156,9 @@ export namespace GetUserResponse {
     email: string;
 
     constructor(init?: Partial<GetUserResponse>) {
-      this.id = "";
-      this.name = "";
-      this.email = "";
+      this.id = '';
+      this.name = '';
+      this.email = '';
       if (init) {
         Object.assign(this, init);
       }
@@ -220,7 +217,7 @@ export namespace ListUsersRequest {
     const reader = new BinaryReader(bytes);
     const message: ListUsersRequest = {
       pageSize: 0,
-      pageToken: "",
+      pageToken: '',
     };
 
     while (reader.nextField()) {
@@ -252,7 +249,7 @@ export namespace ListUsersRequest {
 
     constructor(init?: Partial<ListUsersRequest>) {
       this.pageSize = 0;
-      this.pageToken = "";
+      this.pageToken = '';
       if (init) {
         Object.assign(this, init);
       }
@@ -312,7 +309,7 @@ export namespace ListUsersResponse {
     const reader = new BinaryReader(bytes);
     const message: ListUsersResponse = {
       users: [],
-      nextPageToken: "",
+      nextPageToken: '',
     };
 
     while (reader.nextField()) {
@@ -348,7 +345,7 @@ export namespace ListUsersResponse {
 
     constructor(init?: Partial<ListUsersResponse>) {
       this.users = [];
-      this.nextPageToken = "";
+      this.nextPageToken = '';
       if (init) {
         Object.assign(this, init);
       }
@@ -405,8 +402,8 @@ export namespace CreateUserRequest {
   export function decode(bytes: Uint8Array): CreateUserRequest {
     const reader = new BinaryReader(bytes);
     const message: CreateUserRequest = {
-      name: "",
-      email: "",
+      name: '',
+      email: '',
     };
 
     while (reader.nextField()) {
@@ -437,8 +434,8 @@ export namespace CreateUserRequest {
     email: string;
 
     constructor(init?: Partial<CreateUserRequest>) {
-      this.name = "";
-      this.email = "";
+      this.name = '';
+      this.email = '';
       if (init) {
         Object.assign(this, init);
       }
@@ -495,8 +492,8 @@ export namespace StreamMessage {
   export function decode(bytes: Uint8Array): StreamMessage {
     const reader = new BinaryReader(bytes);
     const message: StreamMessage = {
-      content: "",
-      timestamp: "0",
+      content: '',
+      timestamp: '0',
     };
 
     while (reader.nextField()) {
@@ -527,8 +524,8 @@ export namespace StreamMessage {
     timestamp: string;
 
     constructor(init?: Partial<StreamMessage>) {
-      this.content = "";
-      this.timestamp = "0";
+      this.content = '';
+      this.timestamp = '0';
       if (init) {
         Object.assign(this, init);
       }
@@ -557,11 +554,6 @@ export namespace StreamMessage {
  * @generated
  */
 
-;
-;
-;
-;
-
 /**
  * Service descriptor for UserService
  * Contains metadata for all RPC methods in this service
@@ -577,7 +569,7 @@ export const UserServiceService = {
   GetUserDescriptor: {
     methodName: 'GetUser',
     service: {
-      serviceName: 'test.services.UserService'
+      serviceName: 'test.services.UserService',
     },
     requestType: GetUserRequest.Message,
     responseType: GetUserResponse.Message,
@@ -593,7 +585,7 @@ export const UserServiceService = {
   ListUsersDescriptor: {
     methodName: 'ListUsers',
     service: {
-      serviceName: 'test.services.UserService'
+      serviceName: 'test.services.UserService',
     },
     requestType: ListUsersRequest.Message,
     responseType: ListUsersResponse.Message,
@@ -609,7 +601,7 @@ export const UserServiceService = {
   CreateUsersDescriptor: {
     methodName: 'CreateUsers',
     service: {
-      serviceName: 'test.services.UserService'
+      serviceName: 'test.services.UserService',
     },
     requestType: CreateUserRequest.Message,
     responseType: ListUsersResponse.Message,
@@ -625,7 +617,7 @@ export const UserServiceService = {
   ChatDescriptor: {
     methodName: 'Chat',
     service: {
-      serviceName: 'test.services.UserService'
+      serviceName: 'test.services.UserService',
     },
     requestType: StreamMessage.Message,
     responseType: StreamMessage.Message,
@@ -650,7 +642,7 @@ export class UserServiceStub {
    */
   constructor(
     private readonly baseUrl: string,
-    options?: GrpcClientOptions
+    options?: GrpcClientOptions,
   ) {
     this.adapter = new GrpcWebAdapter(baseUrl, options);
   }
@@ -680,10 +672,10 @@ export class UserServiceStub {
   public async getUser(request: GetUserRequest): Promise<GetUserResponse> {
     return this.adapter.unary<GetUserRequest, GetUserResponse>(
       UserServiceService.GetUserDescriptor,
-      request
+      request,
     );
   }
-  
+
   /**
    * RPC method ListUsers (server streaming)
    *
@@ -698,7 +690,7 @@ export class UserServiceStub {
   public listUsers(request: ListUsersRequest): Observable<ListUsersResponse> {
     return this.adapter.serverStream<ListUsersRequest, ListUsersResponse>(
       UserServiceService.ListUsersDescriptor,
-      request
+      request,
     );
   }
 
@@ -720,9 +712,9 @@ export class UserServiceStub {
   } {
     throw new Error(
       'Client streaming RPC "CreateUsers" is not supported over HTTP/1.1. ' +
-      'gRPC-web requires WebSocket transport or HTTP/2 for client streaming. ' +
-      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
-      'See: https://github.com/grpc/grpc-web#streaming-support'
+        'gRPC-web requires WebSocket transport or HTTP/2 for client streaming. ' +
+        'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
+        'See: https://github.com/grpc/grpc-web#streaming-support',
     );
   }
 
@@ -745,13 +737,9 @@ export class UserServiceStub {
   } {
     throw new Error(
       'Bidirectional streaming RPC "Chat" is not supported over HTTP/1.1. ' +
-      'gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming. ' +
-      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
-      'See: https://github.com/grpc/grpc-web#streaming-support'
+        'gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming. ' +
+        'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
+        'See: https://github.com/grpc/grpc-web#streaming-support',
     );
   }
-
 }
-
-
-

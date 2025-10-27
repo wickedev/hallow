@@ -22,9 +22,6 @@ export const grpcClientOptions: GrpcOptions = {
 };
 
 @Module({
-  imports: [
-    UserModule,
-    HealthModule,
-  ],
+  imports: [UserModule, HealthModule],
 })
 export class AppModule {}

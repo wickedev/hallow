@@ -9,7 +9,6 @@ interface HealthCheckResponse {
 
 @Controller('health')
 export class HealthController {
-
   /**
    * HTTP health check endpoint
    */
@@ -25,7 +24,7 @@ export class HealthController {
           'test.services.UserService/ListUsers',
           'test.services.UserService/CreateUsers',
           'test.services.UserService/Chat',
-        ]
+        ],
       },
       timestamp: new Date().toISOString(),
     };
@@ -38,7 +37,7 @@ export class HealthController {
   check(request: HealthCheckRequest): HealthCheckResponse {
     return {
       status: 'SERVING',
-      services: ['test.services.UserService']
+      services: ['test.services.UserService'],
     };
   }
 }

@@ -12,12 +12,12 @@ export interface CancellationToken {
    * Cancel the operation
    */
   cancel(): void;
-  
+
   /**
    * Whether the operation has been cancelled
    */
   readonly isCancelled: boolean;
-  
+
   /**
    * Register a callback to be called when the operation is cancelled
    */
@@ -30,11 +30,11 @@ export interface CancellationToken {
 export class CancellationTokenImpl implements CancellationToken {
   private _isCancelled = false;
   private readonly cancelCallbacks: Array<() => void> = [];
-  
+
   get isCancelled(): boolean {
     return this._isCancelled;
   }
-  
+
   cancel(): void {
     if (this._isCancelled) return;
     this._isCancelled = true;
@@ -48,7 +48,7 @@ export class CancellationTokenImpl implements CancellationToken {
     // Clear callbacks to prevent memory leaks
     this.cancelCallbacks.length = 0;
   }
-  
+
   onCancel(callback: () => void): void {
     if (this._isCancelled) {
       try {
@@ -70,12 +70,12 @@ export interface ClientStreamingCall<TRequest, TResponse> {
    * Send a request message to the stream
    */
   send: (request: TRequest) => void;
-  
+
   /**
    * Complete the request stream and get the response
    */
   complete: () => Promise<TResponse>;
-  
+
   /**
    * Cancel the streaming call
    */
@@ -100,17 +100,17 @@ export interface BidirectionalStreamingCall<TRequest, TResponse> {
    * Send a request message to the stream
    */
   send: (request: TRequest) => void;
-  
+
   /**
    * Observable stream of response messages
    */
   responses: Observable<TResponse>;
-  
+
   /**
    * Complete the request stream (no more requests)
    */
   complete: () => void;
-  
+
   /**
    * Cancel the streaming call
    */
@@ -163,11 +163,13 @@ export class StreamingUtils {
   static createCancellationToken(): CancellationToken {
     return new CancellationTokenImpl();
   }
-  
+
   /**
    * Determine streaming type from method info
    */
-  static getStreamingType(methodInfo: StreamingMethodInfo): 'unary' | 'client_streaming' | 'server_streaming' | 'bidirectional_streaming' {
+  static getStreamingType(
+    methodInfo: StreamingMethodInfo,
+  ): 'unary' | 'client_streaming' | 'server_streaming' | 'bidirectional_streaming' {
     if (methodInfo.clientStreaming && methodInfo.serverStream) {
       return 'bidirectional_streaming';
     } else if (methodInfo.clientStreaming) {
@@ -178,18 +180,18 @@ export class StreamingUtils {
       return 'unary';
     }
   }
-  
+
   /**
    * Create a streaming error with proper context
    */
   static createStreamingError(
-    message: string, 
+    message: string,
     code: StreamingErrorCode = StreamingErrorCode.UNKNOWN,
     details?: any,
   ): StreamingError {
     return new StreamingError(message, code, details);
   }
-  
+
   /**
    * Wrap an Observable to handle streaming errors
    */
@@ -199,37 +201,43 @@ export class StreamingUtils {
   ): Observable<T> {
     return new Observable<T>(observer => {
       let subscription: any;
-      
+
       const cleanup = () => {
         if (subscription) {
           subscription.unsubscribe();
         }
       };
-      
+
       if (cancellationToken) {
         cancellationToken.onCancel(() => {
           cleanup();
-          observer.error(StreamingUtils.createStreamingError('Stream cancelled', StreamingErrorCode.CANCELLED));
+          observer.error(
+            StreamingUtils.createStreamingError('Stream cancelled', StreamingErrorCode.CANCELLED),
+          );
         });
-        
+
         if (cancellationToken.isCancelled) {
-          observer.error(StreamingUtils.createStreamingError('Stream cancelled', StreamingErrorCode.CANCELLED));
+          observer.error(
+            StreamingUtils.createStreamingError('Stream cancelled', StreamingErrorCode.CANCELLED),
+          );
           return cleanup;
         }
       }
-      
+
       subscription = observable.subscribe({
-        next: (value) => observer.next(value),
-        error: (err) => {
+        next: value => observer.next(value),
+        error: err => {
           cleanup();
           if (err instanceof StreamingError) {
             observer.error(err);
           } else {
-            observer.error(StreamingUtils.createStreamingError(
-              err?.message || 'Unknown streaming error',
-              StreamingErrorCode.UNKNOWN,
-              err,
-            ));
+            observer.error(
+              StreamingUtils.createStreamingError(
+                err?.message || 'Unknown streaming error',
+                StreamingErrorCode.UNKNOWN,
+                err,
+              ),
+            );
           }
         },
         complete: () => {
@@ -237,7 +245,7 @@ export class StreamingUtils {
           observer.complete();
         },
       });
-      
+
       return cleanup;
     });
   }

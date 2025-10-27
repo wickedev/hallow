@@ -1,21 +1,13 @@
 /**
  * ReactHookGenerator - Generates React hooks for gRPC services
- * 
+ *
  * This class is responsible for generating type-safe React hooks that provide
  * data fetching capabilities for gRPC services. It supports both regular hooks
  * with loading/error states and Suspense-compatible hooks for React Suspense.
  */
 
-import { 
-  ServiceDefinition, 
-  MethodDefinition, 
-  ProtoFile, 
-} from '../core/proto-types';
-import { 
-  GeneratedFile, 
-  GenerationError, 
-  GenerationErrorCode, 
-} from '../core/types';
+import { ServiceDefinition, MethodDefinition, ProtoFile } from '../core/proto-types';
+import { GeneratedFile, GenerationError, GenerationErrorCode } from '../core/types';
 import { TemplateEngine } from '../core/template-engine';
 import { TypeMapper, TypeMappingConfig } from '../utils/TypeMapper';
 import { ImportManager } from '../utils/ImportManager';
@@ -29,37 +21,37 @@ export interface ReactHookGeneratorOptions {
    * Whether to generate regular hooks (with loading/error states)
    */
   generateRegularHooks?: boolean;
-  
+
   /**
    * Whether to generate Suspense-compatible hooks
    */
   generateSuspenseHooks?: boolean;
-  
+
   /**
    * Whether to include JSDoc comments
    */
   generateComments?: boolean;
-  
+
   /**
    * Whether to include refetch functionality
    */
   includeRefetch?: boolean;
-  
+
   /**
    * Whether to memoize requests
    */
   memoizeRequests?: boolean;
-  
+
   /**
    * Custom template directory path
    */
   templateDir?: string;
-  
+
   /**
    * Type mapping configuration
    */
   typeMapping?: TypeMappingConfig;
-  
+
   /**
    * Base import path for service stubs
    */
@@ -110,7 +102,7 @@ export class ReactHookGenerator {
   private importManager: ImportManager;
   private nameResolver: NameResolver;
   private options: Required<ReactHookGeneratorOptions>;
-  
+
   constructor(options: ReactHookGeneratorOptions = {}) {
     this.options = {
       generateRegularHooks: options.generateRegularHooks ?? true,
@@ -122,35 +114,32 @@ export class ReactHookGenerator {
       typeMapping: options.typeMapping || {},
       serviceImportPath: options.serviceImportPath || './service',
     };
-    
+
     // Initialize dependencies
     this.templateEngine = new TemplateEngine({
       cache: true,
       strict: false,
     });
-    
+
     this.typeMapper = new TypeMapper(this.options.typeMapping);
     this.importManager = new ImportManager();
     this.nameResolver = new NameResolver();
-    
+
     // Load template (use existing hooks.hbs or default)
     this.loadHooksTemplate();
   }
-  
+
   /**
    * Generate React hooks from service definition
    * @param service Service definition from proto file
    * @param protoFile Parent proto file for context
    * @returns Generated TypeScript file with React hooks
    */
-  public generateHooks(
-    service: ServiceDefinition, 
-    protoFile: ProtoFile,
-  ): GeneratedFile {
+  public generateHooks(service: ServiceDefinition, protoFile: ProtoFile): GeneratedFile {
     try {
       // Validate service definition
       this.validateService(service);
-      
+
       // Check if any hooks should be generated
       if (!this.options.generateRegularHooks && !this.options.generateSuspenseHooks) {
         throw new GenerationError(
@@ -158,16 +147,16 @@ export class ReactHookGenerator {
           GenerationErrorCode.INVALID_OPTIONS,
         );
       }
-      
+
       // Prepare template context
       const context = this.prepareTemplateContext(service, protoFile);
-      
+
       // Render the template
       const content = this.renderHooksTemplate(context);
-      
+
       // Generate file metadata
       const fileName = this.generateFileName(service, protoFile);
-      
+
       return {
         path: fileName,
         content,
@@ -184,7 +173,7 @@ export class ReactHookGenerator {
       );
     }
   }
-  
+
   /**
    * Generate hooks for all services in a proto file
    * @param protoFile Proto file containing services
@@ -192,40 +181,40 @@ export class ReactHookGenerator {
    */
   public generateAllHooks(protoFile: ProtoFile): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
-    
+
     // Only generate if there are services and hooks are enabled
     if (protoFile.services.length === 0) {
       return Promise.resolve(files);
     }
-    
+
     if (!this.options.generateRegularHooks && !this.options.generateSuspenseHooks) {
       return Promise.resolve(files);
     }
-    
+
     // Generate a single hooks file for all services
     const context = this.prepareFileTemplateContext(protoFile);
     const content = this.renderHooksTemplate(context);
     const fileName = this.generateFileNameForProto(protoFile);
-    
+
     files.push({
       path: fileName,
       content,
       sourceMap: undefined,
     });
-    
+
     return Promise.resolve(files);
   }
-  
+
   /**
    * Prepare template context for a single service
    */
   private prepareTemplateContext(
-    service: ServiceDefinition, 
+    service: ServiceDefinition,
     protoFile: ProtoFile,
   ): HookTemplateContext {
     // Reset import manager for this service
     this.importManager.clear();
-    
+
     // Add required React imports based on configuration
     if (this.options.generateRegularHooks) {
       const reactImports = ['useState', 'useEffect', 'useRef'];
@@ -238,14 +227,14 @@ export class ReactHookGenerator {
       // For React 19+ with 'use' hook
       this.importManager.addNamedImports('react', ['use']);
     }
-    
+
     // Add service stub import
     const serviceStubName = `${this.nameResolver.resolveTypeName(service.name)}Stub`;
     this.importManager.addNamedImport(this.options.serviceImportPath, serviceStubName);
-    
+
     // Process methods
     const methods = service.methods.map(method => this.processMethod(method, protoFile));
-    
+
     // Prepare service context
     const serviceContext = {
       name: service.name,
@@ -254,10 +243,10 @@ export class ReactHookGenerator {
       description: this.generateDescription(service),
       methods,
     };
-    
+
     // Build imports array
     const imports = this.buildImportsArray();
-    
+
     return {
       packageName: protoFile.package,
       imports,
@@ -268,14 +257,14 @@ export class ReactHookGenerator {
       memoizeRequests: this.options.memoizeRequests,
     };
   }
-  
+
   /**
    * Prepare template context for entire proto file
    */
   private prepareFileTemplateContext(protoFile: ProtoFile): HookTemplateContext {
     // Reset import manager
     this.importManager.clear();
-    
+
     // Add required React imports based on configuration
     if (this.options.generateRegularHooks) {
       const reactImports = ['useState', 'useEffect', 'useRef'];
@@ -288,17 +277,17 @@ export class ReactHookGenerator {
       // For React 19+ with 'use' hook
       this.importManager.addNamedImports('react', ['use']);
     }
-    
+
     // Process all services
     const services = protoFile.services.map(service => {
       const serviceStubName = `${this.nameResolver.resolveTypeName(service.name)}Stub`;
-      
+
       // Add service stub import
       this.importManager.addNamedImport(this.options.serviceImportPath, serviceStubName);
-      
+
       // Process methods
       const methods = service.methods.map(method => this.processMethod(method, protoFile));
-      
+
       return {
         name: service.name,
         pascalName: this.nameResolver.resolveTypeName(service.name),
@@ -307,10 +296,10 @@ export class ReactHookGenerator {
         methods,
       };
     });
-    
+
     // Build imports array
     const imports = this.buildImportsArray();
-    
+
     return {
       packageName: protoFile.package,
       imports,
@@ -321,7 +310,7 @@ export class ReactHookGenerator {
       memoizeRequests: this.options.memoizeRequests,
     };
   }
-  
+
   /**
    * Process a single method definition
    */
@@ -329,14 +318,14 @@ export class ReactHookGenerator {
     // Resolve input and output types
     const inputType = this.resolveMessageType(method.inputType, protoFile);
     const outputType = this.resolveMessageType(method.outputType, protoFile);
-    
+
     const camelName = this.nameResolver.resolveMethodName(method.name);
     const pascalName = method.name.charAt(0).toUpperCase() + method.name.slice(1);
-    
+
     // Generate hook names
     const hookName = `use${pascalName}`;
     const suspenseHookName = `useSuspense${pascalName}`;
-    
+
     return {
       name: method.name,
       pascalName,
@@ -350,31 +339,32 @@ export class ReactHookGenerator {
       suspenseHookName,
     };
   }
-  
+
   /**
    * Resolve message type and add necessary imports
    */
   private resolveMessageType(typeName: string, protoFile: ProtoFile): string {
     // Remove leading dot if present
     const cleanTypeName = typeName.startsWith('.') ? typeName.slice(1) : typeName;
-    
+
     // Check if it's a message from the same file
-    const localMessage = protoFile.messages.find(msg => 
-      msg.name === cleanTypeName || 
-      (protoFile.package && `${protoFile.package}.${msg.name}` === cleanTypeName),
+    const localMessage = protoFile.messages.find(
+      msg =>
+        msg.name === cleanTypeName ||
+        (protoFile.package && `${protoFile.package}.${msg.name}` === cleanTypeName),
     );
-    
+
     if (localMessage) {
       // For now, assume messages are imported from a separate messages file
       this.importManager.addNamedImport('./messages', localMessage.name);
       return localMessage.name;
     }
-    
+
     // Handle external messages (from imports)
     // This would need to be expanded for full import support
     return cleanTypeName.split('.').pop() || cleanTypeName;
   }
-  
+
   /**
    * Build imports array from ImportManager
    */
@@ -390,11 +380,11 @@ export class ReactHookGenerator {
       isDefault?: boolean;
       source: string;
     }> = [];
-    
+
     // Get all imports from ImportManager
     // Note: ImportManager's internal structure is not exposed, so we'll build manually
     // This would need to be enhanced to work with actual ImportManager API
-    
+
     // React imports - build based on what's needed
     const reactImports: string[] = [];
     if (this.options.generateRegularHooks) {
@@ -407,29 +397,29 @@ export class ReactHookGenerator {
       // For React 19+, we use the 'use' hook
       reactImports.push('use');
     }
-    
+
     // Remove duplicates and sort for consistency
     const uniqueReactImports = [...new Set(reactImports)].sort();
-    
+
     if (uniqueReactImports.length > 0) {
       imports.push({
         imports: uniqueReactImports,
         source: 'react',
       });
     }
-    
+
     // Service stub imports would be added dynamically based on the actual imports
     // For now, return the basic structure
     return imports;
   }
-  
+
   /**
    * Render the hooks template
    */
   private renderHooksTemplate(context: HookTemplateContext): string {
     return this.templateEngine.render('hooks', context);
   }
-  
+
   /**
    * Generate file name for the hooks
    */
@@ -437,7 +427,7 @@ export class ReactHookGenerator {
     const baseName = protoFile.fileName.replace(/\.proto$/, '');
     return `${baseName}.hooks.ts`;
   }
-  
+
   /**
    * Generate file name for proto file hooks
    */
@@ -445,7 +435,7 @@ export class ReactHookGenerator {
     const baseName = protoFile.fileName.replace(/\.proto$/, '');
     return `${baseName}.hooks.ts`;
   }
-  
+
   /**
    * Generate description comment for service
    */
@@ -453,10 +443,10 @@ export class ReactHookGenerator {
     if (!this.options.generateComments) {
       return undefined;
     }
-    
+
     return `React hooks for ${service.name} service`;
   }
-  
+
   /**
    * Generate description comment for method
    */
@@ -464,7 +454,7 @@ export class ReactHookGenerator {
     if (!this.options.generateComments) {
       return undefined;
     }
-    
+
     let description = `React hook for ${method.name} RPC method`;
 
     if (method.clientStreaming && method.serverStreaming) {
@@ -476,28 +466,25 @@ export class ReactHookGenerator {
     } else {
       description += ' (unary)';
     }
-    
+
     return description;
   }
-  
+
   /**
    * Validate service definition
    */
   private validateService(service: ServiceDefinition): void {
     if (!service.name) {
-      throw new GenerationError(
-        'Service name is required',
-        GenerationErrorCode.INVALID_PROTO,
-      );
+      throw new GenerationError('Service name is required', GenerationErrorCode.INVALID_PROTO);
     }
-    
+
     if (!service.methods || service.methods.length === 0) {
       throw new GenerationError(
         `Service "${service.name}" has no methods`,
         GenerationErrorCode.INVALID_PROTO,
       );
     }
-    
+
     // Validate each method for hook generation
     service.methods.forEach(method => {
       if (!method.name) {
@@ -506,31 +493,31 @@ export class ReactHookGenerator {
           GenerationErrorCode.INVALID_PROTO,
         );
       }
-      
+
       if (!method.inputType) {
         throw new GenerationError(
           `Method "${method.name}" in service "${service.name}" has no input type`,
           GenerationErrorCode.INVALID_PROTO,
         );
       }
-      
+
       if (!method.outputType) {
         throw new GenerationError(
           `Method "${method.name}" in service "${service.name}" has no output type`,
           GenerationErrorCode.INVALID_PROTO,
         );
       }
-      
+
       // Warn about streaming methods (not yet fully supported in hooks)
       if (method.clientStreaming || method.serverStreaming) {
         console.warn(
           `Warning: Streaming method "${method.name}" in service "${service.name}" ` +
-          'may not be fully supported in React hooks yet',
+            'may not be fully supported in React hooks yet',
         );
       }
     });
   }
-  
+
   /**
    * Load hooks template
    */
@@ -538,7 +525,7 @@ export class ReactHookGenerator {
     // Try to load from file system first, then use default
     // For now, we'll use the template that already exists in hooks.hbs
     // The TemplateEngine will handle loading from the file system
-    
+
     // If template file doesn't exist, use this improved default with better Suspense support
     const defaultTemplate = `{{!-- Generated React hooks for gRPC services --}}
 {{#if generateRegularHooks}}
@@ -850,11 +837,11 @@ export function getCacheStats(): {
   };
 }
 {{/if}}`;
-    
+
     // Load the template into the engine
     this.templateEngine.loadTemplateFromString('hooks', defaultTemplate);
   }
-  
+
   /**
    * Update generator options
    */
@@ -863,7 +850,7 @@ export function getCacheStats(): {
       ...this.options,
       ...options,
     };
-    
+
     // Update type mapper if type mapping config changed
     if (options.typeMapping) {
       this.typeMapper = new TypeMapper({
@@ -872,7 +859,7 @@ export function getCacheStats(): {
       });
     }
   }
-  
+
   /**
    * Get current generator options
    */

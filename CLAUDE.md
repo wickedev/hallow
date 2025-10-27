@@ -11,34 +11,41 @@ Hallow gRPC is a seamless gRPC web client library that enables importing `.proto
 The project consists of six main components:
 
 ### Parser
+
 - Uses ANTLR4TS to parse `.proto` files based on the official Protobuf3 grammar (`Protobuf3.g4`)
 - Generates AST for code generation
 
 ### Generator
+
 - Traverses parsed `.proto` files to generate gRPC Stub TypeScript code
 - Uses `google-protobuf` for runtime protobuf serialization/deserialization
 - Generates type-safe TypeScript interfaces and client stubs
 
 ### Client (gRPC Web)
+
 - Provides the actual gRPC-web client functionality (`@hallow/grpc-web`)
 - Uses `@improbable-eng/grpc-web` for server communication
 - Handles request/response serialization
 
 ### React (Core)
+
 - Common code for React Hook and Suspense integration
 - Reusable components for generated React hooks
 
 ### Unplugin
+
 - Build system integration plugin for Vite, Webpack, ESBuild, and other bundlers
 - Enables seamless proto file imports during build time
 
 ### Example
+
 - Working examples demonstrating the library usage as shown in README.md
 - gRPC Web protocol example server for testing
 
 ## Development Setup
 
 ### Project Structure (Planned)
+
 ```
 packages/
   parser/        # ANTLR-based protobuf parser
@@ -50,12 +57,14 @@ packages/
 ```
 
 ### Build Tools
+
 - **Monorepo**: Yarn workspaces
 - **Build**: Rollup
 - **Test**: Jest with ts-morph
 - **Parser**: antlr4ts
 
 ### Key Dependencies
+
 - `google-protobuf`: Protocol buffer runtime
 - `@improbable-eng/grpc-web`: gRPC-web implementation
 - `antlr4ts`: ANTLR TypeScript runtime
@@ -63,36 +72,36 @@ packages/
 ## Usage Patterns
 
 ### Promise API
+
 ```typescript
 import { GreetingStub } from './greeting.proto';
 
-const stub = new GreetingStub("https://localhost:3000");
-const { reply } = await stub.methods.greet({ name: "Baba" });
+const stub = new GreetingStub('https://localhost:3000');
+const { reply } = await stub.methods.greet({ name: 'Baba' });
 ```
 
 ### React Hook API
+
 ```typescript
 import { GreetingStub } from './greeting.proto';
 
 function App() {
-  const { data, error } = useGrpc(GreetingStub, client => 
-    client.methods.greet({ name: "Baba" })
-  );
+  const { data, error } = useGrpc(GreetingStub, client => client.methods.greet({ name: 'Baba' }));
 }
 ```
 
 ### Suspense API
+
 ```typescript
 function App() {
-  const { reply } = useSuspenseGrpc(GreetingStub, client => 
-    client.methods.greet({ name: "Baba" })
-  );
+  const { reply } = useSuspenseGrpc(GreetingStub, client => client.methods.greet({ name: 'Baba' }));
 }
 ```
 
 ## Development Commands
 
 ### Global Commands (from root directory)
+
 ```bash
 # Install dependencies
 yarn install
@@ -111,6 +120,7 @@ yarn typecheck
 ```
 
 ### Parser Package Commands
+
 ```bash
 cd packages/parser
 

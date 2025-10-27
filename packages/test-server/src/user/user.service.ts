@@ -79,7 +79,7 @@ export class UserService {
     console.log(`[ListUsers] Streaming users from index ${startIndex} to ${endIndex}`);
 
     // Create an observable that emits batches of users
-    return new Observable<ListUsersResponse>((observer) => {
+    return new Observable<ListUsersResponse>(observer => {
       let currentIndex = startIndex;
 
       const emitBatch = () => {
@@ -89,10 +89,7 @@ export class UserService {
         }
 
         const batchSize = 2;
-        const batch = usersArray.slice(
-          currentIndex,
-          Math.min(currentIndex + batchSize, endIndex)
-        );
+        const batch = usersArray.slice(currentIndex, Math.min(currentIndex + batchSize, endIndex));
 
         // If batch is empty, complete the stream
         if (batch.length === 0) {
@@ -102,9 +99,8 @@ export class UserService {
 
         const response: ListUsersResponse = {
           users: batch,
-          next_page_token: currentIndex + batchSize < usersArray.length
-            ? String(currentIndex + batchSize)
-            : '',
+          next_page_token:
+            currentIndex + batchSize < usersArray.length ? String(currentIndex + batchSize) : '',
         };
 
         console.log(`[ListUsers] Emitting batch with ${batch.length} users`);
@@ -122,10 +118,8 @@ export class UserService {
   /**
    * Client streaming RPC: Create multiple users
    */
-  createUsers(
-    request: Observable<CreateUserRequest>
-  ): Observable<ListUsersResponse> {
-    return new Observable<ListUsersResponse>((observer) => {
+  createUsers(request: Observable<CreateUserRequest>): Observable<ListUsersResponse> {
+    return new Observable<ListUsersResponse>(observer => {
       const createdUsers: GetUserResponse[] = [];
 
       const subscription = request.subscribe({
@@ -141,7 +135,7 @@ export class UserService {
 
           console.log(`[CreateUsers] Created user: ${newUser.id} - ${newUser.name}`);
         },
-        error: (error) => {
+        error: error => {
           console.error('[CreateUsers] Error:', error);
           observer.error(error);
         },
@@ -202,7 +196,7 @@ export class UserService {
           }
         }, 50);
       },
-      error: (error) => {
+      error: error => {
         console.error('[Chat] Error:', error);
         responseSubject.error(error);
       },
@@ -213,7 +207,7 @@ export class UserService {
     });
 
     // Return the subject as observable and handle cleanup
-    return new Observable<StreamMessage>((observer) => {
+    return new Observable<StreamMessage>(observer => {
       const innerSubscription = responseSubject.subscribe(observer);
 
       return () => {

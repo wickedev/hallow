@@ -1,14 +1,14 @@
 /**
  * Generator exports
- * 
+ *
  * This module exports all available code generators for different
  * aspects of protobuf to TypeScript code generation.
  */
 
-export { 
-  ServiceGenerator, 
+export {
+  ServiceGenerator,
   createServiceGenerator,
-  type ServiceGeneratorOptions, 
+  type ServiceGeneratorOptions,
 } from './ServiceGenerator';
 
 export {

@@ -1,6 +1,6 @@
 /**
  * TypeMapper - Proto to TypeScript type conversion utilities
- * 
+ *
  * This class handles the conversion of Protocol Buffer types to their
  * corresponding TypeScript types, including scalar types, complex types,
  * and special field modifiers like repeated, optional, and oneof.
@@ -17,17 +17,17 @@ export interface TypeMappingConfig {
    * Whether to use TypeScript's strict null checks
    */
   strictNullChecks?: boolean;
-  
+
   /**
    * Whether to use bigint for 64-bit integers
    */
   useBigInt?: boolean;
-  
+
   /**
    * Custom type mappings for specific proto types
    */
   customMappings?: Record<string, string>;
-  
+
   /**
    * Whether to generate readonly properties
    */
@@ -42,22 +42,22 @@ export interface TypeScriptType {
    * The TypeScript type string
    */
   type: string;
-  
+
   /**
    * Import statements required for this type
    */
   imports: Set<string>;
-  
+
   /**
    * Whether the type is nullable
    */
   nullable: boolean;
-  
+
   /**
    * Whether the type is an array
    */
   isArray: boolean;
-  
+
   /**
    * Whether the type is a map
    */
@@ -73,29 +73,29 @@ export class TypeMapper {
    */
   private static readonly SCALAR_TYPE_MAP: Record<string, string> = {
     // Numeric types
-    'double': 'number',
-    'float': 'number',
-    'int32': 'number',
-    'int64': 'string', // Default to string, can be overridden with bigint
-    'uint32': 'number',
-    'uint64': 'string', // Default to string, can be overridden with bigint
-    'sint32': 'number',
-    'sint64': 'string', // Default to string, can be overridden with bigint
-    'fixed32': 'number',
-    'fixed64': 'string', // Default to string, can be overridden with bigint
-    'sfixed32': 'number',
-    'sfixed64': 'string', // Default to string, can be overridden with bigint
-    
+    double: 'number',
+    float: 'number',
+    int32: 'number',
+    int64: 'string', // Default to string, can be overridden with bigint
+    uint32: 'number',
+    uint64: 'string', // Default to string, can be overridden with bigint
+    sint32: 'number',
+    sint64: 'string', // Default to string, can be overridden with bigint
+    fixed32: 'number',
+    fixed64: 'string', // Default to string, can be overridden with bigint
+    sfixed32: 'number',
+    sfixed64: 'string', // Default to string, can be overridden with bigint
+
     // Boolean type
-    'bool': 'boolean',
-    
+    bool: 'boolean',
+
     // String types
-    'string': 'string',
-    
+    string: 'string',
+
     // Binary type
-    'bytes': 'Uint8Array',
+    bytes: 'Uint8Array',
   };
-  
+
   /**
    * Well-known Google protobuf types
    */
@@ -117,10 +117,10 @@ export class TypeMapper {
     'google.protobuf.FloatValue': 'number | null',
     'google.protobuf.DoubleValue': 'number | null',
   };
-  
+
   private config: TypeMappingConfig;
   private typeRegistry: Map<string, string>;
-  
+
   constructor(config: TypeMappingConfig = {}) {
     this.config = {
       strictNullChecks: true,
@@ -128,11 +128,11 @@ export class TypeMapper {
       readonlyProperties: false,
       ...config,
     };
-    
+
     this.typeRegistry = new Map();
     this.initializeTypeRegistry();
   }
-  
+
   /**
    * Initialize the type registry with custom mappings
    */
@@ -143,7 +143,7 @@ export class TypeMapper {
         this.typeRegistry.set(proto, ts);
       });
     }
-    
+
     // Handle bigint configuration for 64-bit integers
     if (this.config.useBigInt) {
       const bigIntTypes = ['int64', 'uint64', 'sint64', 'fixed64', 'sfixed64'];
@@ -152,7 +152,7 @@ export class TypeMapper {
       });
     }
   }
-  
+
   /**
    * Map a Proto scalar type to TypeScript
    */
@@ -161,21 +161,21 @@ export class TypeMapper {
     if (this.typeRegistry.has(protoType)) {
       return this.typeRegistry.get(protoType)!;
     }
-    
+
     // Check well-known types
     if (TypeMapper.WELL_KNOWN_TYPES[protoType]) {
       return TypeMapper.WELL_KNOWN_TYPES[protoType];
     }
-    
+
     // Check scalar types
     if (TypeMapper.SCALAR_TYPE_MAP[protoType]) {
       return TypeMapper.SCALAR_TYPE_MAP[protoType];
     }
-    
+
     // Default to the type name itself (for custom messages/enums)
     return protoType;
   }
-  
+
   /**
    * Map a field definition to TypeScript type
    */
@@ -183,13 +183,13 @@ export class TypeMapper {
     const imports = new Set<string>();
     let baseType = this.mapScalarType(field.type);
     const nullable = !!(field.optional && this.config.strictNullChecks);
-    
+
     // Handle map fields
     if (field.map && field.mapKeyType && field.mapValueType) {
       const keyType = this.mapScalarType(field.mapKeyType);
       const valueType = this.mapScalarType(field.mapValueType);
       baseType = `Map<${keyType}, ${valueType}>`;
-      
+
       return {
         type: baseType,
         imports,
@@ -198,11 +198,11 @@ export class TypeMapper {
         isMap: true,
       };
     }
-    
+
     // Handle repeated fields
     if (field.repeated) {
       baseType = `${baseType}[]`;
-      
+
       return {
         type: this.config.readonlyProperties ? `readonly ${baseType}` : baseType,
         imports,
@@ -211,15 +211,15 @@ export class TypeMapper {
         isMap: false,
       };
     }
-    
+
     // Handle optional fields
     if (field.optional && this.config.strictNullChecks) {
       baseType = `${baseType} | undefined`;
     }
-    
+
     // Don't add readonly here - it's handled at the property level in the template
     // Only arrays get readonly modifier at the type level (handled above)
-    
+
     return {
       type: baseType,
       imports,
@@ -228,7 +228,7 @@ export class TypeMapper {
       isMap: false,
     };
   }
-  
+
   /**
    * Map repeated field to TypeScript array type
    */
@@ -237,7 +237,7 @@ export class TypeMapper {
     const arrayType = `${mappedType}[]`;
     return readonly ? `readonly ${arrayType}` : arrayType;
   }
-  
+
   /**
    * Map optional field with proper null handling
    */
@@ -248,7 +248,7 @@ export class TypeMapper {
     }
     return useUndefined ? `${mappedType} | undefined` : `${mappedType} | null`;
   }
-  
+
   /**
    * Map oneof field to TypeScript discriminated union
    */
@@ -257,30 +257,30 @@ export class TypeMapper {
       const fieldType = this.mapScalarType(field.type);
       return `{ ${oneofName}: '${field.name}'; ${field.name}: ${fieldType} }`;
     });
-    
+
     // Add a case for when no field is set
     if (this.config.strictNullChecks) {
       unionTypes.push(`{ ${oneofName}: undefined }`);
     }
-    
+
     return unionTypes.join(' | ');
   }
-  
+
   /**
    * Map complex message type with nested types
    */
   public mapMessageType(message: MessageDefinition, namespace?: string): string {
     const fullName = namespace ? `${namespace}.${message.name}` : message.name;
-    
+
     // Check if it's a well-known type
     if (TypeMapper.WELL_KNOWN_TYPES[fullName]) {
       return TypeMapper.WELL_KNOWN_TYPES[fullName];
     }
-    
+
     // Return the message name as the type
     return message.name;
   }
-  
+
   /**
    * Map enum type to TypeScript enum or union type
    */
@@ -289,22 +289,20 @@ export class TypeMapper {
       // Generate as const enum (more efficient but has limitations)
       return `const enum ${enumDef.name}`;
     }
-    
+
     // Generate as regular enum
     return `enum ${enumDef.name}`;
   }
-  
+
   /**
    * Generate TypeScript enum values
    */
   public generateEnumValues(enumDef: EnumDefinition): string {
-    const values = enumDef.values
-      .map(value => `  ${value.name} = ${value.number}`)
-      .join(',\n');
-    
+    const values = enumDef.values.map(value => `  ${value.name} = ${value.number}`).join(',\n');
+
     return `{\n${values}\n}`;
   }
-  
+
   /**
    * Map a proto package to TypeScript namespace
    */
@@ -312,48 +310,56 @@ export class TypeMapper {
     if (!packageName) {
       return '';
     }
-    
+
     // Convert proto package (e.g., "com.example.service") to TypeScript namespace
     return packageName
       .split('.')
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
       .join('.');
   }
-  
+
   /**
    * Determine if a type requires an import statement
    */
   public requiresImport(typeName: string): boolean {
     // Check if it's a built-in TypeScript type
     const builtInTypes = [
-      'string', 'number', 'boolean', 'any', 'void', 'undefined', 'null',
-      'object', 'bigint', 'symbol', 'never', 'unknown',
+      'string',
+      'number',
+      'boolean',
+      'any',
+      'void',
+      'undefined',
+      'null',
+      'object',
+      'bigint',
+      'symbol',
+      'never',
+      'unknown',
     ];
-    
+
     if (builtInTypes.includes(typeName)) {
       return false;
     }
-    
+
     // Check if it's a built-in JavaScript type
-    const jsBuiltInTypes = [
-      'Array', 'Map', 'Set', 'Date', 'RegExp', 'Promise', 'Uint8Array',
-    ];
-    
+    const jsBuiltInTypes = ['Array', 'Map', 'Set', 'Date', 'RegExp', 'Promise', 'Uint8Array'];
+
     if (jsBuiltInTypes.some(type => typeName.includes(type))) {
       return false;
     }
-    
+
     // All other types require imports
     return true;
   }
-  
+
   /**
    * Generate import statement for a type
    */
   public generateImportStatement(typeName: string, fromPath: string): string {
     return `import { ${typeName} } from '${fromPath}';`;
   }
-  
+
   /**
    * Validate type mapping to ensure correctness
    */
@@ -366,7 +372,7 @@ export class TypeMapper {
         { field },
       );
     }
-    
+
     if (field.map && (!field.mapKeyType || !field.mapValueType)) {
       throw new GenerationError(
         `Map field "${field.name}" must have both key and value types`,
@@ -374,14 +380,24 @@ export class TypeMapper {
         { field },
       );
     }
-    
+
     // Validate map key type (must be integral or string)
     if (field.map && field.mapKeyType) {
       const validKeyTypes = [
-        'int32', 'int64', 'uint32', 'uint64', 'sint32', 'sint64',
-        'fixed32', 'fixed64', 'sfixed32', 'sfixed64', 'bool', 'string',
+        'int32',
+        'int64',
+        'uint32',
+        'uint64',
+        'sint32',
+        'sint64',
+        'fixed32',
+        'fixed64',
+        'sfixed32',
+        'sfixed64',
+        'bool',
+        'string',
       ];
-      
+
       if (!validKeyTypes.includes(field.mapKeyType)) {
         throw new GenerationError(
           `Invalid map key type "${field.mapKeyType}" for field "${field.name}"`,
@@ -391,42 +407,42 @@ export class TypeMapper {
       }
     }
   }
-  
+
   /**
    * Get all scalar types supported by the mapper
    */
   public getSupportedScalarTypes(): string[] {
     return Object.keys(TypeMapper.SCALAR_TYPE_MAP);
   }
-  
+
   /**
    * Check if a type is a scalar type
    */
   public isScalarType(typeName: string): boolean {
     return typeName in TypeMapper.SCALAR_TYPE_MAP;
   }
-  
+
   /**
    * Check if a type is a well-known type
    */
   public isWellKnownType(typeName: string): boolean {
     return typeName in TypeMapper.WELL_KNOWN_TYPES;
   }
-  
+
   /**
    * Reset type registry to default state
    */
   public resetTypeRegistry(): void {
     // Clear the registry completely
     this.typeRegistry.clear();
-    
+
     // Reset configuration to exclude custom mappings
     const originalCustomMappings = this.config.customMappings;
     this.config.customMappings = undefined;
-    
+
     // Re-initialize with updated config
     this.initializeTypeRegistry();
-    
+
     // Restore original custom mappings config (but don't apply them)
     this.config.customMappings = originalCustomMappings;
   }
@@ -440,17 +456,17 @@ export interface TypeContext {
    * Current namespace or package
    */
   namespace?: string;
-  
+
   /**
    * Available message types in scope
    */
   messages?: Map<string, MessageDefinition>;
-  
+
   /**
    * Available enum types in scope
    */
   enums?: Map<string, EnumDefinition>;
-  
+
   /**
    * Import paths for external types
    */

@@ -26,9 +26,7 @@ export class UserController {
   }
 
   @GrpcStreamMethod('UserService', 'CreateUsers')
-  createUsers(
-    request: Observable<CreateUserRequest>,
-  ): Observable<ListUsersResponse> {
+  createUsers(request: Observable<CreateUserRequest>): Observable<ListUsersResponse> {
     return this.userService.createUsers(request);
   }
 

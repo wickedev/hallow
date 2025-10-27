@@ -57,7 +57,7 @@ export class Generator {
         ...options.optionProcessing,
       },
       optimization: {
-        deadCodeElimination: options.optimization?.deadCodeElimination ?? false,  // FIXED: Disabled by default - CodeOptimizer regex is too aggressive
+        deadCodeElimination: options.optimization?.deadCodeElimination ?? false, // FIXED: Disabled by default - CodeOptimizer regex is too aggressive
         minify: options.optimization?.minify ?? false,
         removeComments: options.optimization?.removeComments ?? false,
         inlineFunctions: options.optimization?.inlineFunctions ?? false,
@@ -72,7 +72,7 @@ export class Generator {
       usageTracking: options.usageTracking || {},
       enablePerformanceMonitoring: options.enablePerformanceMonitoring ?? false,
     };
-    
+
     // Initialize template engine
     this.templateEngine = new TemplateEngine();
 
@@ -94,7 +94,7 @@ export class Generator {
       generateComments: this.options.generateComments,
       templateDir: this.options.templateDir,
     });
-    
+
     // Initialize optimizer if optimization is enabled
     if (this.shouldEnableOptimization()) {
       this.codeOptimizer = new CodeOptimizer({
@@ -103,19 +103,19 @@ export class Generator {
         esModules: true,
         usageTracking: this.convertUsageTracking(),
       });
-      
+
       this.bundleAnalyzer = new BundleAnalyzer({
         detailed: true,
         generateReport: true,
         trackDependencies: true,
         analyzeTreeShaking: this.options.treeShaking,
-        sizeWarningThreshold: this.options.optimization.bundleSizeTarget 
+        sizeWarningThreshold: this.options.optimization.bundleSizeTarget
           ? this.options.optimization.bundleSizeTarget / 2
           : 100,
         sizeErrorThreshold: this.options.optimization.bundleSizeTarget || 500,
       });
     }
-    
+
     // Initialize performance monitoring if enabled
     if (options.enablePerformanceMonitoring) {
       this.performanceMonitor = createPerformanceMonitor({
@@ -126,7 +126,7 @@ export class Generator {
           memoryUsage: 300 * 1024 * 1024, // 300MB
         },
       });
-      
+
       // Initialize memory-efficient generator for large files
       this.memoryEfficientGenerator = createMemoryEfficientGenerator({
         chunkSize: 20,
@@ -135,7 +135,7 @@ export class Generator {
         gcInterval: 50,
         cacheStrategy: 'lru',
       });
-      
+
       // Initialize template optimizer
       this.templateOptimizer = createTemplateOptimizer({
         cacheCompiledTemplates: true,
@@ -143,7 +143,7 @@ export class Generator {
         precompile: true,
         minifyOutput: this.options.optimization?.minify,
       });
-      
+
       // Initialize type resolution cache
       this.typeResolutionCache = createTypeResolutionCache({
         maxSize: 1000,
@@ -153,7 +153,7 @@ export class Generator {
       });
     }
   }
-  
+
   /**
    * Generate code from parsed proto file
    * @param protoFile Parsed proto file AST
@@ -164,7 +164,7 @@ export class Generator {
     if (this.performanceMonitor) {
       this.performanceMonitor.start();
     }
-    
+
     try {
       if (this.performanceMonitor) {
         this.performanceMonitor.startOperation('validation');
@@ -173,7 +173,7 @@ export class Generator {
       if (this.performanceMonitor) {
         this.performanceMonitor.endOperation();
       }
-      
+
       let files: GeneratedFile[] = [];
       const metadata = {
         generatedAt: new Date(),
@@ -182,17 +182,16 @@ export class Generator {
         messagesCount: protoFile.messages.length,
         enumsCount: protoFile.enums.length,
       };
-      
+
       // Check if we should use memory-efficient generation for large files
-      const isLargeFile = protoFile.services.length > 50 || 
-                         protoFile.messages.length > 200;
-      
+      const isLargeFile = protoFile.services.length > 50 || protoFile.messages.length > 200;
+
       if (isLargeFile && this.memoryEfficientGenerator) {
         // Use memory-efficient chunked generation
         if (this.performanceMonitor) {
           this.performanceMonitor.startOperation('chunked_generation');
         }
-        
+
         for await (const chunk of this.memoryEfficientGenerator.generateInChunks(
           protoFile,
           async (items, type) => {
@@ -208,7 +207,7 @@ export class Generator {
         )) {
           files.push(...chunk);
         }
-        
+
         if (this.performanceMonitor) {
           this.performanceMonitor.endOperation();
         }
@@ -217,7 +216,7 @@ export class Generator {
         if (this.performanceMonitor) {
           this.performanceMonitor.startOperation('service_generation');
         }
-        
+
         // Generate service stubs (includes message interfaces inline)
         if (protoFile.services.length > 0) {
           const serviceFiles = await this.serviceGenerator.generateStubs(protoFile);
@@ -238,7 +237,10 @@ export class Generator {
 
               // Find where to insert (after imports, before service stub)
               for (let i = 0; i < lines.length; i++) {
-                if (lines[i].includes('/**') && lines[i + 1]?.includes('* Generated gRPC service stubs')) {
+                if (
+                  lines[i].includes('/**') &&
+                  lines[i + 1]?.includes('* Generated gRPC service stubs')
+                ) {
                   insertPosition = i;
                   break;
                 }
@@ -277,7 +279,7 @@ export class Generator {
       }
 
       // TODO: Generate enum types (standalone enums, not nested in messages)
-      
+
       // Apply optimizations if enabled
       if (this.codeOptimizer) {
         if (this.performanceMonitor) {
@@ -288,15 +290,15 @@ export class Generator {
           this.performanceMonitor.endOperation();
         }
       }
-      
+
       // Analyze bundle if analyzer is enabled
       if (this.bundleAnalyzer) {
         if (this.performanceMonitor) {
           this.performanceMonitor.startOperation('bundle_analysis');
         }
-        
+
         const metrics = this.bundleAnalyzer.analyzeBundle(files, protoFile);
-        
+
         // Add bundle report as a separate file if requested
         if (this.options.optimization?.production) {
           const report = this.bundleAnalyzer.generateReport(metrics);
@@ -305,23 +307,23 @@ export class Generator {
             content: report,
           });
         }
-        
+
         // Log warnings for large bundles
         metrics.suggestions
           .filter(s => s.severity === 'error' || s.severity === 'warning')
           .forEach(suggestion => {
             console.warn(`[Bundle Analysis] ${suggestion.message}`);
           });
-        
+
         if (this.performanceMonitor) {
           this.performanceMonitor.endOperation();
         }
       }
-      
+
       // Generate performance report if monitoring is enabled
       if (this.performanceMonitor) {
         const perfMetrics = this.performanceMonitor.stop();
-        
+
         // Add performance report as a file in development mode
         if (!this.options.optimization?.production) {
           const perfReport = this.performanceMonitor.generateReport();
@@ -330,12 +332,14 @@ export class Generator {
             content: perfReport,
           });
         }
-        
+
         // Log performance summary
         console.log(`[Performance] Generation completed in ${perfMetrics.duration}ms`);
-        console.log(`[Performance] Peak memory usage: ${(perfMetrics.peakMemoryUsage?.heapUsed || 0) / 1024 / 1024}MB`);
+        console.log(
+          `[Performance] Peak memory usage: ${(perfMetrics.peakMemoryUsage?.heapUsed || 0) / 1024 / 1024}MB`,
+        );
       }
-      
+
       return {
         files,
         metadata,
@@ -345,7 +349,7 @@ export class Generator {
       if (this.performanceMonitor) {
         this.performanceMonitor.stop();
       }
-      
+
       if (error instanceof GenerationError) {
         throw error;
       }
@@ -356,7 +360,7 @@ export class Generator {
       );
     }
   }
-  
+
   /**
    * Optimize generated files
    */
@@ -367,24 +371,24 @@ export class Generator {
     if (!this.codeOptimizer) {
       return files;
     }
-    
+
     const optimizedFiles: GeneratedFile[] = [];
-    
+
     for (const file of files) {
       // Skip non-TypeScript/JavaScript files
       if (!file.path.match(/\.[tj]sx?$/)) {
         optimizedFiles.push(file);
         continue;
       }
-      
+
       const optimized = this.codeOptimizer.optimizeFile(file, protoFile);
       optimizedFiles.push(optimized);
     }
-    
+
     // Generate code splitting configuration if enabled
     if (this.options.optimization?.codeSplitting && protoFile.services.length > 0) {
       const splitConfig = this.codeOptimizer.generateCodeSplitConfig(protoFile.services);
-      
+
       // Generate an index file with lazy loading if enabled
       if (this.options.optimization.lazyLoading) {
         const indexContent = this.generateLazyLoadingIndex(splitConfig, optimizedFiles);
@@ -394,10 +398,10 @@ export class Generator {
         });
       }
     }
-    
+
     return optimizedFiles;
   }
-  
+
   /**
    * Generate lazy loading index file
    */
@@ -412,7 +416,7 @@ export class Generator {
       ' */',
       '',
     ];
-    
+
     splitConfig.forEach((services, chunkName) => {
       lines.push(`// ${chunkName}`);
       services.forEach(serviceName => {
@@ -424,10 +428,10 @@ export class Generator {
       });
       lines.push('');
     });
-    
+
     return lines.join('\n');
   }
-  
+
   /**
    * Check if optimization should be enabled
    */
@@ -441,7 +445,7 @@ export class Generator {
       this.options.treeShaking
     );
   }
-  
+
   /**
    * Convert usage tracking options
    */
@@ -450,53 +454,50 @@ export class Generator {
     if (!tracking) {
       return {};
     }
-    
+
     const result: UsageTrackingOptions = {};
-    
+
     if (tracking.usedServices) {
       result.usedServices = new Set(tracking.usedServices);
     }
-    
+
     if (tracking.usedMethods) {
       result.usedMethods = new Map();
       Object.entries(tracking.usedMethods).forEach(([service, methods]) => {
         result.usedMethods!.set(service, new Set(methods));
       });
     }
-    
+
     if (tracking.usedMessages) {
       result.usedMessages = new Set(tracking.usedMessages);
     }
-    
+
     if (tracking.usedEnums) {
       result.usedEnums = new Set(tracking.usedEnums);
     }
-    
+
     return result;
   }
-  
+
   /**
    * Validate proto file before generation
    * @param protoFile Proto file to validate
    */
   private validateProtoFile(protoFile: ProtoFile): void {
     if (!protoFile) {
-      throw new GenerationError(
-        'Proto file is required',
-        GenerationErrorCode.INVALID_PROTO,
-      );
+      throw new GenerationError('Proto file is required', GenerationErrorCode.INVALID_PROTO);
     }
-    
+
     // TODO: Add more validation
   }
-  
+
   /**
    * Get current generator options
    */
   getOptions(): Readonly<Required<GeneratorOptions>> {
     return { ...this.options };
   }
-  
+
   /**
    * Update generator options
    * @param options Partial options to update
@@ -505,9 +506,10 @@ export class Generator {
     this.options = {
       ...this.options,
       ...options,
-      enablePerformanceMonitoring: options.enablePerformanceMonitoring ?? this.options.enablePerformanceMonitoring,
+      enablePerformanceMonitoring:
+        options.enablePerformanceMonitoring ?? this.options.enablePerformanceMonitoring,
     };
-    
+
     // Update service generator options
     this.serviceGenerator.updateOptions({
       serverUrl: this.options.serverUrl,
@@ -516,7 +518,7 @@ export class Generator {
       generateComments: this.options.generateComments,
       templateDir: this.options.templateDir,
     });
-    
+
     // Re-initialize performance monitoring if enabled state changed
     if (options.enablePerformanceMonitoring !== undefined) {
       if (options.enablePerformanceMonitoring && !this.performanceMonitor) {
@@ -529,7 +531,7 @@ export class Generator {
             memoryUsage: 300 * 1024 * 1024,
           },
         });
-        
+
         this.memoryEfficientGenerator = createMemoryEfficientGenerator({
           chunkSize: 20,
           memoryLimit: 400 * 1024 * 1024,
@@ -537,14 +539,14 @@ export class Generator {
           gcInterval: 50,
           cacheStrategy: 'lru',
         });
-        
+
         this.templateOptimizer = createTemplateOptimizer({
           cacheCompiledTemplates: true,
           maxCacheSize: 100,
           precompile: true,
           minifyOutput: this.options.optimization?.minify,
         });
-        
+
         this.typeResolutionCache = createTypeResolutionCache({
           maxSize: 1000,
           ttl: 60000,

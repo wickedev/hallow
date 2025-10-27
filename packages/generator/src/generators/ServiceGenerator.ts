@@ -1,21 +1,13 @@
 /**
  * ServiceGenerator - Generates TypeScript service stub classes from Proto service definitions
- * 
+ *
  * This class is responsible for generating client-side service stubs that provide
  * type-safe methods for calling gRPC services. It supports Promise-based API for
  * unary RPC calls and can be extended for streaming support.
  */
 
-import { 
-  ServiceDefinition, 
-  MethodDefinition, 
-  ProtoFile, 
-} from '../core/proto-types';
-import { 
-  GeneratedFile, 
-  GenerationError, 
-  GenerationErrorCode, 
-} from '../core/types';
+import { ServiceDefinition, MethodDefinition, ProtoFile } from '../core/proto-types';
+import { GeneratedFile, GenerationError, GenerationErrorCode } from '../core/types';
 import { TemplateEngine } from '../core/template-engine';
 import { TypeMapper } from '../utils/TypeMapper';
 import { ImportManager } from '../utils/ImportManager';
@@ -45,27 +37,27 @@ export interface ServiceGeneratorOptions {
    * Base URL for the gRPC server
    */
   serverUrl?: string;
-  
+
   /**
    * Whether to generate React hooks
    */
   generateReactHooks?: boolean;
-  
+
   /**
    * Whether to generate Suspense hooks
    */
   generateSuspenseHooks?: boolean;
-  
+
   /**
    * Whether to include JSDoc comments
    */
   generateComments?: boolean;
-  
+
   /**
    * Custom template directory path
    */
   templateDir?: string;
-  
+
   /**
    * Type mapping configuration
    */
@@ -73,12 +65,12 @@ export interface ServiceGeneratorOptions {
     strictNullChecks?: boolean;
     useBigInt?: boolean;
   };
-  
+
   /**
    * Whether to include option metadata in generated code
    */
   includeOptionMetadata?: boolean;
-  
+
   /**
    * Configuration for option processing
    */
@@ -134,7 +126,7 @@ export class ServiceGenerator {
   private nameResolver: NameResolver;
   private optionProcessor: OptionProcessor;
   private options: Required<ServiceGeneratorOptions>;
-  
+
   constructor(options: ServiceGeneratorOptions = {}) {
     this.options = {
       serverUrl: options.serverUrl || '',
@@ -146,18 +138,18 @@ export class ServiceGenerator {
       includeOptionMetadata: options.includeOptionMetadata ?? false,
       optionProcessing: options.optionProcessing || {},
     };
-    
+
     // Initialize dependencies
     this.templateEngine = new TemplateEngine({
       cache: true,
       strict: false,
     });
-    
+
     this.typeMapper = new TypeMapper(this.options.typeMapping);
     this.importManager = new ImportManager();
     this.nameResolver = new NameResolver();
     this.optionProcessor = new OptionProcessor(this.options.optionProcessing);
-    
+
     // Load templates from directory if templateDir is provided
     if (this.options.templateDir) {
       // Templates will be loaded asynchronously - ensure they're loaded before first use
@@ -167,30 +159,27 @@ export class ServiceGenerator {
       this.loadDefaultTemplate();
     }
   }
-  
+
   /**
    * Generate service stub from service definition
    * @param service Service definition from proto file
    * @param protoFile Parent proto file for context
    * @returns Generated TypeScript file
    */
-  public generateStub(
-    service: ServiceDefinition, 
-    protoFile: ProtoFile,
-  ): GeneratedFile {
+  public generateStub(service: ServiceDefinition, protoFile: ProtoFile): GeneratedFile {
     try {
       // Validate service definition
       this.validateService(service);
-      
+
       // Prepare template context
       const context = this.prepareTemplateContext(service, protoFile);
-      
+
       // Render the template
       const content = this.renderServiceTemplate(context);
-      
+
       // Generate file metadata
       const fileName = this.generateFileName(service, protoFile);
-      
+
       return {
         path: fileName,
         content,
@@ -207,7 +196,7 @@ export class ServiceGenerator {
       );
     }
   }
-  
+
   /**
    * Generate stubs for all services in a proto file
    * @param protoFile Proto file containing services
@@ -215,42 +204,42 @@ export class ServiceGenerator {
    */
   public generateStubs(protoFile: ProtoFile): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
-    
+
     for (const service of protoFile.services) {
       const file = this.generateStub(service, protoFile);
       files.push(file);
     }
-    
+
     return Promise.resolve(files);
   }
-  
+
   /**
    * Prepare template context for service generation
    */
   private prepareTemplateContext(
-    service: ServiceDefinition, 
+    service: ServiceDefinition,
     protoFile: ProtoFile,
   ): ServiceTemplateContext {
     // Reset import manager for this service
     this.importManager.clear();
-    
+
     // Add required imports
     this.importManager.addNamedImport('@improbable-eng/grpc-web', 'grpc');
     this.importManager.addNamedImport('google-protobuf', 'Message');
-    
+
     // Process methods
     const methods = service.methods.map(method => this.processMethod(method, protoFile));
 
     // Check if we have any streaming methods
     const hasStreaming = methods.some(m => m.clientStreaming || m.serverStreaming);
-    
+
     // Process service-level options if enabled
     let serviceOptions: TemplateOptionMetadata | undefined;
     if (this.options.includeOptionMetadata && service.options) {
       const optionMetadata = this.optionProcessor.processOptions(service.options);
       serviceOptions = this.optionProcessor.generateTemplateMetadata(optionMetadata);
     }
-    
+
     // Prepare service context
     const serviceContext = {
       name: service.name,
@@ -259,7 +248,7 @@ export class ServiceGenerator {
       options: serviceOptions,
       methods,
     };
-    
+
     // Prepare import list
     // Build import list from ImportManager's internal maps
     const imports: Array<{
@@ -268,7 +257,7 @@ export class ServiceGenerator {
       isDefault?: boolean;
       source: string;
     }> = [];
-    
+
     // Always add core imports
     imports.push({
       imports: ['grpc'],
@@ -292,7 +281,7 @@ export class ServiceGenerator {
         source: 'rxjs',
       });
     }
-    
+
     return {
       packageName: protoFile.package,
       imports,
@@ -302,7 +291,7 @@ export class ServiceGenerator {
       serverUrl: this.options.serverUrl,
     };
   }
-  
+
   /**
    * Process a single method definition
    */
@@ -334,38 +323,39 @@ export class ServiceGenerator {
       options: methodOptions,
     };
   }
-  
+
   /**
    * Resolve message type and add necessary imports
    */
   private resolveMessageType(typeName: string, protoFile: ProtoFile): string {
     // Remove leading dot if present
     const cleanTypeName = typeName.startsWith('.') ? typeName.slice(1) : typeName;
-    
+
     // Check if it's a message from the same file
-    const localMessage = protoFile.messages.find(msg => 
-      msg.name === cleanTypeName || 
-      (protoFile.package && `${protoFile.package}.${msg.name}` === cleanTypeName),
+    const localMessage = protoFile.messages.find(
+      msg =>
+        msg.name === cleanTypeName ||
+        (protoFile.package && `${protoFile.package}.${msg.name}` === cleanTypeName),
     );
-    
+
     if (localMessage) {
       // Add import for local message if needed
       // For now, assume messages are in the same file
       return localMessage.name;
     }
-    
+
     // Handle external messages (from imports)
     // This would need to be expanded for full import support
     return cleanTypeName.split('.').pop() || cleanTypeName;
   }
-  
+
   /**
    * Render the service template
    */
   private renderServiceTemplate(context: ServiceTemplateContext): string {
     return this.templateEngine.render('service', context);
   }
-  
+
   /**
    * Generate file name for the service
    */
@@ -373,7 +363,7 @@ export class ServiceGenerator {
     const baseName = protoFile.fileName.replace(/\.proto$/, '');
     return `${baseName}.service.ts`;
   }
-  
+
   /**
    * Generate description comment for service
    */
@@ -381,12 +371,12 @@ export class ServiceGenerator {
     if (!this.options.generateComments) {
       return undefined;
     }
-    
+
     // Extract description from options if available
     // For now, return a default description
     return `${service.name} service client`;
   }
-  
+
   /**
    * Generate description comment for method
    */
@@ -394,7 +384,7 @@ export class ServiceGenerator {
     if (!this.options.generateComments) {
       return undefined;
     }
-    
+
     let description = `RPC method ${method.name}`;
 
     if (method.clientStreaming && method.serverStreaming) {
@@ -406,28 +396,25 @@ export class ServiceGenerator {
     } else {
       description += ' (unary)';
     }
-    
+
     return description;
   }
-  
+
   /**
    * Validate service definition
    */
   private validateService(service: ServiceDefinition): void {
     if (!service.name) {
-      throw new GenerationError(
-        'Service name is required',
-        GenerationErrorCode.INVALID_PROTO,
-      );
+      throw new GenerationError('Service name is required', GenerationErrorCode.INVALID_PROTO);
     }
-    
+
     if (!service.methods || service.methods.length === 0) {
       throw new GenerationError(
         `Service "${service.name}" has no methods`,
         GenerationErrorCode.INVALID_PROTO,
       );
     }
-    
+
     // Validate each method
     service.methods.forEach(method => {
       if (!method.name) {
@@ -436,14 +423,14 @@ export class ServiceGenerator {
           GenerationErrorCode.INVALID_PROTO,
         );
       }
-      
+
       if (!method.inputType) {
         throw new GenerationError(
           `Method "${method.name}" in service "${service.name}" has no input type`,
           GenerationErrorCode.INVALID_PROTO,
         );
       }
-      
+
       if (!method.outputType) {
         throw new GenerationError(
           `Method "${method.name}" in service "${service.name}" has no output type`,
@@ -452,7 +439,7 @@ export class ServiceGenerator {
       }
     });
   }
-  
+
   /**
    * Load default service template
    * Templates will be loaded from .hbs files by the TemplateEngine when templateDir is provided to Generator constructor
@@ -476,7 +463,9 @@ export class ServiceGenerator {
         this.loadFallbackTemplate();
       }
     } catch (error) {
-      console.warn(`Failed to load service template: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(
+        `Failed to load service template: ${error instanceof Error ? error.message : String(error)}`,
+      );
       this.loadFallbackTemplate();
     }
   }
@@ -489,7 +478,7 @@ export class ServiceGenerator {
     const fallbackTemplate = `// Generated service stub\n{{#each services}}export class {{pascalName}}Stub { }{{/each}}`;
     this.templateEngine.loadTemplateFromString('service', fallbackTemplate);
   }
-  
+
   /**
    * Update generator options
    */
@@ -498,7 +487,7 @@ export class ServiceGenerator {
       ...this.options,
       ...options,
     };
-    
+
     // Update type mapper if type mapping config changed
     if (options.typeMapping) {
       this.typeMapper = new TypeMapper({
@@ -507,7 +496,7 @@ export class ServiceGenerator {
       });
     }
   }
-  
+
   /**
    * Get current generator options
    */

@@ -10,37 +10,37 @@ export interface ProtoFile {
    * File name
    */
   fileName: string;
-  
+
   /**
    * Package name
    */
   package?: string;
-  
+
   /**
    * Syntax version (e.g., "proto3")
    */
   syntax?: string;
-  
+
   /**
    * Import statements
    */
   imports: string[];
-  
+
   /**
    * Service definitions
    */
   services: ServiceDefinition[];
-  
+
   /**
    * Message definitions
    */
   messages: MessageDefinition[];
-  
+
   /**
    * Enum definitions
    */
   enums: EnumDefinition[];
-  
+
   /**
    * File-level options
    */

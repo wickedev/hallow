@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+
+# Build output
+dist
+build
+*.tsbuildinfo
+
+# Coverage
+coverage
+
+# Generated files
+*.g.ts
+*.generated.ts
+
+# Logs
+*.log
+
+# Cache
+.cache
+.eslintcache
+
+# OS files
+.DS_Store

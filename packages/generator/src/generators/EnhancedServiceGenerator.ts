@@ -1,20 +1,12 @@
 /**
  * EnhancedServiceGenerator - Example of ServiceGenerator with ImportResolver integration
- * 
+ *
  * This class demonstrates how to use the ImportResolver for handling
  * cross-file type references and managing import dependencies.
  */
 
-import { 
-  ServiceDefinition, 
-  MethodDefinition, 
-  ProtoFile, 
-} from '../core/proto-types';
-import { 
-  GeneratedFile, 
-  GenerationError, 
-  GenerationErrorCode, 
-} from '../core/types';
+import { ServiceDefinition, MethodDefinition, ProtoFile } from '../core/proto-types';
+import { GeneratedFile, GenerationError, GenerationErrorCode } from '../core/types';
 import { TemplateEngine } from '../core/template-engine';
 import { TypeMapper } from '../utils/TypeMapper';
 import { ImportManager } from '../utils/ImportManager';
@@ -29,22 +21,22 @@ export interface EnhancedServiceGeneratorOptions {
    * Base URL for the gRPC server
    */
   serverUrl?: string;
-  
+
   /**
    * Whether to generate React hooks
    */
   generateReactHooks?: boolean;
-  
+
   /**
    * Whether to resolve cross-file imports
    */
   resolveCrossFileImports?: boolean;
-  
+
   /**
    * Output directory for generated files
    */
   outputDir?: string;
-  
+
   /**
    * Whether to use namespace imports for large packages
    */
@@ -61,7 +53,7 @@ export class EnhancedServiceGenerator {
   private importResolver: ImportResolver;
   private nameResolver: NameResolver;
   private options: Required<EnhancedServiceGeneratorOptions>;
-  
+
   constructor(options: EnhancedServiceGeneratorOptions = {}) {
     this.options = {
       serverUrl: options.serverUrl || '',
@@ -70,13 +62,13 @@ export class EnhancedServiceGenerator {
       outputDir: options.outputDir || './generated',
       useNamespaceImports: options.useNamespaceImports ?? false,
     };
-    
+
     // Initialize dependencies
     this.templateEngine = new TemplateEngine({
       cache: true,
       strict: false,
     });
-    
+
     this.typeMapper = new TypeMapper();
     this.nameResolver = new NameResolver();
     this.importManager = new ImportManager({
@@ -84,7 +76,7 @@ export class EnhancedServiceGenerator {
       sortAlphabetically: true,
       addBlankLinesBetweenGroups: true,
     });
-    
+
     // Initialize ImportResolver with configuration
     this.importResolver = new ImportResolver(
       {
@@ -98,19 +90,19 @@ export class EnhancedServiceGenerator {
       this.typeMapper,
     );
   }
-  
+
   /**
    * Generate service stub with cross-file import resolution
    */
   public generateStub(
-    service: ServiceDefinition, 
+    service: ServiceDefinition,
     protoFile: ProtoFile,
     allProtoFiles?: ProtoFile[],
   ): GeneratedFile {
     try {
       // Clear previous imports
       this.importManager.clear();
-      
+
       // Register all proto files with ImportResolver if available
       if (allProtoFiles && this.options.resolveCrossFileImports) {
         allProtoFiles.forEach(file => {
@@ -119,26 +111,21 @@ export class EnhancedServiceGenerator {
       } else if (protoFile) {
         this.importResolver.registerProtoFile(protoFile);
       }
-      
+
       // Add base gRPC imports
       this.importManager.addGrpcImports();
-      
+
       // Process service methods and collect type references
-      const processedMethods = this.processServiceMethods(
-        service.methods,
-        protoFile,
-      );
-      
+      const processedMethods = this.processServiceMethods(service.methods, protoFile);
+
       // Resolve import dependencies
       if (this.options.resolveCrossFileImports) {
-        const dependencies = this.importResolver.getImportDependencies(
-          protoFile.fileName,
-        );
-        
+        const dependencies = this.importResolver.getImportDependencies(protoFile.fileName);
+
         // Add resolved dependencies to ImportManager
         this.importManager.addFromDependencies(dependencies);
       }
-      
+
       // Generate service class
       const serviceName = this.nameResolver.resolveServiceName(service.name);
       const serviceCode = this.generateServiceClass(
@@ -146,26 +133,18 @@ export class EnhancedServiceGenerator {
         processedMethods,
         protoFile.package,
       );
-      
+
       // Generate React hooks if enabled
       let reactHooksCode = '';
       if (this.options.generateReactHooks) {
         this.importManager.addReactImports();
-        reactHooksCode = this.generateReactHooks(
-          serviceName,
-          processedMethods,
-        );
+        reactHooksCode = this.generateReactHooks(serviceName, processedMethods);
       }
-      
+
       // Combine all code with imports
       const imports = this.importManager.generateProtoImports();
-      const fullCode = [
-        imports,
-        '',
-        serviceCode,
-        reactHooksCode,
-      ].filter(Boolean).join('\n');
-      
+      const fullCode = [imports, '', serviceCode, reactHooksCode].filter(Boolean).join('\n');
+
       return {
         path: `${service.name.toLowerCase()}.service.ts`,
         content: fullCode,
@@ -178,7 +157,7 @@ export class EnhancedServiceGenerator {
       );
     }
   }
-  
+
   /**
    * Process service methods and resolve types
    */
@@ -187,45 +166,33 @@ export class EnhancedServiceGenerator {
     protoFile: ProtoFile,
   ): ProcessedMethod[] {
     const processedMethods: ProcessedMethod[] = [];
-    
+
     for (const method of methods) {
       // Resolve input and output types
-      const inputTypeRef = this.importResolver.resolveType(
-        method.inputType,
-        protoFile.package,
-      );
-      const outputTypeRef = this.importResolver.resolveType(
-        method.outputType,
-        protoFile.package,
-      );
-      
+      const inputTypeRef = this.importResolver.resolveType(method.inputType, protoFile.package);
+      const outputTypeRef = this.importResolver.resolveType(method.outputType, protoFile.package);
+
       // Convert to TypeScript names
-      const inputTypeName = inputTypeRef 
+      const inputTypeName = inputTypeRef
         ? this.nameResolver.resolveTypeName(inputTypeRef.typeName)
         : method.inputType;
       const outputTypeName = outputTypeRef
         ? this.nameResolver.resolveTypeName(outputTypeRef.typeName)
         : method.outputType;
-      
+
       // Add type imports if needed
       if (inputTypeRef && !inputTypeRef.isWellKnown) {
         if (inputTypeRef.sourceFile !== protoFile.fileName) {
-          this.importManager.addCrossFileImport(
-            inputTypeName,
-            inputTypeRef.sourceFile || '',
-          );
+          this.importManager.addCrossFileImport(inputTypeName, inputTypeRef.sourceFile || '');
         }
       }
-      
+
       if (outputTypeRef && !outputTypeRef.isWellKnown) {
         if (outputTypeRef.sourceFile !== protoFile.fileName) {
-          this.importManager.addCrossFileImport(
-            outputTypeName,
-            outputTypeRef.sourceFile || '',
-          );
+          this.importManager.addCrossFileImport(outputTypeName, outputTypeRef.sourceFile || '');
         }
       }
-      
+
       processedMethods.push({
         name: method.name,
         camelName: this.nameResolver.resolveMethodName(method.name),
@@ -236,10 +203,10 @@ export class EnhancedServiceGenerator {
         fullPath: this.generateMethodPath(protoFile.package, method.name),
       });
     }
-    
+
     return processedMethods;
   }
-  
+
   /**
    * Generate service class code
    */
@@ -249,7 +216,7 @@ export class EnhancedServiceGenerator {
     _packageName?: string,
   ): string {
     const code: string[] = [];
-    
+
     code.push(`export class ${serviceName} {`);
     code.push('  private client: grpc.Client;');
     code.push('');
@@ -257,7 +224,7 @@ export class EnhancedServiceGenerator {
     code.push('    this.client = new grpc.Client(hostname, options);');
     code.push('  }');
     code.push('');
-    
+
     // Generate methods
     for (const method of methods) {
       if (method.clientStreaming || method.serverStreaming) {
@@ -267,18 +234,18 @@ export class EnhancedServiceGenerator {
       }
       code.push('');
     }
-    
+
     code.push('}');
-    
+
     return code.join('\n');
   }
-  
+
   /**
    * Generate unary method
    */
   private generateUnaryMethod(method: ProcessedMethod, _packageName?: string): string {
     const lines: string[] = [];
-    
+
     lines.push(`  async ${method.camelName}(`);
     lines.push(`    request: ${method.inputType},`);
     lines.push('    metadata?: grpc.Metadata');
@@ -300,43 +267,40 @@ export class EnhancedServiceGenerator {
     lines.push('      });');
     lines.push('    });');
     lines.push('  }');
-    
+
     return lines.join('\n');
   }
-  
+
   /**
    * Generate streaming method (placeholder)
    */
   private generateStreamingMethod(method: ProcessedMethod): string {
     const lines: string[] = [];
-    
+
     lines.push(`  // TODO: Implement streaming method ${method.camelName}`);
     lines.push(`  ${method.camelName}(`);
     lines.push(`    request: ${method.inputType},`);
     lines.push('    metadata?: grpc.Metadata');
     lines.push('  ): grpc.Request {');
-    lines.push('    throw new Error(\'Streaming not yet implemented\');');
+    lines.push("    throw new Error('Streaming not yet implemented');");
     lines.push('  }');
-    
+
     return lines.join('\n');
   }
-  
+
   /**
    * Generate React hooks
    */
-  private generateReactHooks(
-    serviceName: string,
-    methods: ProcessedMethod[],
-  ): string {
+  private generateReactHooks(serviceName: string, methods: ProcessedMethod[]): string {
     const code: string[] = [];
-    
+
     code.push(`// React Hooks for ${serviceName}`);
     code.push('');
-    
+
     for (const method of methods) {
       if (!method.clientStreaming && !method.serverStreaming) {
         const hookName = this.nameResolver.resolveHookName(method.name);
-        
+
         code.push(`export function ${hookName}() {`);
         code.push(`  const [data, setData] = useState<${method.outputType} | null>(null);`);
         code.push('  const [loading, setLoading] = useState(false);');
@@ -362,10 +326,10 @@ export class EnhancedServiceGenerator {
         code.push('');
       }
     }
-    
+
     return code.join('\n');
   }
-  
+
   /**
    * Generate method path for gRPC
    */

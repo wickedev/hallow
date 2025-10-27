@@ -116,7 +116,7 @@ export class GrpcError extends Error {
     message: string,
     public readonly code: grpc.Code,
     public readonly methodName: string,
-    public readonly metadata?: grpc.Metadata
+    public readonly metadata?: grpc.Metadata,
   ) {
     super(message);
     this.name = 'GrpcError';
@@ -185,7 +185,7 @@ export class GrpcWebAdapter {
    */
   constructor(
     private readonly baseUrl: string,
-    options?: GrpcClientOptions
+    options?: GrpcClientOptions,
   ) {
     this.options = {
       timeout: options?.timeout,
@@ -215,7 +215,7 @@ export class GrpcWebAdapter {
    */
   async unary<TRequest, TResponse>(
     methodDescriptor: MethodDescriptor<TRequest, TResponse>,
-    request: TRequest
+    request: TRequest,
   ): Promise<TResponse> {
     return new Promise<TResponse>((resolve, reject) => {
       try {
@@ -225,17 +225,20 @@ export class GrpcWebAdapter {
             baseUrl: this.baseUrl,
             serviceName: methodDescriptor.service?.serviceName,
             requestType: methodDescriptor.requestType,
-            responseType: methodDescriptor.responseType
+            responseType: methodDescriptor.responseType,
           });
         }
 
         // Convert plain object to Message-like object with serializeBinary method
-        const messageRequest = this.createMessageWrapper(request, methodDescriptor.requestSerializer);
+        const messageRequest = this.createMessageWrapper(
+          request,
+          methodDescriptor.requestSerializer,
+        );
 
         if (this.options.debug) {
           console.log('[GrpcWebAdapter] Message wrapper created:', {
             hasSerializeBinary: typeof messageRequest.serializeBinary === 'function',
-            requestKeys: Object.keys(messageRequest)
+            requestKeys: Object.keys(messageRequest),
           });
         }
 
@@ -244,14 +247,14 @@ export class GrpcWebAdapter {
           request: messageRequest as any,
           host: this.baseUrl,
           metadata: this.options.metadata,
-          onEnd: (response) => {
+          onEnd: response => {
             if (this.options.debug) {
               console.log('[GrpcWebAdapter] Response received:', {
                 status: response.status,
                 statusMessage: response.statusMessage,
                 hasMessage: !!response.message,
                 headers: response.headers,
-                trailers: response.trailers
+                trailers: response.trailers,
               });
             }
 
@@ -260,7 +263,7 @@ export class GrpcWebAdapter {
                 response.statusMessage,
                 response.status,
                 methodDescriptor.methodName,
-                response.trailers
+                response.trailers,
               );
 
               if (this.options.debug) {
@@ -277,7 +280,7 @@ export class GrpcWebAdapter {
 
             // Response message is already deserialized by gRPC-web
             resolve(response.message as TResponse);
-          }
+          },
         });
       } catch (error) {
         if (this.options.debug) {
@@ -314,7 +317,7 @@ export class GrpcWebAdapter {
    */
   serverStream<TRequest, TResponse>(
     methodDescriptor: MethodDescriptor<TRequest, TResponse>,
-    request: TRequest
+    request: TRequest,
   ): Observable<TResponse> {
     return new Observable<TResponse>(observer => {
       const cancellationToken = new CancellationTokenImpl();
@@ -325,7 +328,10 @@ export class GrpcWebAdapter {
         }
 
         // Convert plain object to Message-like object with serializeBinary method
-        const messageRequest = this.createMessageWrapper(request, methodDescriptor.requestSerializer);
+        const messageRequest = this.createMessageWrapper(
+          request,
+          methodDescriptor.requestSerializer,
+        );
 
         // Open streaming connection
         const client = grpc.invoke(methodDescriptor as any, {
@@ -344,12 +350,7 @@ export class GrpcWebAdapter {
           },
           onEnd: (code: grpc.Code, message: string, trailers: grpc.Metadata) => {
             if (code !== grpc.Code.OK) {
-              const error = new GrpcError(
-                message,
-                code,
-                methodDescriptor.methodName,
-                trailers
-              );
+              const error = new GrpcError(message, code, methodDescriptor.methodName, trailers);
 
               if (this.options.debug) {
                 console.error(`[GrpcWebAdapter] Stream ended with error:`, error);
@@ -363,7 +364,7 @@ export class GrpcWebAdapter {
 
               observer.complete();
             }
-          }
+          },
         });
 
         // Handle cancellation
@@ -412,7 +413,7 @@ export class GrpcWebAdapter {
       if (this.options.debug) {
         console.log('[GrpcWebAdapter] Using data as-is (has serializeBinary):', {
           hasSerializer: !!serializer,
-          hasSerializeBinary: !!(data as any).serializeBinary
+          hasSerializeBinary: !!(data as any).serializeBinary,
         });
       }
       return data;
@@ -433,7 +434,7 @@ export class GrpcWebAdapter {
             console.log('[GrpcWebAdapter] Serialized message:', {
               originalData: data,
               encodedLength: encoded.length,
-              encodedBytes: Array.from(encoded.slice(0, 20))
+              encodedBytes: Array.from(encoded.slice(0, 20)),
             });
           }
           return encoded;
@@ -441,7 +442,7 @@ export class GrpcWebAdapter {
           console.error('[GrpcWebAdapter] Serialization error:', error);
           throw error;
         }
-      }
+      },
     };
 
     return wrapper;

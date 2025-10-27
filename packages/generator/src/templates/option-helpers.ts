@@ -1,6 +1,6 @@
 /**
  * Handlebars helpers for option metadata generation
- * 
+ *
  * This module provides template helpers that make it easy to work with
  * option metadata in Handlebars templates.
  */
@@ -78,19 +78,19 @@ export const optionHelpers = {
    */
   formatOptionValue: (option?: ProcessedOption): string => {
     if (!option) return '';
-    
+
     if (typeof option.value === 'string') {
       return `"${option.value}"`;
     }
-    
+
     if (typeof option.value === 'boolean' || typeof option.value === 'number') {
       return String(option.value);
     }
-    
+
     if (typeof option.value === 'object') {
       return JSON.stringify(option.value);
     }
-    
+
     return String(option.value);
   },
 
@@ -99,23 +99,23 @@ export const optionHelpers = {
    */
   generateOptionsComment: (options?: TemplateOptionMetadata): string => {
     if (!options || !options.hasOptions) return '';
-    
+
     const lines: string[] = [];
-    
+
     if (options.hasStandardOptions) {
       lines.push(' * Standard options:');
       options.standardOptions.forEach(option => {
         lines.push(` *   ${option.name}: ${optionHelpers.formatOptionValue(option)}`);
       });
     }
-    
+
     if (options.hasCustomOptions) {
       lines.push(' * Custom options:');
       options.customOptions.forEach(option => {
         lines.push(` *   ${option.name}: ${optionHelpers.formatOptionValue(option)}`);
       });
     }
-    
+
     return lines.length > 0 ? lines.join('\n') : '';
   },
 
@@ -124,9 +124,9 @@ export const optionHelpers = {
    */
   generateMetadataObject: (options?: TemplateOptionMetadata): string => {
     if (!options || !options.hasOptions) return 'undefined';
-    
+
     const metadata: Record<string, any> = {};
-    
+
     options.allOptions.forEach(option => {
       metadata[option.name] = {
         value: option.value,
@@ -134,7 +134,7 @@ export const optionHelpers = {
         rawValue: option.rawValue,
       };
     });
-    
+
     return JSON.stringify(metadata, null, 2);
   },
 
@@ -142,11 +142,11 @@ export const optionHelpers = {
    * Filter options by type
    */
   filterOptions: (
-    options?: TemplateOptionMetadata, 
-    type?: 'standard' | 'custom'
+    options?: TemplateOptionMetadata,
+    type?: 'standard' | 'custom',
   ): ProcessedOption[] => {
     if (!options) return [];
-    
+
     switch (type) {
       case 'standard':
         return options.standardOptions;
@@ -162,15 +162,10 @@ export const optionHelpers = {
    */
   shouldIncludeInComments: (option?: ProcessedOption): boolean => {
     if (!option) return false;
-    
+
     // Exclude internal options that shouldn't be shown to users
-    const excludeFromComments = [
-      'java_package',
-      'go_package',
-      'optimize_for',
-      'cc_enable_arenas',
-    ];
-    
+    const excludeFromComments = ['java_package', 'go_package', 'optimize_for', 'cc_enable_arenas'];
+
     return !excludeFromComments.includes(option.name);
   },
 
@@ -179,12 +174,13 @@ export const optionHelpers = {
    */
   generateDeprecationWarning: (options?: TemplateOptionMetadata): string => {
     if (!optionHelpers.isDeprecated(options)) return '';
-    
+
     const deprecatedOption = options?.optionsMap.deprecated;
-    const message = typeof deprecatedOption?.value === 'string' 
-      ? deprecatedOption.value 
-      : 'This element is deprecated';
-    
+    const message =
+      typeof deprecatedOption?.value === 'string'
+        ? deprecatedOption.value
+        : 'This element is deprecated';
+
     return `/**\n * @deprecated ${message}\n */`;
   },
 

@@ -2,8 +2,8 @@
  * Export all optimizer modules
  */
 
-export { 
-  CodeOptimizer, 
+export {
+  CodeOptimizer,
   createCodeOptimizer,
   type OptimizationOptions,
   type UsageTrackingOptions,

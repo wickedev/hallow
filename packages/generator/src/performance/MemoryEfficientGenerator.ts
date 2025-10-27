@@ -2,7 +2,12 @@
  * Memory-efficient code generation strategies for large proto schemas
  */
 
-import { ProtoFile, ServiceDefinition, MessageDefinition, EnumDefinition } from '../core/proto-types';
+import {
+  ProtoFile,
+  ServiceDefinition,
+  MessageDefinition,
+  EnumDefinition,
+} from '../core/proto-types';
 import { GeneratedFile } from '../core/types';
 import { Readable, Transform, pipeline } from 'stream';
 import { promisify } from 'util';
@@ -35,7 +40,7 @@ export class MemoryEfficientGenerator {
   private cache: Map<string, any> = new Map();
   private cacheOrder: string[] = [];
   private operationCount = 0;
-  
+
   constructor(options: StreamingGenerationOptions = {}) {
     this.options = {
       chunkSize: options.chunkSize ?? 10,
@@ -56,29 +61,17 @@ export class MemoryEfficientGenerator {
   ): AsyncGenerator<GeneratedFile[], void, unknown> {
     // Process services in chunks
     if (protoFile.services.length > 0) {
-      yield* this.processChunks(
-        protoFile.services,
-        'service',
-        generator,
-      );
+      yield* this.processChunks(protoFile.services, 'service', generator);
     }
 
     // Process messages in chunks
     if (protoFile.messages.length > 0) {
-      yield* this.processChunks(
-        protoFile.messages,
-        'message',
-        generator,
-      );
+      yield* this.processChunks(protoFile.messages, 'message', generator);
     }
 
     // Process enums in chunks
     if (protoFile.enums.length > 0) {
-      yield* this.processChunks(
-        protoFile.enums,
-        'enum',
-        generator,
-      );
+      yield* this.processChunks(protoFile.enums, 'enum', generator);
     }
   }
 
@@ -96,7 +89,7 @@ export class MemoryEfficientGenerator {
     for (const chunk of chunks) {
       // Check memory before processing
       await this.checkMemoryUsage();
-      
+
       const metadata: ChunkMetadata = {
         index: chunkIndex++,
         totalChunks: chunks.length,
@@ -108,12 +101,12 @@ export class MemoryEfficientGenerator {
       try {
         // Generate code for this chunk
         const files = await generator(chunk, type);
-        
+
         metadata.endTime = Date.now();
-        
+
         // Perform garbage collection if needed
         this.performGarbageCollection();
-        
+
         yield files;
       } catch (error) {
         console.error(`[MemoryEfficient] Error processing chunk ${metadata.index}:`, error);
@@ -144,10 +137,7 @@ export class MemoryEfficientGenerator {
   /**
    * Stream-based file generation for very large outputs
    */
-  async generateFileStream(
-    content: string[],
-    fileName: string,
-  ): Promise<Readable> {
+  async generateFileStream(content: string[], fileName: string): Promise<Readable> {
     const stream = new Readable({
       read() {
         // Stream content line by line
@@ -169,15 +159,17 @@ export class MemoryEfficientGenerator {
   optimizeMemory(data: any): any {
     // Remove circular references
     const seen = new WeakSet();
-    return JSON.parse(JSON.stringify(data, (key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (seen.has(value)) {
-          return undefined; // Remove circular reference
+    return JSON.parse(
+      JSON.stringify(data, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return undefined; // Remove circular reference
+          }
+          seen.add(value);
         }
-        seen.add(value);
-      }
-      return value;
-    }));
+        return value;
+      }),
+    );
   }
 
   /**
@@ -194,7 +186,7 @@ export class MemoryEfficientGenerator {
     }
 
     this.cache.set(key, value);
-    
+
     if (this.options.cacheStrategy === 'lru') {
       // Move to end for LRU
       const index = this.cacheOrder.indexOf(key);
@@ -213,7 +205,7 @@ export class MemoryEfficientGenerator {
    */
   getFromCache(key: string): any | undefined {
     const value = this.cache.get(key);
-    
+
     if (value && this.options.cacheStrategy === 'lru') {
       // Move to end for LRU
       const index = this.cacheOrder.indexOf(key);
@@ -222,7 +214,7 @@ export class MemoryEfficientGenerator {
         this.cacheOrder.push(key);
       }
     }
-    
+
     return value;
   }
 
@@ -251,21 +243,21 @@ export class MemoryEfficientGenerator {
    */
   private async checkMemoryUsage(): Promise<void> {
     const usage = process.memoryUsage();
-    
+
     if (usage.heapUsed > this.options.memoryLimit) {
       console.warn('[MemoryEfficient] Memory limit approaching, triggering garbage collection');
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
       }
-      
+
       // Clear cache to free memory
       this.clearCache();
-      
+
       // Wait for memory to stabilize
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Check again
       const newUsage = process.memoryUsage();
       if (newUsage.heapUsed > this.options.memoryLimit * 0.9) {
@@ -279,12 +271,12 @@ export class MemoryEfficientGenerator {
    */
   private performGarbageCollection(): void {
     this.operationCount++;
-    
+
     if (this.operationCount % this.options.gcInterval === 0) {
       if (global.gc) {
         global.gc();
       }
-      
+
       // Also trim cache if it's getting large
       if (this.cache.size > this.options.cacheSize * 0.8) {
         const toRemove = Math.floor(this.cache.size * 0.2);
@@ -323,14 +315,14 @@ export class MemoryEfficientGenerator {
     cacheMemory: number;
   } {
     const usage = process.memoryUsage();
-    
+
     // Estimate cache memory usage
     let cacheMemory = 0;
     for (const [key, value] of this.cache) {
       cacheMemory += key.length * 2; // Rough estimate for string
       cacheMemory += JSON.stringify(value).length * 2; // Rough estimate for value
     }
-    
+
     return {
       usage,
       cacheSize: this.cache.size,
@@ -349,11 +341,7 @@ export class MemoryPool<T> {
   private reset: (item: T) => void;
   private maxSize: number;
 
-  constructor(
-    factory: () => T,
-    reset: (item: T) => void,
-    maxSize: number = 100,
-  ) {
+  constructor(factory: () => T, reset: (item: T) => void, maxSize: number = 100) {
     this.factory = factory;
     this.reset = reset;
     this.maxSize = maxSize;
@@ -364,11 +352,11 @@ export class MemoryPool<T> {
    */
   acquire(): T {
     let item = this.pool.pop();
-    
+
     if (!item) {
       item = this.factory();
     }
-    
+
     this.inUse.add(item);
     return item;
   }
@@ -380,10 +368,10 @@ export class MemoryPool<T> {
     if (!this.inUse.has(item)) {
       return;
     }
-    
+
     this.inUse.delete(item);
     this.reset(item);
-    
+
     if (this.pool.length < this.maxSize) {
       this.pool.push(item);
     }
