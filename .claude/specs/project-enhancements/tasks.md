@@ -169,7 +169,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 ### Standalone Enum Generator
 
 - [ ] 6. Implement standalone enum generation
-- [ ] 6.1 Create EnumGenerator class
+- [x] 6.1 Create EnumGenerator class
   - Create `EnumGenerator` class with template-based generation
   - Implement `generateEnum()` method for top-level enums
   - Implement `generateNestedEnum()` method for enums within messages
@@ -179,7 +179,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.4_
   - _Files: packages/generator/src/generators/EnumGenerator.ts (new)_
 
-- [ ] 6.2 Create enum Handlebars template
+- [x] 6.2 Create enum Handlebars template
   - Create `enum.hbs` template with TypeScript enum syntax
   - Add JSDoc comments and metadata
   - Include helper functions (is[EnumName], to[EnumName], get[EnumName]Name)
@@ -189,7 +189,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.4_
   - _Files: packages/generator/templates/enum.hbs (new)_
 
-- [ ] 6.3 Integrate enum generation into Generator
+- [x] 6.3 Integrate enum generation into Generator
   - Update `generate()` method in `packages/generator/src/core/generator.ts:281` to process top-level enums
   - Generate separate files for top-level enums
   - Generate nested enums within message namespace

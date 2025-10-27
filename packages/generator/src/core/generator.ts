@@ -8,6 +8,7 @@ import {
 import { ProtoFile } from './proto-types';
 import { ServiceGenerator } from '../generators/ServiceGenerator';
 import { MessageGenerator } from '../generators/MessageGenerator';
+import { EnumGenerator } from '../generators/EnumGenerator';
 import { TemplateEngine } from './template-engine';
 import { CodeOptimizer, UsageTrackingOptions } from '../optimizers/CodeOptimizer';
 import { BundleAnalyzer } from '../optimizers/BundleAnalyzer';
@@ -32,6 +33,7 @@ export class Generator {
   private options: Required<GeneratorOptions>;
   private serviceGenerator: ServiceGenerator;
   private messageGenerator: MessageGenerator;
+  private enumGenerator: EnumGenerator;
   private templateEngine: TemplateEngine;
   private codeOptimizer?: CodeOptimizer;
   private bundleAnalyzer?: BundleAnalyzer;
@@ -116,6 +118,15 @@ export class Generator {
       generateSuspenseHooks: this.options.generateSuspenseHooks,
       generateComments: this.options.generateComments,
       templateDir: this.options.templateDir,
+    });
+
+    // Initialize enum generator
+    this.enumGenerator = new EnumGenerator(this.templateEngine, {
+      generateComments: this.options.generateComments,
+      generateHelpers: true,
+      generateConstEnums: false,
+      includeOptionMetadata: this.options.includeOptionMetadata,
+      optionProcessing: this.options.optionProcessing,
     });
 
     // Initialize optimizer if optimization is enabled
@@ -301,7 +312,40 @@ export class Generator {
         }
       }
 
-      // TODO: Generate enum types (standalone enums, not nested in messages)
+      // Generate top-level enum types
+      if (protoFile.enums && protoFile.enums.length > 0) {
+        if (this.performanceMonitor) {
+          this.performanceMonitor.startOperation('enum_generation');
+        }
+
+        for (const enumDef of protoFile.enums) {
+          // Generate enum code
+          const generatedEnum = this.enumGenerator.generateEnum(enumDef, protoFile.package);
+          const enumCode = this.enumGenerator.combineEnumCode(generatedEnum);
+
+          // Create enum file
+          const enumFileName = `${protoFile.fileName.replace(/\.proto$/, '')}.${enumDef.name}.ts`;
+
+          files.push({
+            path: enumFileName,
+            content: enumCode,
+          });
+
+          // Record metrics
+          if (this.performanceMonitor) {
+            this.performanceMonitor.recordFileGeneration({
+              fileName: enumFileName,
+              fileSize: enumCode.length,
+              generationTime: 0,
+              linesOfCode: enumCode.split('\n').length,
+            });
+          }
+        }
+
+        if (this.performanceMonitor) {
+          this.performanceMonitor.endOperation();
+        }
+      }
 
       // Apply optimizations if enabled
       if (this.codeOptimizer) {
