@@ -49,8 +49,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Integration Test Infrastructure
 
-- [ ] 4. Set up automated test server management
-- [ ] 4.1 Create TestGrpcServer class for lifecycle management
+- [x] 4. Set up automated test server management
+- [x] 4.1 Create TestGrpcServer class for lifecycle management
   - Implement `TestGrpcServer.start()` with configurable port and services
   - Implement `TestGrpcServer.stop()` with proper cleanup
   - Add health check endpoint to verify server readiness
@@ -58,9 +58,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - Write unit tests for server lifecycle
   - _Time: 2 hours_
   - _Requirements: 3.1_
-  - _Files: packages/test-server/src/TestGrpcServer.ts (new), packages/test-server/src/services/HealthService.ts (new)_
+  - _Files: packages/test-server/src/TestGrpcServer.ts (new), packages/test-server/tests/TestGrpcServer.test.ts (new)_
 
-- [ ] 4.2 Create docker-compose configuration for test infrastructure
+- [x] 4.2 Create docker-compose configuration for test infrastructure
   - Define gRPC test server service in docker-compose.yml
   - Define Envoy proxy service with proper gRPC-web configuration
   - Configure network connectivity between services
@@ -68,9 +68,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - Document local development setup in README
   - _Time: 1.5 hours_
   - _Requirements: 3.1_
-  - _Files: packages/test-server/docker-compose.yml (new), packages/test-server/envoy.yaml (new)_
+  - _Files: packages/test-server/docker-compose.yml (verified), packages/test-server/envoy/envoy.yaml (verified), packages/test-server/README.md (updated)_
 
-- [ ] 4.3 Update integration tests to use automated test infrastructure
+- [x] 4.3 Update integration tests to use automated test infrastructure
   - Modify `beforeAll` hooks to start test server and Envoy
   - Modify `afterAll` hooks to stop and clean up services
   - Add connection verification before running tests
@@ -78,7 +78,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - Update `packages/generator/tests/integration/grpc-web-integration.test.ts:39`
   - _Time: 0.5 hours_
   - _Requirements: 3.1_
-  - _Files: packages/generator/tests/integration/setup.ts (new), packages/generator/tests/integration/grpc-web-integration.test.ts_
+  - _Files: packages/generator/tests/integration/setup.ts (new), packages/generator/tests/integration/grpc-web-integration.test.ts (updated)_
 
 ---
 

@@ -19,6 +19,9 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@je
 import { firstValueFrom, take, toArray, timeout } from 'rxjs';
 import { grpc } from '@improbable-eng/grpc-web';
 
+// Import test server setup utilities
+import { startTestServer, stopTestServer, getTestServerUrls } from './setup';
+
 // Import generated service stub and types
 import {
   UserServiceStub,
@@ -31,41 +34,31 @@ import {
 /**
  * Test Suite: gRPC-Web Integration Tests
  *
- * Prerequisites:
- * 1. Test server must be running (yarn start in packages/test-server)
- * 2. Generator must have been run on packages/test-server/src/proto/service.proto
- * 3. Generated code must be available
+ * This test suite uses automated test server management.
+ * The test server is automatically started before tests and stopped after.
  *
- * Note: These tests are currently skipped because they require:
- * - Running test server
- * - Generated service stubs from test-server/proto/service.proto
- *
- * To enable these tests:
- * 1. Start test server: cd packages/test-server && yarn start
- * 2. Generate service stubs: cd packages/test-client && node generate.js
- * 3. Update imports to use generated UserServiceStub
- * 4. Remove .skip from describe blocks
+ * Requirements Coverage:
+ * - FR-3 AC 12: End-to-end RPC calls with running gRPC server
+ * - NFR-3 AC 4-6: Integration testing with real gRPC server
+ * - Task 4.3: Automated integration test infrastructure
  */
-describe('gRPC-Web Integration Tests (requires running test server)', () => {
-  const TEST_SERVER_URL = 'http://localhost:8080';
-
+describe('gRPC-Web Integration Tests (automated test server)', () => {
   let stub: UserServiceStub;
 
   beforeAll(async () => {
-    // Verify test server is running
-    try {
-      const response = await fetch(`${TEST_SERVER_URL}/health`);
-      if (!response.ok) {
-        console.warn('Test server health check failed. Tests will be skipped.');
-      }
-    } catch (error) {
-      console.warn('Test server is not running. Start with: cd packages/test-server && yarn start');
-      console.warn('These tests will be skipped.');
-    }
-  });
+    // Automatically start test server
+    await startTestServer();
+  }, 60000);
+
+  afterAll(async () => {
+    // Automatically stop and clean up test server
+    await stopTestServer();
+  }, 30000);
 
   beforeEach(() => {
-    stub = new UserServiceStub(TEST_SERVER_URL, { debug: true });
+    // Use dynamically assigned test server URL
+    const testServerUrl = getTestServerUrls().http;
+    stub = new UserServiceStub(testServerUrl, { debug: true });
   });
 
   describe('Unary RPC: GetUser', () => {

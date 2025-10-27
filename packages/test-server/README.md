@@ -84,6 +84,50 @@ for await (const response of stream) {
 }
 ```
 
+## Programmatic Server Management (Integration Tests)
+
+The `TestGrpcServer` class provides programmatic lifecycle management for automated tests:
+
+```typescript
+import { TestGrpcServer } from '@hallow/test-server';
+
+describe('My Integration Tests', () => {
+  let server: TestGrpcServer;
+
+  beforeAll(async () => {
+    // Start test server with custom ports
+    server = new TestGrpcServer({
+      httpPort: 3001,
+      grpcPort: 50052,
+      debug: true
+    });
+    await server.start();
+  });
+
+  afterAll(async () => {
+    // Clean up server resources
+    await server.stop();
+  });
+
+  it('should connect to test server', async () => {
+    // Server is automatically ready
+    expect(await server.isHealthy()).toBe(true);
+
+    // Use server URLs for client connections
+    const stub = new UserServiceStub(`http://localhost:${server.getHttpPort()}`);
+    // ... your tests
+  });
+});
+```
+
+### TestGrpcServer Features
+
+- **Automatic Lifecycle**: Starts/stops server with proper cleanup
+- **Port Conflict Detection**: Clear error messages if ports are in use
+- **Health Verification**: Waits for server readiness before tests run
+- **Configurable Ports**: Avoid conflicts with multiple test suites
+- **Debug Logging**: Optional verbose output for troubleshooting
+
 ## Docker Services
 
 ### nestjs-server
