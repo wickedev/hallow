@@ -37,11 +37,16 @@ import {
   ClientStreamingCall,
   BidiStreamingCall,
   AdapterConfig,
-  GrpcStatusCode,
-  GrpcError,
   Metadata,
 } from './types';
 import { MetadataConverter } from './metadata';
+import {
+  GrpcError,
+  GrpcStatusCode,
+  convertGrpcError,
+  toGrpcError,
+} from './errors';
+import { RetryPolicy, type RetryConfig } from './retry';
 
 /**
  * Configuration specific to NativeGrpcAdapter
@@ -57,6 +62,13 @@ export interface NativeGrpcAdapterConfig extends AdapterConfig {
    * Default timeout for all calls (milliseconds)
    */
   defaultTimeout?: number;
+
+  /**
+   * Retry configuration for transient failures
+   * Set to false to disable retries
+   * @default { maxRetries: 3, initialBackoffMs: 100, maxBackoffMs: 10000 }
+   */
+  retryConfig?: RetryConfig | false;
 }
 
 /**
@@ -81,6 +93,7 @@ export class NativeGrpcAdapter implements ITransportAdapter {
   private readonly serverAddress: string;
   private readonly credentials: grpc.ChannelCredentials;
   private readonly config: NativeGrpcAdapterInternalConfig;
+  private readonly retryPolicy: RetryPolicy | null;
   private closed: boolean = false;
 
   /**
@@ -148,10 +161,34 @@ export class NativeGrpcAdapter implements ITransportAdapter {
         {}
       );
 
+      // Initialize retry policy
+      if (config.retryConfig === false) {
+        // Explicitly disabled
+        this.retryPolicy = null;
+      } else if (config.retryConfig) {
+        // Custom retry configuration
+        this.retryPolicy = new RetryPolicy(config.retryConfig);
+      } else {
+        // Default retry configuration
+        this.retryPolicy = new RetryPolicy({
+          maxRetries: 3,
+          initialBackoffMs: 100,
+          maxBackoffMs: 10000,
+        });
+      }
+
       if (this.config.debug) {
         console.log(
           `[NativeGrpcAdapter] Created adapter for ${this.serverAddress}`
         );
+        if (this.retryPolicy) {
+          const retryConfig = this.retryPolicy.getConfig();
+          console.log(
+            `[NativeGrpcAdapter] Retry policy enabled: maxRetries=${retryConfig.maxRetries}`
+          );
+        } else {
+          console.log('[NativeGrpcAdapter] Retry policy disabled');
+        }
       }
     } catch (error) {
       throw new Error(
@@ -166,6 +203,9 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * Sends a single request and receives a single response.
    * Implements the most common RPC pattern.
    *
+   * If retry policy is enabled (default), automatically retries transient
+   * failures (UNAVAILABLE, DEADLINE_EXCEEDED, etc.) with exponential backoff.
+   *
    * @template TRequest - Type of the request message
    * @template TResponse - Type of the response message
    * @param method - Method descriptor with service and method metadata
@@ -173,6 +213,18 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * @param options - Optional call options (timeout, metadata, etc.)
    * @returns Promise resolving to the response message
    * @throws {GrpcError} If the call fails or returns a non-OK status
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const response = await adapter.unary(getUserDescriptor, { id: '123' });
+   *   console.log('User:', response);
+   * } catch (error) {
+   *   if (error.is(GrpcStatusCode.NOT_FOUND)) {
+   *     console.log('User not found');
+   *   }
+   * }
+   * ```
    */
   async unary<TRequest, TResponse>(
     method: MethodDescriptor<TRequest, TResponse>,
@@ -181,6 +233,38 @@ export class NativeGrpcAdapter implements ITransportAdapter {
   ): Promise<TResponse> {
     this.ensureNotClosed();
 
+    // If retry policy is enabled, wrap call with retry logic
+    if (this.retryPolicy) {
+      return this.retryPolicy.execute(() =>
+        this.executeUnaryCall(method, request, options)
+      );
+    }
+
+    // No retry - execute directly
+    return this.executeUnaryCall(method, request, options);
+  }
+
+  /**
+   * Execute a single unary RPC call (internal implementation)
+   *
+   * This is the actual implementation of the unary call logic.
+   * Called directly when retries are disabled, or wrapped by retry policy
+   * when retries are enabled.
+   *
+   * @template TRequest - Type of the request message
+   * @template TResponse - Type of the response message
+   * @param method - Method descriptor
+   * @param request - Request message
+   * @param options - Call options
+   * @returns Promise resolving to the response message
+   * @throws {GrpcError} If the call fails
+   * @private
+   */
+  private executeUnaryCall<TRequest, TResponse>(
+    method: MethodDescriptor<TRequest, TResponse>,
+    request: TRequest,
+    options?: CallOptions
+  ): Promise<TResponse> {
     return new Promise<TResponse>((resolve, reject) => {
       // Construct full method path: /ServiceName/MethodName
       const methodPath = this.getMethodPath(method);
@@ -684,44 +768,29 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * Helper: Convert grpc.ServiceError to GrpcError
    *
    * Maps native gRPC errors to our standardized GrpcError format.
-   * Preserves status code, message, and metadata using MetadataConverter.
+   * Uses StatusCodeMapper for consistent error conversion with:
+   * - Proper status code mapping
+   * - Metadata extraction
+   * - Error details preservation
+   * - Debug logging in debug mode
    *
-   * @param error - Native gRPC ServiceError
+   * @param error - Native gRPC ServiceError or any error
    * @param methodName - Name of the method that failed
    * @returns GrpcError with proper status code and metadata
    * @private
    */
-  private convertError(error: grpc.ServiceError, methodName: string): GrpcError {
-    // Map gRPC status code to our GrpcStatusCode enum
-    const statusCode = this.mapGrpcStatusCode(error.code ?? grpc.status.UNKNOWN);
+  private convertError(error: any, methodName: string): GrpcError {
+    // Convert using StatusCodeMapper
+    const grpcError = toGrpcError(error, methodName);
 
-    // Extract error message
-    const message = error.message || error.details || 'Unknown gRPC error';
-
-    // Convert metadata if present using MetadataConverter
-    let metadata: Metadata | undefined;
-    if (error.metadata) {
-      metadata = MetadataConverter.fromGrpcMetadata(error.metadata);
+    // Log error details in debug mode
+    if (this.config.debug) {
+      console.error(
+        `[NativeGrpcAdapter] Error in ${methodName}:`,
+        grpcError.toDebugMessage()
+      );
     }
 
-    // Create and return GrpcError
-    return new GrpcError(message, statusCode, methodName, metadata, {
-      originalError: error,
-      code: error.code,
-    });
+    return grpcError;
   }
-
-  /**
-   * Helper: Map grpc.status to GrpcStatusCode
-   *
-   * @param grpcStatus - Native gRPC status code
-   * @returns Our GrpcStatusCode enum value
-   * @private
-   */
-  private mapGrpcStatusCode(grpcStatus: grpc.status): GrpcStatusCode {
-    // grpc.status and GrpcStatusCode use the same numeric values
-    // This is by design to maintain compatibility
-    return grpcStatus as unknown as GrpcStatusCode;
-  }
-
 }

@@ -382,8 +382,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Error Handling & Status Codes
 
-- [ ] 11. Implement comprehensive error handling
-- [ ] 11.1 Create GrpcError class and status code enum
+- [x] 11. Implement comprehensive error handling
+- [x] 11.1 Create GrpcError class and status code enum
   - Define `GrpcError` class extending Error
   - Define `GrpcStatusCode` enum with all standard codes
   - Add helper methods: `is()`, `getDescription()`
@@ -391,8 +391,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1 hour_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/errors/GrpcError.ts (new), packages/generator/src/adapters/errors/StatusCodes.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 11.2 Implement StatusCodeMapper
+- [x] 11.2 Implement StatusCodeMapper
   - Create utility to map between `@grpc/grpc-js` status codes and `GrpcStatusCode`
   - Handle error conversion from native gRPC errors
   - Extract error details and metadata
@@ -400,8 +401,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1.5 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/errors/StatusCodeMapper.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 11.3 Integrate error handling in NativeGrpcAdapter
+- [x] 11.3 Integrate error handling in NativeGrpcAdapter
   - Update unary method to convert errors using `StatusCodeMapper`
   - Update streaming methods to convert errors
   - Ensure consistent error format across all RPC patterns
@@ -409,15 +411,17 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1 hour_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 11.4 Add retry logic for transient failures
+- [x] 11.4 Add retry logic for transient failures
   - Implement exponential backoff retry for unary calls
   - Configure retryable status codes (UNAVAILABLE, DEADLINE_EXCEEDED)
   - Add configurable max retry attempts
   - Write unit tests for retry scenarios
   - _Time: 1.5 hours_
   - _Requirements: 2.1_
-  - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Files: packages/generator/src/adapters/retry/RetryPolicy.ts (new), packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
 ### Integration Testing
 
