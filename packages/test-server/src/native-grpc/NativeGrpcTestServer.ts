@@ -137,6 +137,8 @@ export class NativeGrpcTestServer {
     this.server.addService(userService, {
       GetUser: this.handleGetUser.bind(this),
       ListUsers: this.handleListUsers.bind(this),
+      CreateUsers: this.handleCreateUsers.bind(this),
+      Chat: this.handleChat.bind(this),
     });
 
     if (this.debug) {
@@ -162,7 +164,7 @@ export class NativeGrpcTestServer {
     if (userId === 'error-not-found') {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'User not found',
+        message: `User with id ${userId} not found`,
         code: grpc.status.NOT_FOUND,
         details: `User with id ${userId} not found`,
         metadata: new grpc.Metadata(),
@@ -174,7 +176,7 @@ export class NativeGrpcTestServer {
     if (userId === 'error-internal') {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'Internal server error',
+        message: 'Simulated internal error',
         code: grpc.status.INTERNAL,
         details: 'Simulated internal error',
         metadata: new grpc.Metadata(),
@@ -186,7 +188,7 @@ export class NativeGrpcTestServer {
     if (userId === 'error-unavailable') {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'Service unavailable',
+        message: 'Simulated unavailability',
         code: grpc.status.UNAVAILABLE,
         details: 'Simulated unavailability',
         metadata: new grpc.Metadata(),
@@ -198,7 +200,7 @@ export class NativeGrpcTestServer {
     if (userId === 'error-deadline') {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'Deadline exceeded',
+        message: 'Simulated deadline exceeded',
         code: grpc.status.DEADLINE_EXCEEDED,
         details: 'Simulated deadline exceeded',
         metadata: new grpc.Metadata(),
@@ -213,7 +215,7 @@ export class NativeGrpcTestServer {
     if (!user) {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'User not found',
+        message: `User with id ${userId} not found`,
         code: grpc.status.NOT_FOUND,
         details: `User with id ${userId} not found`,
         metadata: new grpc.Metadata(),
@@ -245,7 +247,7 @@ export class NativeGrpcTestServer {
     if (pageSize === -1) {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'Invalid argument',
+        message: 'Page size must be positive',
         code: grpc.status.INVALID_ARGUMENT,
         details: 'Page size must be positive',
         metadata: new grpc.Metadata(),
@@ -258,7 +260,7 @@ export class NativeGrpcTestServer {
     if (pageSize === -2) {
       const error: grpc.ServiceError = {
         name: 'Error',
-        message: 'Service unavailable',
+        message: 'Simulated unavailability',
         code: grpc.status.UNAVAILABLE,
         details: 'Simulated unavailability',
         metadata: new grpc.Metadata(),
@@ -293,6 +295,168 @@ export class NativeGrpcTestServer {
     };
 
     sendNext();
+  }
+
+  /**
+   * Handle CreateUsers client streaming RPC
+   * @private
+   */
+  private handleCreateUsers(
+    call: grpc.ServerReadableStream<any, any>,
+    callback: grpc.sendUnaryData<any>
+  ): void {
+    if (this.debug) {
+      console.log('[NativeGrpcTestServer] CreateUsers called');
+    }
+
+    const createdUsers: User[] = [];
+    let hasError = false;
+
+    // Listen for data events (incoming user creation requests)
+    call.on('data', (request: any) => {
+      if (this.debug) {
+        console.log(`[NativeGrpcTestServer] CreateUsers received:`, request);
+      }
+
+      // Simulate error if name is 'error'
+      if (request.name === 'error') {
+        hasError = true;
+        const error: grpc.ServiceError = {
+          name: 'Error',
+          message: 'Cannot create user with name "error"',
+          code: grpc.status.INVALID_ARGUMENT,
+          details: 'Cannot create user with name "error"',
+          metadata: new grpc.Metadata(),
+        };
+        callback(error);
+        return;
+      }
+
+      // Create user with auto-generated ID
+      const userId = `${this.users.size + 1 + createdUsers.length}`;
+      const user: User = {
+        id: userId,
+        name: request.name,
+        email: request.email,
+      };
+
+      createdUsers.push(user);
+    });
+
+    // Listen for end event (client finished sending)
+    call.on('end', () => {
+      if (hasError) {
+        // Error already sent
+        return;
+      }
+
+      if (this.debug) {
+        console.log(
+          `[NativeGrpcTestServer] CreateUsers stream ended, created ${createdUsers.length} users`
+        );
+      }
+
+      // Add users to storage
+      createdUsers.forEach((user) => {
+        this.users.set(user.id, user);
+      });
+
+      // Send response with all created users
+      const response = {
+        users: createdUsers.map((u) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+        })),
+        next_page_token: '',
+      };
+
+      callback(null, response);
+    });
+
+    // Listen for error event
+    call.on('error', (error: Error) => {
+      if (this.debug) {
+        console.error('[NativeGrpcTestServer] CreateUsers error:', error);
+      }
+    });
+  }
+
+  /**
+   * Handle Chat bidirectional streaming RPC
+   * @private
+   */
+  private handleChat(call: grpc.ServerDuplexStream<any, any>): void {
+    if (this.debug) {
+      console.log('[NativeGrpcTestServer] Chat called');
+    }
+
+    // Listen for data events (incoming messages)
+    call.on('data', (request: any) => {
+      if (this.debug) {
+        console.log(`[NativeGrpcTestServer] Chat received:`, request);
+      }
+
+      const content = request.content || '';
+
+      // Simulate error scenarios based on content
+      if (content === 'error-internal') {
+        const error: grpc.ServiceError = {
+          name: 'Error',
+          message: 'Simulated internal error',
+          code: grpc.status.INTERNAL,
+          details: 'Simulated internal error',
+          metadata: new grpc.Metadata(),
+        };
+        call.emit('error', error);
+        call.end();
+        return;
+      }
+
+      if (content === 'error-unavailable') {
+        const error: grpc.ServiceError = {
+          name: 'Error',
+          message: 'Simulated unavailability',
+          code: grpc.status.UNAVAILABLE,
+          details: 'Simulated unavailability',
+          metadata: new grpc.Metadata(),
+        };
+        call.emit('error', error);
+        call.end();
+        return;
+      }
+
+      // Echo back the message with a prefix
+      const response = {
+        content: `Echo: ${content}`,
+        timestamp: Date.now(),
+      };
+
+      call.write(response);
+    });
+
+    // Listen for end event (client finished sending)
+    call.on('end', () => {
+      if (this.debug) {
+        console.log('[NativeGrpcTestServer] Chat stream ended by client');
+      }
+
+      // Send a final message before ending
+      call.write({
+        content: 'Chat session ended',
+        timestamp: Date.now(),
+      });
+
+      // End the server side of the stream
+      call.end();
+    });
+
+    // Listen for error event
+    call.on('error', (error: Error) => {
+      if (this.debug) {
+        console.error('[NativeGrpcTestServer] Chat error:', error);
+      }
+    });
   }
 
   /**

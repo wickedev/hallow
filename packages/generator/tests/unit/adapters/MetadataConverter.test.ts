@@ -47,8 +47,9 @@ describe('MetadataConverter', () => {
       const result = MetadataConverter.toGrpcMetadata(input);
 
       expect(result.get('valid-header')).toEqual(['value']);
-      expect(result.get('null-header')).toBeUndefined();
-      expect(result.get('undefined-header')).toBeUndefined();
+      // grpc.Metadata.get() returns empty array for non-existent keys
+      expect(result.get('null-header').length).toBe(0);
+      expect(result.get('undefined-header').length).toBe(0);
     });
 
     it('should convert Metadata interface to grpc.Metadata', () => {

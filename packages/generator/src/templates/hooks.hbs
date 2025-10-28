@@ -1,109 +1,302 @@
 {{comment "Generated React hooks for gRPC services"}}
-import { useState, useEffect } from 'react';
+/**
+ * @generated
+ *
+ * This file provides React hooks for gRPC services with automatic adapter selection.
+ * Supports both gRPC-web (browser) and native gRPC (Node.js) transports.
+ */
+
+import { useGrpc, useSuspenseGrpc, useGrpcStream } from '@hallow/react';
+import type { HookAdapterConfig, GrpcHookResult, GrpcStreamHookResult } from '@hallow/react';
 
 {{#each imports}}
-import {{#if isDefault}}{{name}}{{else}}{{{join imports ", "}}}{{/if}} from '{{source}}';
+import {{#if isDefault}}{{name}}{{else}}{ {{join imports ", "}} }{{/if}} from '{{source}}';
 {{/each}}
 
 {{#each services}}
 /**
- * React Hook utilities for {{pascalCase name}} service
+ * Configuration for {{pascalName}} service hooks
  */
-export class {{pascalCase name}}HookStub {
-  constructor(private readonly stub: {{pascalCase name}}Stub) {}
-
-  {{#each methods}}
+export interface {{pascalName}}HookConfig extends Omit<HookAdapterConfig, 'StubClass' | 'stubMethod' | 'method'> {
   /**
-   * React Hook for {{camelCase name}} method
-   * @param request Request message
-   * @returns Hook result with data, loading, and error states
+   * Server URL or address
+   * - For gRPC-web: HTTP(S) URL (e.g., 'https://api.example.com')
+   * - For native gRPC: host:port (e.g., 'localhost:50051')
    */
-  use{{pascalCase name}}(request: {{inputType}}): {
-    data?: {{outputType}};
-    loading: boolean;
-    error?: Error;
-    refetch: () => void;
-  } {
-    const [data, setData] = useState<{{outputType}} | undefined>(undefined);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<Error | undefined>(undefined);
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(undefined);
-        const result = await this.stub.{{camelCase name}}(request);
-        setData(result);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      fetchData();
-    }, [JSON.stringify(request)]); // Re-run when request changes
-
-    return {
-      data,
-      loading,
-      error,
-      refetch: fetchData,
-    };
-  }
+  serverUrl: string;
 
   /**
-   * Suspense-compatible React Hook for {{camelCase name}} method
-   * @param request Request message
-   * @returns Response data (throws promise while loading or error if failed)
+   * Transport adapter type
+   * - 'auto': Automatically select based on environment (default)
+   * - 'grpc-web': Force use of gRPC-web adapter (browser-compatible)
+   * - 'native': Force use of native gRPC adapter (Node.js only)
+   *
+   * @default 'auto'
    */
-  useSuspense{{pascalCase name}}(request: {{inputType}}): {{outputType}} {
-    const [data, setData] = useState<{{outputType}} | undefined>(undefined);
-    const [error, setError] = useState<Error | undefined>(undefined);
-    const [promise, setPromise] = useState<Promise<{{outputType}}> | undefined>(undefined);
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data && !promise) {
-      const newPromise = this.stub.{{camelCase name}}(request)
-        .then(result => {
-          setData(result);
-          return result;
-        })
-        .catch(err => {
-          const error = err instanceof Error ? err : new Error(String(err));
-          setError(error);
-          throw error;
-        });
-      
-      setPromise(newPromise);
-      throw newPromise;
-    }
-
-    if (!data) {
-      throw promise;
-    }
-
-    return data;
-  }
-
-  {{/each}}
+  adapterType?: 'auto' | 'grpc-web' | 'native';
 }
+
+{{#each methods}}
+{{#if serverStreaming}}
+{{#if clientStreaming}}
+/**
+ * React Hook for {{camelName}} bidirectional streaming method
+ *
+ * **IMPORTANT**: Bidirectional streaming requires native gRPC adapter (HTTP/2).
+ * Not supported with gRPC-web adapter.
+ *
+ * @param config - Hook configuration with server URL and adapter options
+ * @returns Stream hook result with messages, send, and control methods
+ *
+ * @example
+ * ```typescript
+ * function ChatComponent() {
+ *   const {
+ *     messages,
+ *     loading,
+ *     error,
+ *     send,
+ *     cancel,
+ *     restart
+ *   } = use{{pascalName}}({
+ *     serverUrl: 'localhost:50051',
+ *     adapterType: 'native', // Required for bidi streaming
+ *   });
+ *
+ *   const handleSend = () => {
+ *     send({ message: 'Hello!' });
+ *   };
+ *
+ *   return (
+ *     <div>
+ *       {messages.map((msg, i) => <p key={i}>{msg.content}</p>)}
+ *       <button onClick={handleSend}>Send</button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export function use{{pascalName}}(
+  config: {{../pascalName}}HookConfig
+): GrpcStreamHookResult<{{outputType}}> & { send: (request: {{inputType}}) => void } {
+  // Note: Bidirectional streaming implementation requires additional work
+  // This is a placeholder that uses the streaming hook infrastructure
+  throw new Error('Bidirectional streaming hooks not yet fully implemented');
+}
+{{else}}
+/**
+ * React Hook for {{camelName}} server streaming method
+ *
+ * Subscribes to a server stream and accumulates response messages.
+ * Automatically manages stream lifecycle and cleanup.
+ *
+ * @param request - {{inputType}} request message
+ * @param config - Hook configuration with server URL and adapter options
+ * @returns Stream hook result with accumulated messages and controls
+ *
+ * @example
+ * ```typescript
+ * function StreamComponent() {
+ *   const { messages, loading, error, cancel } = use{{pascalName}}(
+ *     { {{#if ../methods.[0].inputFields.[0]}}{{../methods.[0].inputFields.[0].camelName}}: 'value'{{else}}/* request fields *\/{{/if}} },
+ *     {
+ *       serverUrl: 'https://api.example.com',
+ *       adapterType: 'auto',
+ *       onMessage: (msg) => console.log('Received:', msg),
+ *       maxMessages: 100,
+ *     }
+ *   );
+ *
+ *   return (
+ *     <div>
+ *       {loading && <p>Loading...</p>}
+ *       {error && <p>Error: {error.message}</p>}
+ *       {messages.map((msg, i) => <div key={i}>{JSON.stringify(msg)}</div>)}
+ *       <button onClick={cancel}>Cancel Stream</button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export function use{{pascalName}}(
+  request: {{inputType}},
+  config: {{../pascalName}}HookConfig & {
+    /**
+     * Callback invoked when a new message is received
+     */
+    onMessage?: (message: {{outputType}}) => void;
+    /**
+     * Callback invoked when stream completes successfully
+     */
+    onComplete?: () => void;
+    /**
+     * Callback invoked when stream encounters an error
+     */
+    onError?: (error: Error) => void;
+    /**
+     * Maximum number of messages to keep in memory (default: unlimited)
+     */
+    maxMessages?: number;
+  } = {} as any
+): GrpcStreamHookResult<{{outputType}}> {
+  return useGrpcStream<{{inputType}}, {{outputType}}>({
+    serverUrl: config.serverUrl,
+    adapterType: config.adapterType || 'auto',
+    StubClass: {{../pascalName}}Stub,
+    stubMethod: (stub) => stub.{{camelName}}(request),
+    onMessage: config.onMessage,
+    onComplete: config.onComplete,
+    onError: config.onError,
+    maxMessages: config.maxMessages,
+  });
+}
+{{/if}}
+{{else if clientStreaming}}
+/**
+ * React Hook for {{camelName}} client streaming method
+ *
+ * **IMPORTANT**: Client streaming requires native gRPC adapter (HTTP/2).
+ * Not supported with gRPC-web adapter.
+ *
+ * @param config - Hook configuration with server URL and adapter options
+ * @returns Hook result with send method and response data
+ *
+ * @example
+ * ```typescript
+ * function UploadComponent() {
+ *   const { send, complete, data, loading, error } = use{{pascalName}}({
+ *     serverUrl: 'localhost:50051',
+ *     adapterType: 'native', // Required for client streaming
+ *   });
+ *
+ *   const handleUpload = async (items: {{inputType}}[]) => {
+ *     items.forEach(item => send(item));
+ *     const response = await complete();
+ *     console.log('Upload complete:', response);
+ *   };
+ *
+ *   return <div>...</div>;
+ * }
+ * ```
+ */
+export function use{{pascalName}}(
+  config: {{../pascalName}}HookConfig
+): {
+  send: (request: {{inputType}}) => void;
+  complete: () => Promise<{{outputType}}>;
+  data?: {{outputType}};
+  loading: boolean;
+  error?: Error;
+} {
+  // Note: Client streaming implementation requires additional work
+  throw new Error('Client streaming hooks not yet fully implemented');
+}
+{{else}}
+/**
+ * React Hook for {{camelName}} unary method
+ *
+ * Executes a unary gRPC call and manages loading/error states.
+ * Automatically retries on failure and re-executes when request changes.
+ *
+ * @param request - {{inputType}} request message
+ * @param config - Hook configuration with server URL and adapter options
+ * @returns Hook result with response data, loading state, and error
+ *
+ * @example
+ * ```typescript
+ * function UserComponent({ userId }: { userId: string }) {
+ *   const { data, loading, error, refetch } = use{{pascalName}}(
+ *     { {{#if ../methods.[0].inputFields.[0]}}{{../methods.[0].inputFields.[0].camelName}}: userId{{else}}/* request fields *\/{{/if}} },
+ *     {
+ *       serverUrl: 'https://api.example.com',
+ *       adapterType: 'auto',
+ *       onSuccess: (response) => console.log('Success:', response),
+ *       onError: (error) => console.error('Failed:', error),
+ *     }
+ *   );
+ *
+ *   if (loading) return <div>Loading...</div>;
+ *   if (error) return <div>Error: {error.message}</div>;
+ *   if (!data) return null;
+ *
+ *   return (
+ *     <div>
+ *       <pre>{JSON.stringify(data, null, 2)}</pre>
+ *       <button onClick={refetch}>Refresh</button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export function use{{pascalName}}(
+  request: {{inputType}},
+  config: {{../pascalName}}HookConfig & {
+    /**
+     * Callback invoked when request succeeds
+     */
+    onSuccess?: (data: {{outputType}}) => void;
+    /**
+     * Callback invoked when request fails
+     */
+    onError?: (error: Error) => void;
+  } = {} as any
+): GrpcHookResult<{{outputType}}> {
+  return useGrpc<{{inputType}}, {{outputType}}>({
+    serverUrl: config.serverUrl,
+    adapterType: config.adapterType || 'auto',
+    StubClass: {{../pascalName}}Stub,
+    stubMethod: (stub) => stub.{{camelName}}(request),
+    onSuccess: config.onSuccess,
+    onError: config.onError,
+  });
+}
+
+/**
+ * Suspense-compatible React Hook for {{camelName}} unary method
+ *
+ * Throws a promise while loading (for React Suspense) and throws errors
+ * (for Error Boundaries). Always returns data when rendering completes.
+ *
+ * @param request - {{inputType}} request message
+ * @param config - Hook configuration with server URL and adapter options
+ * @returns {{outputType}} response data (never undefined)
+ *
+ * @example
+ * ```typescript
+ * function UserProfile({ userId }: { userId: string }) {
+ *   // Must be wrapped in <Suspense> and <ErrorBoundary>
+ *   const data = useSuspense{{pascalName}}(
+ *     { {{#if ../methods.[0].inputFields.[0]}}{{../methods.[0].inputFields.[0].camelName}}: userId{{else}}/* request fields *\/{{/if}} },
+ *     {
+ *       serverUrl: 'https://api.example.com',
+ *       adapterType: 'auto',
+ *     }
+ *   );
+ *
+ *   // data is always defined here (Suspense handles loading state)
+ *   return <div>{JSON.stringify(data)}</div>;
+ * }
+ *
+ * // Usage:
+ * <Suspense fallback={<div>Loading...</div>}>
+ *   <ErrorBoundary fallback={<div>Error occurred</div>}>
+ *     <UserProfile userId="123" />
+ *   </ErrorBoundary>
+ * </Suspense>
+ * ```
+ */
+export function useSuspense{{pascalName}}(
+  request: {{inputType}},
+  config: {{../pascalName}}HookConfig
+): {{outputType}} {
+  return useSuspenseGrpc<{{inputType}}, {{outputType}}>({
+    serverUrl: config.serverUrl,
+    adapterType: config.adapterType || 'auto',
+    StubClass: {{../pascalName}}Stub,
+    stubMethod: (stub) => stub.{{camelName}}(request),
+  });
+}
+{{/if}}
 
 {{/each}}
-
-{{#each services}}
-/**
- * Hook factory for {{pascalCase name}} service
- * @param baseUrl Base URL for the gRPC service
- * @returns Hook utilities
- */
-export function use{{pascalCase name}}Service(baseUrl: string): {{pascalCase name}}HookStub {
-  const stub = new {{pascalCase name}}Stub(baseUrl);
-  return new {{pascalCase name}}HookStub(stub);
-}
-
 {{/each}}

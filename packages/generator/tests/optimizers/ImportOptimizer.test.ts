@@ -2,9 +2,13 @@ import { ImportOptimizer } from '../../src/optimizers/ImportOptimizer';
 
 describe('ImportOptimizer', () => {
   let optimizer: ImportOptimizer;
-  
+
   beforeEach(() => {
-    optimizer = new ImportOptimizer();
+    // Disable usage analysis for basic parsing tests
+    optimizer = new ImportOptimizer({
+      analyzeUsage: false,
+      removeUnused: false,
+    });
   });
   
   describe('Import Parsing', () => {
@@ -48,46 +52,54 @@ import { D } from 'another';`;
   });
   
   describe('Unused Import Removal', () => {
+    beforeEach(() => {
+      // Enable usage analysis for unused import removal tests
+      optimizer = new ImportOptimizer({
+        analyzeUsage: true,
+        removeUnused: true,
+      });
+    });
+
     it('should remove completely unused imports', () => {
       const code = `
 import { Unused } from 'library';
 import { Used } from 'another';
 
 const result = Used();`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized).not.toContain('Unused');
       expect(optimized).toContain('Used');
     });
-    
+
     it('should remove unused named imports but keep used ones', () => {
       const code = `
 import { Used, Unused } from 'library';
 
 const result = Used();`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized).toContain("import { Used } from 'library'");
       expect(optimized).not.toContain('Unused');
     });
-    
+
     it('should remove unused default imports', () => {
       const code = `
 import DefaultUnused from 'library';
 import { Named } from 'library';
 
 const result = Named();`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized).not.toContain('DefaultUnused');
       expect(optimized).toContain('Named');
     });
-    
+
     it('should keep side-effect imports even if unused', () => {
       const code = `
 import './polyfill';
 import { Unused } from 'library';`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized).toContain("import './polyfill'");
       expect(optimized).not.toContain('Unused');
@@ -95,30 +107,48 @@ import { Unused } from 'library';`;
   });
   
   describe('Named Import Preference', () => {
+    beforeEach(() => {
+      // Enable preferNamedImports but disable usage analysis
+      optimizer = new ImportOptimizer({
+        preferNamedImports: true,
+        analyzeUsage: false,
+        removeUnused: false,
+      });
+    });
+
     it('should convert namespace imports to named imports when possible', () => {
       const code = `
 import * as utils from './utils';
 
 const result = utils.formatDate(new Date());
 const name = utils.formatName('test');`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized).toContain('import { formatDate, formatName } from \'./utils\'');
       expect(optimized).not.toContain('* as utils');
     });
-    
+
     it('should keep namespace imports when too many members are used', () => {
       const code = `
 import * as utils from './utils';
 
 ${Array.from({ length: 15 }, (_, i) => `const v${i} = utils.fn${i}();`).join('\n')}`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized).toContain('* as utils');
     });
   });
   
   describe('Import Combining', () => {
+    beforeEach(() => {
+      // Enable combineImports but disable usage analysis
+      optimizer = new ImportOptimizer({
+        combineImports: true,
+        analyzeUsage: false,
+        removeUnused: false,
+      });
+    });
+
     it('should combine multiple imports from same source', () => {
       const code = `
 import { A } from 'library';
@@ -128,7 +158,7 @@ import { C } from 'library';
 const a = A();
 const b = B();
 const c = C();`;
-      
+
       const optimized = optimizer.optimizeImports(code);
       expect(optimized.match(/from 'library'/g)?.length).toBe(1);
       expect(optimized).toContain('import { A, B, C } from \'library\'');

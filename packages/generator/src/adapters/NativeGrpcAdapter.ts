@@ -496,13 +496,29 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * Sends a stream of requests and receives a single response.
    * Returns a ClientStreamingCall interface for sending requests.
    *
+   * Key features:
+   * - Wraps gRPC ClientWritableStream for sending multiple requests
+   * - Returns a promise that resolves with the server's response
+   * - Supports write(), end(), getResponse(), and cancel() operations
+   * - Proper error handling and resource cleanup
+   * - Validates method descriptor for client streaming pattern
+   *
    * @template TRequest - Type of the request messages
    * @template TResponse - Type of the response message
    * @param method - Method descriptor with service and method metadata
    * @param options - Optional call options (timeout, metadata, etc.)
    * @returns ClientStreamingCall interface for sending requests
+   * @throws {Error} If method is not a client streaming RPC
    *
-   * @note Implementation will be added in Task 11 (client streaming)
+   * @example
+   * ```typescript
+   * const call = adapter.clientStream(createUsersDescriptor);
+   * call.write({ name: 'Alice', email: 'alice@example.com' });
+   * call.write({ name: 'Bob', email: 'bob@example.com' });
+   * call.end();
+   * const response = await call.getResponse();
+   * console.log('Created users:', response.users);
+   * ```
    */
   clientStream<TRequest, TResponse>(
     method: MethodDescriptor<TRequest, TResponse>,
@@ -510,8 +526,199 @@ export class NativeGrpcAdapter implements ITransportAdapter {
   ): ClientStreamingCall<TRequest, TResponse> {
     this.ensureNotClosed();
 
-    // Implementation will be added in Task 11
-    throw new Error('Not implemented yet - Task 11');
+    // Validate that this is a client streaming RPC
+    if (!method.requestStream || method.responseStream) {
+      throw new Error(
+        `Method ${method.methodName} is not a client streaming RPC ` +
+          `(requestStream=${method.requestStream}, responseStream=${method.responseStream})`
+      );
+    }
+
+    // Construct full method path: /ServiceName/MethodName
+    const methodPath = this.getMethodPath(method);
+
+    // Create metadata from options
+    const metadata = this.createMetadata(options);
+
+    // Calculate deadline
+    const deadline = this.calculateDeadline(options);
+
+    // Create serializer and deserializer
+    const serialize = this.createSerializer(method);
+    const deserialize = this.createDeserializer(method);
+
+    // Storage for response and error
+    let responsePromiseResolve: ((value: TResponse) => void) | null = null;
+    let responsePromiseReject: ((error: Error) => void) | null = null;
+    let isStreamWritable = true;
+    let streamCancelled = false;
+
+    // Create response promise
+    const responsePromise = new Promise<TResponse>((resolve, reject) => {
+      responsePromiseResolve = resolve;
+      responsePromiseReject = reject;
+    });
+
+    // Make client streaming call
+    const stream = this.client.makeClientStreamRequest(
+      methodPath,
+      serialize,
+      deserialize,
+      metadata,
+      { deadline },
+      (error: grpc.ServiceError | null, response?: TResponse) => {
+        if (error) {
+          // Error occurred - convert and reject
+          responsePromiseReject?.(this.convertError(error, method.methodName));
+          return;
+        }
+
+        if (!response) {
+          // No response received (shouldn't happen for successful calls)
+          responsePromiseReject?.(
+            new GrpcError(
+              `No response received from ${method.methodName}`,
+              GrpcStatusCode.UNKNOWN,
+              method.methodName
+            )
+          );
+          return;
+        }
+
+        // Success - resolve with response
+        responsePromiseResolve?.(response);
+      }
+    );
+
+    if (this.config.debug) {
+      console.log(`[NativeGrpcAdapter] Starting client stream: ${methodPath}`);
+    }
+
+    // Handle stream events
+    stream.on('error', (error: grpc.ServiceError) => {
+      if (this.config.debug) {
+        console.error(
+          `[NativeGrpcAdapter] Client stream error:`,
+          error.message,
+          error.code
+        );
+      }
+      isStreamWritable = false;
+    });
+
+    stream.on('finish', () => {
+      if (this.config.debug) {
+        console.log(`[NativeGrpcAdapter] Client stream finished: ${methodPath}`);
+      }
+      isStreamWritable = false;
+    });
+
+    // Return ClientStreamingCall interface
+    return {
+      /**
+       * Write a request message to the stream
+       * @param request - Request message to send
+       * @throws Error if stream is closed or not writable
+       */
+      write: (request: TRequest): void => {
+        if (!isStreamWritable || streamCancelled) {
+          throw new Error(
+            `Cannot write to ${method.methodName}: stream is not writable`
+          );
+        }
+
+        try {
+          stream.write(request);
+        } catch (error) {
+          isStreamWritable = false;
+          throw new Error(
+            `Failed to write to stream: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      },
+
+      /**
+       * Signal that no more requests will be sent
+       * This triggers the server to send its response.
+       */
+      end: (): void => {
+        if (streamCancelled) {
+          return;
+        }
+
+        try {
+          stream.end();
+          isStreamWritable = false;
+
+          if (this.config.debug) {
+            console.log(`[NativeGrpcAdapter] Client stream ended: ${methodPath}`);
+          }
+        } catch (error) {
+          if (this.config.debug) {
+            console.error(
+              '[NativeGrpcAdapter] Error ending client stream:',
+              error
+            );
+          }
+        }
+      },
+
+      /**
+       * Get the response from the server
+       * This promise resolves after end() is called and the server has sent its response.
+       *
+       * @returns Promise that resolves with the server's response
+       */
+      getResponse: (): Promise<TResponse> => {
+        return responsePromise;
+      },
+
+      /**
+       * Cancel the streaming call
+       * Closes the stream and notifies the server.
+       */
+      cancel: (): void => {
+        if (streamCancelled) {
+          return;
+        }
+
+        streamCancelled = true;
+        isStreamWritable = false;
+
+        try {
+          stream.cancel();
+
+          if (this.config.debug) {
+            console.log(
+              `[NativeGrpcAdapter] Client stream cancelled: ${methodPath}`
+            );
+          }
+
+          // Reject the response promise
+          responsePromiseReject?.(
+            new GrpcError(
+              `${method.methodName} was cancelled`,
+              GrpcStatusCode.CANCELLED,
+              method.methodName
+            )
+          );
+        } catch (error) {
+          if (this.config.debug) {
+            console.error(
+              '[NativeGrpcAdapter] Error cancelling client stream:',
+              error
+            );
+          }
+        }
+      },
+
+      /**
+       * Check if the stream is still writable
+       */
+      get writable(): boolean {
+        return isStreamWritable && !streamCancelled;
+      },
+    };
   }
 
   /**
@@ -520,13 +727,37 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * Sends a stream of requests and receives a stream of responses.
    * Both client and server can send messages independently.
    *
+   * Key features:
+   * - Wraps gRPC ClientDuplexStream for bidirectional communication
+   * - Returns an Observable for receiving responses
+   * - Supports write(), end(), responses(), and cancel() operations
+   * - Client and server can send/receive messages concurrently
+   * - Proper error handling and resource cleanup
+   * - Validates method descriptor for bidirectional streaming pattern
+   *
    * @template TRequest - Type of the request messages
    * @template TResponse - Type of the response messages
    * @param method - Method descriptor with service and method metadata
    * @param options - Optional call options (timeout, metadata, etc.)
    * @returns BidiStreamingCall interface for bidirectional streaming
+   * @throws {Error} If method is not a bidirectional streaming RPC
    *
-   * @note Implementation will be added in Task 11 (bidirectional streaming)
+   * @example
+   * ```typescript
+   * const call = adapter.bidiStream(chatDescriptor);
+   *
+   * // Subscribe to responses
+   * call.responses().subscribe({
+   *   next: (msg) => console.log('Received:', msg.content),
+   *   error: (err) => console.error('Error:', err),
+   *   complete: () => console.log('Stream complete')
+   * });
+   *
+   * // Send messages
+   * call.write({ content: 'Hello', timestamp: Date.now() });
+   * call.write({ content: 'World', timestamp: Date.now() });
+   * call.end();
+   * ```
    */
   bidiStream<TRequest, TResponse>(
     method: MethodDescriptor<TRequest, TResponse>,
@@ -534,8 +765,239 @@ export class NativeGrpcAdapter implements ITransportAdapter {
   ): BidiStreamingCall<TRequest, TResponse> {
     this.ensureNotClosed();
 
-    // Implementation will be added in Task 11
-    throw new Error('Not implemented yet - Task 11');
+    // Validate that this is a bidirectional streaming RPC
+    if (!method.requestStream || !method.responseStream) {
+      throw new Error(
+        `Method ${method.methodName} is not a bidirectional streaming RPC ` +
+          `(requestStream=${method.requestStream}, responseStream=${method.responseStream})`
+      );
+    }
+
+    // Construct full method path: /ServiceName/MethodName
+    const methodPath = this.getMethodPath(method);
+
+    // Create metadata from options
+    const metadata = this.createMetadata(options);
+
+    // Calculate deadline
+    const deadline = this.calculateDeadline(options);
+
+    // Create serializer and deserializer
+    const serialize = this.createSerializer(method);
+    const deserialize = this.createDeserializer(method);
+
+    // Storage for stream state
+    let isStreamWritable = true;
+    let streamCancelled = false;
+    let responsesObservable: Observable<TResponse> | null = null;
+
+    // Make bidirectional streaming call
+    const stream = this.client.makeBidiStreamRequest(
+      methodPath,
+      serialize,
+      deserialize,
+      metadata,
+      { deadline }
+    );
+
+    if (this.config.debug) {
+      console.log(`[NativeGrpcAdapter] Starting bidi stream: ${methodPath}`);
+    }
+
+    // Handle stream events for write side
+    stream.on('error', (error: grpc.ServiceError) => {
+      if (this.config.debug) {
+        console.error(
+          `[NativeGrpcAdapter] Bidi stream error:`,
+          error.message,
+          error.code
+        );
+      }
+      isStreamWritable = false;
+    });
+
+    stream.on('finish', () => {
+      if (this.config.debug) {
+        console.log(`[NativeGrpcAdapter] Bidi stream write side finished: ${methodPath}`);
+      }
+      isStreamWritable = false;
+    });
+
+    // Return BidiStreamingCall interface
+    return {
+      /**
+       * Write a request message to the stream
+       * @param request - Request message to send
+       * @throws Error if stream is closed or not writable
+       */
+      write: (request: TRequest): void => {
+        if (!isStreamWritable || streamCancelled) {
+          throw new Error(
+            `Cannot write to ${method.methodName}: stream is not writable`
+          );
+        }
+
+        try {
+          stream.write(request);
+        } catch (error) {
+          isStreamWritable = false;
+          throw new Error(
+            `Failed to write to stream: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      },
+
+      /**
+       * Signal that no more requests will be sent
+       * The server may continue sending responses after the client ends.
+       */
+      end: (): void => {
+        if (streamCancelled) {
+          return;
+        }
+
+        try {
+          stream.end();
+          isStreamWritable = false;
+
+          if (this.config.debug) {
+            console.log(`[NativeGrpcAdapter] Bidi stream write side ended: ${methodPath}`);
+          }
+        } catch (error) {
+          if (this.config.debug) {
+            console.error(
+              '[NativeGrpcAdapter] Error ending bidi stream write side:',
+              error
+            );
+          }
+        }
+      },
+
+      /**
+       * Get an Observable of response messages from the server
+       * Messages can be received before, during, and after client writes.
+       *
+       * @returns Observable stream of response messages
+       */
+      responses: (): Observable<TResponse> => {
+        // Create Observable lazily (only once)
+        if (!responsesObservable) {
+          responsesObservable = new Observable<TResponse>((observer) => {
+            /**
+             * Handle 'data' events - each response message
+             *
+             * Emitted for every message the server sends.
+             * We emit each response to the Observable subscriber.
+             */
+            stream.on('data', (response: TResponse) => {
+              observer.next(response);
+            });
+
+            /**
+             * Handle 'end' event - stream completed successfully
+             *
+             * Emitted when server closes the stream normally.
+             * We complete the Observable.
+             */
+            stream.on('end', () => {
+              if (this.config.debug) {
+                console.log(`[NativeGrpcAdapter] Bidi stream ended: ${methodPath}`);
+              }
+              observer.complete();
+            });
+
+            /**
+             * Handle 'error' event - stream failed
+             *
+             * Emitted when an error occurs during streaming.
+             * We convert the error and propagate to the Observable.
+             */
+            stream.on('error', (error: grpc.ServiceError) => {
+              observer.error(this.convertError(error, method.methodName));
+            });
+
+            /**
+             * Handle 'metadata' event - initial metadata from server
+             *
+             * Emitted when server sends initial metadata (headers).
+             */
+            stream.on('metadata', (receivedMetadata: grpc.Metadata) => {
+              if (this.config.debug) {
+                console.log(
+                  `[NativeGrpcAdapter] Bidi stream received metadata:`,
+                  receivedMetadata.getMap()
+                );
+              }
+            });
+
+            /**
+             * Handle 'status' event - final status and trailing metadata
+             *
+             * Always emitted at the end (success or failure).
+             */
+            stream.on('status', (status: grpc.StatusObject) => {
+              if (this.config.debug) {
+                console.log(
+                  `[NativeGrpcAdapter] Bidi stream status:`,
+                  status.code,
+                  status.details
+                );
+              }
+            });
+
+            /**
+             * Cleanup function - called when Observable is unsubscribed
+             *
+             * Note: This does NOT cancel the stream automatically.
+             * The stream continues until cancel() is explicitly called.
+             */
+            return () => {
+              // No automatic cancellation - stream remains active
+              // Call cancel() explicitly if needed
+            };
+          });
+        }
+
+        return responsesObservable;
+      },
+
+      /**
+       * Cancel the streaming call
+       * Closes both the request and response streams.
+       */
+      cancel: (): void => {
+        if (streamCancelled) {
+          return;
+        }
+
+        streamCancelled = true;
+        isStreamWritable = false;
+
+        try {
+          stream.cancel();
+
+          if (this.config.debug) {
+            console.log(
+              `[NativeGrpcAdapter] Bidi stream cancelled: ${methodPath}`
+            );
+          }
+        } catch (error) {
+          if (this.config.debug) {
+            console.error(
+              '[NativeGrpcAdapter] Error cancelling bidi stream:',
+              error
+            );
+          }
+        }
+      },
+
+      /**
+       * Check if the stream is still writable
+       */
+      get writable(): boolean {
+        return isStreamWritable && !streamCancelled;
+      },
+    };
   }
 
   /**

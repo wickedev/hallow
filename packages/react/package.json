@@ -1,0 +1,44 @@
+{
+  "name": "@hallow/react",
+  "version": "0.1.0",
+  "description": "React hooks for Hallow gRPC client",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "grpc",
+    "react",
+    "hooks",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/react-hooks": "^8.0.1",
+    "@types/jest": "^29.5.5",
+    "@types/react": "^18.2.28",
+    "jest": "^29.7.0",
+    "react": "^18.2.0",
+    "react-test-renderer": "^18.2.0",
+    "rollup": "^3.29.4",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  }
+}

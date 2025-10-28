@@ -27,7 +27,7 @@ export class MetadataConverter {
   /**
    * Convert application metadata to grpc.Metadata
    *
-   * Accepts either a plain object (Record<string, string>) or a Metadata
+   * Accepts either a plain object (Record<string, string | Buffer>) or a Metadata
    * interface implementation and converts it to grpc.Metadata format.
    *
    * @param metadata - Application metadata (plain object or Metadata interface)
@@ -47,7 +47,7 @@ export class MetadataConverter {
    * ```
    */
   static toGrpcMetadata(
-    metadata?: Metadata | Record<string, string>
+    metadata?: Metadata | Record<string, string | Buffer>
   ): grpc.Metadata {
     const grpcMetadata = new grpc.Metadata();
 
@@ -61,7 +61,7 @@ export class MetadataConverter {
     }
 
     // Handle plain object
-    return this.fromPlainObject(metadata as Record<string, string>);
+    return this.fromPlainObject(metadata as Record<string, string | Buffer>);
   }
 
   /**
@@ -87,18 +87,23 @@ export class MetadataConverter {
   /**
    * Convert plain object to grpc.Metadata
    *
-   * @param metadata - Plain object with string values
+   * @param metadata - Plain object with string values or Buffer for binary headers
    * @returns grpc.Metadata instance
    * @private
    */
   private static fromPlainObject(
-    metadata: Record<string, string>
+    metadata: Record<string, string | Buffer>
   ): grpc.Metadata {
     const grpcMetadata = new grpc.Metadata();
 
     for (const [key, value] of Object.entries(metadata)) {
       if (value !== undefined && value !== null) {
-        grpcMetadata.set(key, value);
+        // Binary headers (ending with -bin) should be sent as Buffer
+        if (key.endsWith('-bin') && typeof value === 'string') {
+          grpcMetadata.set(key, Buffer.from(value));
+        } else {
+          grpcMetadata.set(key, value);
+        }
       }
     }
 
@@ -127,13 +132,11 @@ export class MetadataConverter {
    * ```
    */
   static fromGrpcMetadata(grpcMetadata: grpc.Metadata): Metadata {
-    const map = grpcMetadata.getMap();
-
     return {
       get(key: string): string[] | undefined {
-        const values = map[key.toLowerCase()];
-        if (!values) return undefined;
-        return Array.isArray(values) ? values : [String(values)];
+        const values = grpcMetadata.get(key);
+        if (!values || values.length === 0) return undefined;
+        return values.map((v) => (Buffer.isBuffer(v) ? v.toString() : String(v)));
       },
 
       set(key: string, value: string | Buffer): void {
@@ -150,8 +153,13 @@ export class MetadataConverter {
 
       getMap(): Record<string, string[]> {
         const result: Record<string, string[]> = {};
-        for (const [key, value] of Object.entries(map)) {
-          result[key] = Array.isArray(value) ? value : [String(value)];
+        const map = grpcMetadata.getMap();
+        // Use grpcMetadata.get() to get all values for each key
+        for (const key of Object.keys(map)) {
+          const values = grpcMetadata.get(key);
+          result[key] = values.map((v) =>
+            Buffer.isBuffer(v) ? v.toString() : String(v)
+          );
         }
         return result;
       },
@@ -175,7 +183,7 @@ export class MetadataConverter {
    * ```
    */
   static merge(
-    sources: Array<Metadata | Record<string, string> | undefined>
+    sources: Array<Metadata | Record<string, string | Buffer> | undefined>
   ): grpc.Metadata {
     const grpcMetadata = new grpc.Metadata();
 
@@ -212,9 +220,10 @@ export class MetadataConverter {
     const cloned = new grpc.Metadata();
     const map = metadata.getMap();
 
-    for (const [key, values] of Object.entries(map)) {
-      const valueArray = Array.isArray(values) ? values : [String(values)];
-      for (const value of valueArray) {
+    // Use metadata.get() to get all values for each key
+    for (const key of Object.keys(map)) {
+      const values = metadata.get(key);
+      for (const value of values) {
         cloned.add(key, value);
       }
     }

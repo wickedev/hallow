@@ -509,7 +509,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 ### React Hooks Integration
 
 - [ ] 14. Update React hooks for adapter compatibility
-- [ ] 14.1 Update useGrpc hook to work with adapter factory
+- [x] 14.1 Update useGrpc hook to work with adapter factory
   - Modify `useGrpc` hook to accept adapter configuration options
   - Ensure hook works with both GrpcWebAdapter and NativeGrpcAdapter
   - Update dependency array to include adapter configuration
@@ -517,16 +517,18 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2 hours_
   - _Requirements: 2.1_
   - _Files: packages/react/src/hooks/useGrpc.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 14.2 Update useSuspenseGrpc hook
+- [x] 14.2 Update useSuspenseGrpc hook
   - Modify `useSuspenseGrpc` hook to work with adapter factory
   - Ensure Suspense integration works with native gRPC
   - Test with both adapters
   - _Time: 1.5 hours_
   - _Requirements: 2.1_
   - _Files: packages/react/src/hooks/useSuspenseGrpc.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 14.3 Create useGrpcStream hook for streaming RPCs
+- [x] 14.3 Create useGrpcStream hook for streaming RPCs
   - Create new hook for server streaming RPCs
   - Handle Observable subscription and cleanup
   - Manage loading and error states
@@ -535,6 +537,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2.5 hours_
   - _Requirements: 2.2_
   - _Files: packages/react/src/hooks/useGrpcStream.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
 - [ ] 14.4 Update React hook generator templates
   - Update `react-hook.hbs` template to generate hooks for streaming methods
