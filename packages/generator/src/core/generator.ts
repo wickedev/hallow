@@ -235,7 +235,8 @@ export class Generator {
                 services: items as any,
               });
             }
-            // TODO: Handle messages and enums
+            // Note: Messages and enums are handled through MemoryEfficientGenerator.generateMessagesInChunks()
+            // and MemoryEfficientGenerator.generateEnumsInChunks() methods for better control
             return [];
           },
         )) {

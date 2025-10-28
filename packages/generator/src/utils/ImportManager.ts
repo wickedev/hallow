@@ -552,6 +552,227 @@ export class ImportManager {
 
     return null;
   }
+
+  /**
+   * Get all collected imports grouped by source
+   * Returns a structured view of all imports for inspection or manipulation
+   */
+  public getImports(): {
+    regular: Map<string, string[]>;
+    types: Map<string, string[]>;
+    defaults: Map<string, string>;
+    namespaces: Map<string, string>;
+    sideEffects: string[];
+  } {
+    return {
+      regular: new Map(
+        Array.from(this.regularImports.entries()).map(([source, names]) => [
+          source,
+          Array.from(names),
+        ])
+      ),
+      types: new Map(
+        Array.from(this.typeImports.entries()).map(([source, names]) => [
+          source,
+          Array.from(names),
+        ])
+      ),
+      defaults: new Map(this.defaultImports),
+      namespaces: new Map(this.namespaceImports),
+      sideEffects: Array.from(this.sideEffectImports),
+    };
+  }
+
+  /**
+   * Get import statement for a specific source
+   * Builds a formatted import statement string for the given source
+   */
+  public getImportStatement(source: string): string | null {
+    const regularNames = this.regularImports.get(source);
+    const typeNames = this.typeImports.get(source);
+    const defaultName = this.defaultImports.get(source);
+    const namespaceName = this.namespaceImports.get(source);
+
+    // If no imports from this source, return null
+    if (!regularNames && !typeNames && !defaultName && !namespaceName) {
+      return null;
+    }
+
+    const statements: string[] = [];
+
+    // Build regular import statement if exists
+    if (regularNames || defaultName || namespaceName) {
+      const stmt = this.buildImportStatement(
+        source,
+        regularNames ? Array.from(regularNames) : [],
+        defaultName,
+        namespaceName,
+        false
+      );
+      statements.push(stmt);
+    }
+
+    // Build type-only import statement if exists
+    if (typeNames) {
+      const stmt = this.buildImportStatement(
+        source,
+        Array.from(typeNames),
+        undefined,
+        undefined,
+        true
+      );
+      statements.push(stmt);
+    }
+
+    return statements.join('\n');
+  }
+
+  /**
+   * Optimize imports by consolidating and removing duplicates
+   * This method can be called before generating final imports to ensure
+   * the most efficient import statements
+   */
+  public optimizeImports(): void {
+    // Remove empty import sets
+    for (const [source, names] of this.regularImports.entries()) {
+      if (names.size === 0) {
+        this.regularImports.delete(source);
+      }
+    }
+
+    for (const [source, names] of this.typeImports.entries()) {
+      if (names.size === 0) {
+        this.typeImports.delete(source);
+      }
+    }
+
+    // Merge duplicate types between regular and type imports
+    // If a type appears in both, keep it in regular imports
+    for (const [source, typeNames] of this.typeImports.entries()) {
+      const regularNames = this.regularImports.get(source);
+      if (regularNames) {
+        for (const typeName of typeNames) {
+          if (regularNames.has(typeName)) {
+            // Remove from type imports since it's already in regular imports
+            typeNames.delete(typeName);
+          }
+        }
+
+        // If type imports is now empty, remove it
+        if (typeNames.size === 0) {
+          this.typeImports.delete(source);
+        }
+      }
+    }
+
+    // Sort names within each import for consistency
+    for (const [source, names] of this.regularImports.entries()) {
+      const sorted = Array.from(names).sort();
+      this.regularImports.set(source, new Set(sorted));
+    }
+
+    for (const [source, names] of this.typeImports.entries()) {
+      const sorted = Array.from(names).sort();
+      this.typeImports.set(source, new Set(sorted));
+    }
+  }
+
+  /**
+   * Get all sources that have imports
+   */
+  public getAllSources(): string[] {
+    const sources = new Set<string>();
+
+    this.regularImports.forEach((_, source) => sources.add(source));
+    this.typeImports.forEach((_, source) => sources.add(source));
+    this.defaultImports.forEach((_, source) => sources.add(source));
+    this.namespaceImports.forEach((_, source) => sources.add(source));
+    this.sideEffectImports.forEach(source => sources.add(source));
+
+    return Array.from(sources).sort();
+  }
+
+  /**
+   * Remove all imports from a specific source
+   */
+  public removeSource(source: string): void {
+    this.regularImports.delete(source);
+    this.typeImports.delete(source);
+    this.defaultImports.delete(source);
+    this.namespaceImports.delete(source);
+    this.sideEffectImports.delete(source);
+  }
+
+  /**
+   * Check if imports are empty
+   */
+  public isEmpty(): boolean {
+    return !this.hasImports();
+  }
+
+  /**
+   * Convert imports to JSON for serialization
+   */
+  public toJSON(): {
+    regular: Record<string, string[]>;
+    types: Record<string, string[]>;
+    defaults: Record<string, string>;
+    namespaces: Record<string, string>;
+    sideEffects: string[];
+  } {
+    const imports = this.getImports();
+
+    return {
+      regular: Object.fromEntries(imports.regular),
+      types: Object.fromEntries(imports.types),
+      defaults: Object.fromEntries(imports.defaults),
+      namespaces: Object.fromEntries(imports.namespaces),
+      sideEffects: imports.sideEffects,
+    };
+  }
+
+  /**
+   * Load imports from JSON
+   */
+  public fromJSON(json: {
+    regular?: Record<string, string[]>;
+    types?: Record<string, string[]>;
+    defaults?: Record<string, string>;
+    namespaces?: Record<string, string>;
+    sideEffects?: string[];
+  }): void {
+    this.clear();
+
+    if (json.regular) {
+      Object.entries(json.regular).forEach(([source, names]) => {
+        names.forEach(name => this.addNamedImport(source, name, false));
+      });
+    }
+
+    if (json.types) {
+      Object.entries(json.types).forEach(([source, names]) => {
+        names.forEach(name => this.addNamedImport(source, name, true));
+      });
+    }
+
+    if (json.defaults) {
+      Object.entries(json.defaults).forEach(([source, name]) => {
+        this.addDefaultImport(source, name);
+      });
+    }
+
+    if (json.namespaces) {
+      Object.entries(json.namespaces).forEach(([source, name]) => {
+        this.addNamespaceImport(source, name);
+      });
+    }
+
+    if (json.sideEffects) {
+      json.sideEffects.forEach(source => {
+        this.addSideEffectImport(source);
+      });
+    }
+  }
 }
 
 /**

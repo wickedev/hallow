@@ -381,35 +381,53 @@ export class ReactHookGenerator {
       source: string;
     }> = [];
 
-    // Get all imports from ImportManager
-    // Note: ImportManager's internal structure is not exposed, so we'll build manually
-    // This would need to be enhanced to work with actual ImportManager API
+    // Use ImportManager API to get all imports
+    const importManager = new ImportManager();
 
-    // React imports - build based on what's needed
-    const reactImports: string[] = [];
+    // Add React imports based on what's needed
     if (this.options.generateRegularHooks) {
-      reactImports.push('useState', 'useEffect', 'useRef');
+      importManager.addNamedImports('react', ['useState', 'useEffect', 'useRef']);
       if (this.options.includeRefetch) {
-        reactImports.push('useCallback');
+        importManager.addNamedImport('react', 'useCallback');
       }
     }
     if (this.options.generateSuspenseHooks) {
       // For React 19+, we use the 'use' hook
-      reactImports.push('use');
+      importManager.addNamedImport('react', 'use');
     }
 
-    // Remove duplicates and sort for consistency
-    const uniqueReactImports = [...new Set(reactImports)].sort();
+    // Optimize imports to remove duplicates and consolidate
+    importManager.optimizeImports();
 
-    if (uniqueReactImports.length > 0) {
+    // Convert ImportManager data to template format
+    const allImports = importManager.getImports();
+
+    // Add regular imports
+    allImports.regular.forEach((names, source) => {
       imports.push({
-        imports: uniqueReactImports,
-        source: 'react',
+        imports: names,
+        source,
       });
-    }
+    });
 
-    // Service stub imports would be added dynamically based on the actual imports
-    // For now, return the basic structure
+    // Add type imports
+    allImports.types.forEach((names, source) => {
+      imports.push({
+        imports: names,
+        source,
+        isDefault: false,
+      });
+    });
+
+    // Add default imports
+    allImports.defaults.forEach((name, source) => {
+      imports.push({
+        name,
+        source,
+        isDefault: true,
+      });
+    });
+
     return imports;
   }
 
