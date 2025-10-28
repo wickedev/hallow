@@ -425,8 +425,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Integration Testing
 
-- [ ] 12. Create integration tests for native gRPC adapter
-- [ ] 12.1 Set up test gRPC server with native gRPC
+- [x] 12. Create integration tests for native gRPC adapter
+- [x] 12.1 Set up test gRPC server with native gRPC
   - Create test server using `@grpc/grpc-js` server
   - Implement test service with all RPC patterns
   - Start server on dedicated port (50051)
@@ -435,7 +435,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.1, 3.1_
   - _Files: packages/test-server/src/NativeGrpcTestServer.ts (new)_
 
-- [ ] 12.2 Write integration tests for unary RPCs
+- [x] 12.2 Write integration tests for unary RPCs
   - Test successful unary call end-to-end
   - Test error responses (NOT_FOUND, INVALID_ARGUMENT)
   - Test metadata propagation
@@ -444,7 +444,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.1, 3.1_
   - _Files: packages/generator/tests/integration/native-grpc-unary.test.ts (new)_
 
-- [ ] 12.3 Write integration tests for server streaming
+- [x] 12.3 Write integration tests for server streaming
   - Test successful server streaming with multiple responses
   - Test stream errors
   - Test stream cancellation
@@ -453,7 +453,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.1, 2.2, 3.1_
   - _Files: packages/generator/tests/integration/native-grpc-streaming.test.ts (new)_
 
-- [ ] 12.4 Compare native gRPC vs grpc-web performance
+- [x] 12.4 Compare native gRPC vs grpc-web performance
   - Create benchmark tests comparing adapter performance
   - Measure latency for unary calls
   - Measure throughput for streaming

@@ -250,7 +250,8 @@ export class NativeGrpcTestServer {
         details: 'Page size must be positive',
         metadata: new grpc.Metadata(),
       };
-      call.destroy(error);
+      call.emit('error', error);
+      call.end();
       return;
     }
 
@@ -262,7 +263,8 @@ export class NativeGrpcTestServer {
         details: 'Simulated unavailability',
         metadata: new grpc.Metadata(),
       };
-      call.destroy(error);
+      call.emit('error', error);
+      call.end();
       return;
     }
 
