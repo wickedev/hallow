@@ -281,8 +281,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Native gRPC Adapter - Unary RPC
 
-- [ ] 9. Implement NativeGrpcAdapter for unary RPCs
-- [ ] 9.1 Create NativeGrpcAdapter class skeleton
+- [x] 9. Implement NativeGrpcAdapter for unary RPCs
+- [x] 9.1 Create NativeGrpcAdapter class skeleton
   - Create `NativeGrpcAdapter` class implementing `ITransportAdapter`
   - Add constructor with channel creation
   - Implement `close()` method for channel cleanup
@@ -290,8 +290,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1.5 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 9.2 Implement unary RPC method
+- [x] 9.2 Implement unary RPC method
   - Implement `unary<TRequest, TResponse>()` method
   - Use `@grpc/grpc-js` client to make unary request
   - Handle request serialization and response deserialization
@@ -300,8 +301,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 3 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 9.3 Add metadata support for unary calls
+- [x] 9.3 Add metadata support for unary calls
   - Create `MetadataConverter` utility class
   - Implement conversion from application metadata to gRPC metadata
   - Attach metadata to unary calls
@@ -310,8 +312,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/metadata/MetadataConverter.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 9.4 Add timeout and deadline support
+- [x] 9.4 Add timeout and deadline support
   - Implement deadline propagation from `CallOptions.timeout`
   - Handle deadline exceeded errors
   - Add configurable default timeout
@@ -319,8 +322,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1.5 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 9.5 Write unit tests for NativeGrpcAdapter unary calls
+- [x] 9.5 Write unit tests for NativeGrpcAdapter unary calls
   - Mock `@grpc/grpc-js` client
   - Test successful unary call
   - Test error scenarios (NOT_FOUND, INTERNAL, etc.)
@@ -329,6 +333,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 3 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/tests/unit/adapters/NativeGrpcAdapter.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
 ### Native gRPC Adapter - Server Streaming
 
