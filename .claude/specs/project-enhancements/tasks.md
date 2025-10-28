@@ -468,8 +468,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Service Template Updates
 
-- [ ] 13. Update service generator for adapter support
-- [ ] 13.1 Update service.hbs template with adapter factory
+- [x] 13. Update service generator for adapter support
+- [x] 13.1 Update service.hbs template with adapter factory
   - Modify template to use `AdapterFactory.create()`
   - Add constructor options for adapter selection
   - Update imports to include adapter types
@@ -478,7 +478,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/templates/service.hbs_
 
-- [ ] 13.2 Generate method descriptors in service template
+- [x] 13.2 Generate method descriptors in service template
   - Add template helpers to generate method descriptors
   - Include service name, method name, and streaming flags
   - Generate descriptor creation methods
@@ -487,7 +487,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/templates/service.hbs, packages/generator/src/generators/ServiceGenerator.ts_
 
-- [ ] 13.3 Add streaming method generation to template
+- [x] 13.3 Add streaming method generation to template
   - Update template to generate server streaming methods returning Observable
   - Generate client streaming methods returning ClientStreamingCall
   - Generate bidirectional streaming methods returning BidiStreamingCall
@@ -496,7 +496,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.2_
   - _Files: packages/generator/templates/service.hbs_
 
-- [ ] 13.4 Test generated service stubs with both adapters
+- [x] 13.4 Test generated service stubs with both adapters
   - Generate service stubs from test proto files
   - Verify unary method generation
   - Verify streaming method generation

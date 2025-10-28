@@ -204,15 +204,13 @@ export class AdapterFactory {
     }
 
     // Dynamically import NativeGrpcAdapter to avoid loading in browser
-    // This will be implemented in later tasks
-    throw new Error(
-      'NativeGrpcAdapter not yet implemented. ' +
-        'Use adapterType: "grpc-web" or wait for Task 9 completion.'
-    );
-
-    // TODO: Task 9 - Uncomment when NativeGrpcAdapter is implemented
-    // const { NativeGrpcAdapter } = require('./NativeGrpcAdapter');
-    // return new NativeGrpcAdapter(config);
+    const { NativeGrpcAdapter } = require('./NativeGrpcAdapter');
+    return new NativeGrpcAdapter({
+      serverUrl: config.serverUrl,
+      secure: config.secure,
+      debug: config.debug,
+      defaultCallOptions: config.defaultCallOptions,
+    });
   }
 
   /**

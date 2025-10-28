@@ -1,6 +1,13 @@
 /**
  * Generated gRPC service stubs
  * @generated
+ *
+ * This file provides service stubs with support for both gRPC-web and native gRPC transports.
+ * The adapter is automatically selected based on the runtime environment:
+ * - Browser: Uses GrpcWebAdapter (HTTP/1.1 with gRPC-web protocol)
+ * - Node.js: Uses NativeGrpcAdapter (HTTP/2 with native gRPC)
+ *
+ * You can also explicitly specify the adapter type in the constructor options.
  */
 
 {{#each imports}}
@@ -9,68 +16,175 @@ import {{#if isDefault}}{{name}}{{else}}{ {{join imports ", "}} }{{/if}} from '{
 
 {{#each services}}
 /**
- * Service descriptor for {{pascalName}}
- * Contains metadata for all RPC methods in this service
+ * Configuration options for {{pascalName}}Stub
  */
-export const {{pascalName}}Service = {
-  serviceName: '{{name}}',
-  {{#if ../packageName}}
-  fullServiceName: '{{../packageName}}.{{name}}',
-  {{else}}
-  fullServiceName: '{{name}}',
-  {{/if}}
-
-  {{#each methods}}
+export interface {{pascalName}}StubConfig {
   /**
-   * Method descriptor for {{name}} RPC
-   * @type {grpc.MethodDefinition<{{inputType}}, {{outputType}}>}
+   * Server URL or address
+   * - For gRPC-web: HTTP(S) URL (e.g., 'https://api.example.com')
+   * - For native gRPC: host:port (e.g., 'localhost:50051')
    */
-  {{pascalName}}Descriptor: {
-    methodName: '{{name}}',
-    service: {
-      serviceName: '{{#if ../../packageName}}{{../../packageName}}.{{/if}}{{../name}}'
-    },
-    requestType: {{inputType}}.Message,
-    responseType: {{outputType}}.Message,
-    requestStream: {{clientStreaming}},
-    responseStream: {{serverStreaming}},
-    requestSerializer: {{inputType}},
-    responseSerializer: {{outputType}},
-  },
-  {{/each}}
-} as const;
+  serverUrl: string;
+
+  /**
+   * Transport adapter type
+   * - 'auto': Automatically select based on environment (default)
+   * - 'grpc-web': Force use of gRPC-web adapter (browser-compatible)
+   * - 'native': Force use of native gRPC adapter (Node.js only)
+   *
+   * @default 'auto'
+   */
+  adapterType?: AdapterType;
+
+  /**
+   * Use secure connection (TLS/SSL)
+   * @default false for native gRPC, true for gRPC-web with HTTPS URL
+   */
+  secure?: boolean;
+
+  /**
+   * Enable debug logging
+   * @default false
+   */
+  debug?: boolean;
+
+  /**
+   * Default call options applied to all RPC methods
+   */
+  defaultCallOptions?: CallOptions;
+}
+
+{{#each methods}}
+/**
+ * Method descriptor for {{pascalName}} RPC
+ * Contains metadata required for making gRPC calls with any transport adapter
+ */
+const {{pascalName}}Descriptor: MethodDescriptor<{{inputType}}, {{outputType}}> = {
+  serviceName: '{{#if ../../packageName}}{{../../packageName}}.{{/if}}{{../name}}',
+  methodName: '{{name}}',
+  requestStream: {{clientStreaming}},
+  responseStream: {{serverStreaming}},
+  requestType: {
+    serializeBinary: (msg: {{inputType}}) => {{inputType}}.toBinary(msg),
+    deserializeBinary: (bytes: Uint8Array) => {{inputType}}.fromBinary(bytes),
+  } as MessageType<{{inputType}}>,
+  responseType: {
+    serializeBinary: (msg: {{outputType}}) => {{outputType}}.toBinary(msg),
+    deserializeBinary: (bytes: Uint8Array) => {{outputType}}.fromBinary(bytes),
+  } as MessageType<{{outputType}}>,
+};
+
+{{/each}}
 
 /**
  * {{#if description}}{{description}}{{else}}{{pascalName}} service client{{/if}}
- * Generated gRPC service stub with Promise and Streaming APIs
+ *
+ * Generated gRPC service stub with automatic transport adapter selection.
+ * Supports both Promise-based APIs for unary calls and Observable-based APIs for streaming.
+ *
+ * ## Transport Adapters
+ *
+ * This stub automatically selects the appropriate transport adapter:
+ * - **Browser**: Uses gRPC-web adapter (HTTP/1.1 compatible)
+ * - **Node.js**: Uses native gRPC adapter (HTTP/2 with full gRPC support)
+ *
+ * You can override the automatic selection:
+ *
+ * ```typescript
+ * // Force gRPC-web adapter (browser-compatible)
+ * const stub = new {{pascalName}}Stub({
+ *   serverUrl: 'https://api.example.com',
+ *   adapterType: 'grpc-web'
+ * });
+ *
+ * // Force native gRPC adapter (Node.js only, full streaming support)
+ * const stub = new {{pascalName}}Stub({
+ *   serverUrl: 'localhost:50051',
+ *   adapterType: 'native'
+ * });
+ *
+ * // Automatic selection (recommended)
+ * const stub = new {{pascalName}}Stub({
+ *   serverUrl: 'https://api.example.com'
+ * });
+ * ```
+ *
+ * ## Streaming Support
+ *
+ * - **Unary RPC**: Fully supported by both adapters
+ * - **Server streaming**: Fully supported by both adapters
+ * - **Client streaming**: Native adapter only (HTTP/2 required)
+ * - **Bidirectional streaming**: Native adapter only (HTTP/2 required)
+ *
+ * @see {@link AdapterFactory} for more details on adapter selection
  */
 export class {{pascalName}}Stub {
-  private readonly adapter: GrpcWebAdapter;
+  private readonly adapter: ITransportAdapter;
+  private readonly config: {{pascalName}}StubConfig;
 
   /**
    * Create a new {{pascalName}}Stub
-   * @param baseUrl - Base URL for the gRPC server (e.g., 'https://api.example.com')
-   * @param options - Optional client configuration
+   *
+   * @param config - Service stub configuration
+   *
+   * @example
+   * ```typescript
+   * // Auto-select adapter (recommended)
+   * const stub = new {{pascalName}}Stub({
+   *   serverUrl: 'https://api.example.com'
+   * });
+   *
+   * // Browser-compatible gRPC-web
+   * const webStub = new {{pascalName}}Stub({
+   *   serverUrl: 'https://api.example.com',
+   *   adapterType: 'grpc-web'
+   * });
+   *
+   * // Node.js native gRPC (full streaming support)
+   * const nativeStub = new {{pascalName}}Stub({
+   *   serverUrl: 'localhost:50051',
+   *   adapterType: 'native',
+   *   secure: false
+   * });
+   * ```
    */
-  constructor(
-    private readonly baseUrl: string,
-    options?: GrpcClientOptions
-  ) {
-    this.adapter = new GrpcWebAdapter(baseUrl, options);
+  constructor(config: {{pascalName}}StubConfig) {
+    this.config = config;
+
+    // Create adapter using AdapterFactory
+    this.adapter = AdapterFactory.create({
+      serverUrl: config.serverUrl,
+      adapterType: config.adapterType,
+      secure: config.secure,
+      debug: config.debug,
+      defaultCallOptions: config.defaultCallOptions,
+    });
   }
 
   /**
-   * Get the service base URL
+   * Get the service configuration
    */
-  public getBaseUrl(): string {
-    return this.baseUrl;
+  public getConfig(): Readonly<{{pascalName}}StubConfig> {
+    return Object.freeze({ ...this.config });
   }
 
   /**
-   * Get the underlying GrpcWebAdapter for advanced usage
+   * Get the underlying transport adapter for advanced usage
+   *
+   * @returns The current transport adapter instance
    */
-  public getAdapter(): GrpcWebAdapter {
+  public getAdapter(): ITransportAdapter {
     return this.adapter;
+  }
+
+  /**
+   * Close the adapter and clean up resources
+   *
+   * Call this when you're done using the stub to release connections
+   * and prevent resource leaks.
+   */
+  public async close(): Promise<void> {
+    await this.adapter.close();
   }
 
   {{#each methods}}
@@ -79,25 +193,39 @@ export class {{pascalName}}Stub {
   /**
    * {{#if description}}{{description}}{{else}}{{name}} - Bidirectional streaming RPC method{{/if}}
    *
-   * **IMPORTANT:** Bidirectional streaming is not fully supported over HTTP/1.1 in gRPC-web.
-   * This method requires WebSocket transport or HTTP/2.
+   * Establishes a bidirectional stream for sending and receiving messages.
    *
-   * @returns Object with send(), responses, complete(), and cancel() methods
-   * @throws {Error} Bidirectional streaming not supported over HTTP/1.1
+   * **IMPORTANT**: Bidirectional streaming requires HTTP/2 transport.
+   * - Native gRPC adapter: ✓ Fully supported
+   * - gRPC-web adapter: ✗ Not supported (HTTP/1.1 limitation)
+   *
+   * @returns Bidirectional streaming call with send/receive capabilities
+   * @throws {Error} If using gRPC-web adapter (HTTP/1.1 does not support bidi streaming)
+   *
+   * @example
+   * ```typescript
+   * // Only works with native gRPC adapter
+   * const call = stub.{{camelName}}();
+   *
+   * // Subscribe to responses
+   * call.responses.subscribe({
+   *   next: (response) => console.log('Received:', response),
+   *   error: (err) => console.error('Error:', err),
+   *   complete: () => console.log('Stream completed')
+   * });
+   *
+   * // Send requests
+   * call.send(request1);
+   * call.send(request2);
+   * call.complete();
+   * ```
    *
    * @see https://github.com/grpc/grpc-web#streaming-support
    */
-  public {{camelName}}(): {
-    send: (request: {{inputType}}) => void;
-    responses: Observable<{{outputType}}>;
-    complete: () => void;
-    cancel: () => void;
-  } {
-    throw new Error(
-      'Bidirectional streaming RPC "{{name}}" is not supported over HTTP/1.1. ' +
-      'gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming. ' +
-      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
-      'See: https://github.com/grpc/grpc-web#streaming-support'
+  public {{camelName}}(options?: CallOptions): BidiStreamingCall<{{inputType}}, {{outputType}}> {
+    return this.adapter.bidiStream<{{inputType}}, {{outputType}}>(
+      {{../pascalName}}Descriptor,
+      options
     );
   }
   {{else}}
@@ -107,15 +235,37 @@ export class {{pascalName}}Stub {
    * Sends a single request and receives a stream of responses.
    * Returns an RxJS Observable that emits each response message.
    *
+   * **Transport Support**:
+   * - Native gRPC adapter: ✓ Fully supported (HTTP/2)
+   * - gRPC-web adapter: ✓ Supported (with HTTP/1.1 chunked transfer)
+   *
    * @param request - {{inputType}} request message
+   * @param options - Optional call options (metadata, timeout, etc.)
    * @returns Observable stream of {{outputType}} response messages
+   *
+   * @example
+   * ```typescript
+   * const subscription = stub.{{camelName}}(request).subscribe({
+   *   next: (response) => console.log('Received:', response),
+   *   error: (err) => console.error('Error:', err),
+   *   complete: () => console.log('Stream completed')
+   * });
+   *
+   * // Cancel the stream
+   * subscription.unsubscribe();
+   * ```
+   *
    * @description Opens a server stream and emits multiple response messages.
    *              Unsubscribe to cancel the stream and clean up resources.
    */
-  public {{camelName}}(request: {{inputType}}): Observable<{{outputType}}> {
+  public {{camelName}}(
+    request: {{inputType}},
+    options?: CallOptions
+  ): Observable<{{outputType}}> {
     return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Service.{{pascalName}}Descriptor,
-      request
+      {{../pascalName}}Descriptor,
+      request,
+      options
     );
   }
   {{/if}}
@@ -123,24 +273,37 @@ export class {{pascalName}}Stub {
   /**
    * {{#if description}}{{description}}{{else}}{{name}} - Client streaming RPC method{{/if}}
    *
-   * **IMPORTANT:** Client streaming is not fully supported over HTTP/1.1 in gRPC-web.
-   * This method requires WebSocket transport or HTTP/2.
+   * Sends a stream of requests and receives a single response.
    *
-   * @returns Object with send(), complete(), and cancel() methods
-   * @throws {Error} Client streaming not supported over HTTP/1.1
+   * **IMPORTANT**: Client streaming requires HTTP/2 transport.
+   * - Native gRPC adapter: ✓ Fully supported
+   * - gRPC-web adapter: ✗ Not supported (HTTP/1.1 limitation)
+   *
+   * @param options - Optional call options (metadata, timeout, etc.)
+   * @returns Client streaming call with send/complete capabilities
+   * @throws {Error} If using gRPC-web adapter (HTTP/1.1 does not support client streaming)
+   *
+   * @example
+   * ```typescript
+   * // Only works with native gRPC adapter
+   * const call = stub.{{camelName}}();
+   *
+   * // Send multiple requests
+   * call.send(request1);
+   * call.send(request2);
+   * call.send(request3);
+   *
+   * // Complete and get response
+   * const response = await call.complete();
+   * console.log('Final response:', response);
+   * ```
    *
    * @see https://github.com/grpc/grpc-web#streaming-support
    */
-  public {{camelName}}(): {
-    send: (request: {{inputType}}) => void;
-    complete: () => Promise<{{outputType}}>;
-    cancel: () => void;
-  } {
-    throw new Error(
-      'Client streaming RPC "{{name}}" is not supported over HTTP/1.1. ' +
-      'gRPC-web requires WebSocket transport or HTTP/2 for client streaming. ' +
-      'Please use unary or server streaming RPCs, or configure your server for WebSocket support. ' +
-      'See: https://github.com/grpc/grpc-web#streaming-support'
+  public {{camelName}}(options?: CallOptions): ClientStreamingCall<{{inputType}}, {{outputType}}> {
+    return this.adapter.clientStream<{{inputType}}, {{outputType}}>(
+      {{../pascalName}}Descriptor,
+      options
     );
   }
   {{else}}
@@ -149,13 +312,32 @@ export class {{pascalName}}Stub {
    *
    * Sends a single request and receives a single response.
    *
+   * **Transport Support**:
+   * - Native gRPC adapter: ✓ Fully supported
+   * - gRPC-web adapter: ✓ Fully supported
+   *
    * @param request - {{inputType}} request message
+   * @param options - Optional call options (metadata, timeout, etc.)
    * @returns Promise resolving to {{outputType}} response message
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const response = await stub.{{camelName}}(request);
+   *   console.log('Response:', response);
+   * } catch (error) {
+   *   console.error('RPC failed:', error);
+   * }
+   * ```
    */
-  public async {{camelName}}(request: {{inputType}}): Promise<{{outputType}}> {
+  public async {{camelName}}(
+    request: {{inputType}},
+    options?: CallOptions
+  ): Promise<{{outputType}}> {
     return this.adapter.unary<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Service.{{pascalName}}Descriptor,
-      request
+      {{../pascalName}}Descriptor,
+      request,
+      options
     );
   }
   {{/if}}
@@ -171,8 +353,8 @@ export class {{pascalName}}Stub {
 export class {{pascalName}}HookStub {
   private readonly stub: {{pascalName}}Stub;
 
-  constructor(baseUrl: string) {
-    this.stub = new {{pascalName}}Stub(baseUrl);
+  constructor(config: {{pascalName}}StubConfig) {
+    this.stub = new {{pascalName}}Stub(config);
   }
 
   {{#each methods}}
@@ -243,7 +425,11 @@ export class {{pascalName}}HookStub {
  * Suspense Hook stub for {{pascalName}} service
  */
 export class {{pascalName}}SuspenseStub {
-  constructor(private readonly baseUrl: string) {}
+  private readonly stub: {{pascalName}}Stub;
+
+  constructor(config: {{pascalName}}StubConfig) {
+    this.stub = new {{pascalName}}Stub(config);
+  }
 
   {{#each methods}}
   /**

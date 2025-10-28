@@ -268,19 +268,33 @@ export class ServiceGenerator {
       source: 'google-protobuf',
     });
 
-    // Add GrpcWebAdapter import from the generator package
+    // Add GrpcWebAdapter import from the generator package (legacy support)
     imports.push({
       imports: ['GrpcWebAdapter', 'GrpcError', 'isGrpcError', 'GrpcClientOptions'],
       source: '@hallow/generator',
     });
 
-    // Add Observable imports for streaming methods
-    if (hasStreaming) {
-      imports.push({
-        imports: ['Observable'],
-        source: 'rxjs',
-      });
-    }
+    // Add Observable import (always needed for streaming support)
+    imports.push({
+      imports: ['Observable'],
+      source: 'rxjs',
+    });
+
+    // Add adapter factory and types (required for new adapter system)
+    imports.push({
+      imports: [
+        'AdapterFactory',
+        'type AdapterFactoryConfig',
+        'type AdapterType',
+        'type ITransportAdapter',
+        'type MethodDescriptor',
+        'type CallOptions',
+        'type ClientStreamingCall',
+        'type BidiStreamingCall',
+        'type MessageType',
+      ],
+      source: '@hallow/generator/adapters',
+    });
 
     return {
       packageName: protoFile.package,
