@@ -508,7 +508,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### React Hooks Integration
 
-- [ ] 14. Update React hooks for adapter compatibility
+- [x] 14. Update React hooks for adapter compatibility
 - [x] 14.1 Update useGrpc hook to work with adapter factory
   - Modify `useGrpc` hook to accept adapter configuration options
   - Ensure hook works with both GrpcWebAdapter and NativeGrpcAdapter
@@ -539,7 +539,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Files: packages/react/src/hooks/useGrpcStream.ts (new)_
   - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 14.4 Update React hook generator templates
+- [x] 14.4 Update React hook generator templates
   - Update `react-hook.hbs` template to generate hooks for streaming methods
   - Generate `useGrpcStream` calls for server streaming
   - Add TypeScript types for hook return values
@@ -547,20 +547,22 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1 hour_
   - _Requirements: 2.2_
   - _Files: packages/generator/templates/react-hook.hbs, packages/generator/src/generators/ReactHookGenerator.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
 ### Client & Bidirectional Streaming
 
-- [ ] 15. Implement client streaming in NativeGrpcAdapter
-- [ ] 15.1 Create ClientStreamHandler class
+- [x] 15. Implement client streaming in NativeGrpcAdapter
+- [x] 15.1 Create ClientStreamHandler class
   - Create class to manage client streaming calls
   - Implement `write()`, `end()`, and `getResponse()` methods
   - Handle stream backpressure
   - Implement proper error handling
   - _Time: 2 hours_
   - _Requirements: 2.2_
-  - _Files: packages/generator/src/adapters/streaming/ClientStreamHandler.ts (new)_
+  - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts (implemented inline)_
+  - _Status: ✅ Completed 2025-10-28 (implemented as clientStream method in NativeGrpcAdapter)_
 
-- [ ] 15.2 Implement clientStream method in NativeGrpcAdapter
+- [x] 15.2 Implement clientStream method in NativeGrpcAdapter
   - Implement `clientStream<TRequest, TResponse>()` method
   - Use `@grpc/grpc-js` client writable stream
   - Return `ClientStreamingCall` interface
@@ -568,27 +570,30 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2 hours_
   - _Requirements: 2.2_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28 (228 lines, full implementation)_
 
-- [ ] 15.3 Write unit tests for client streaming
+- [x] 15.3 Write unit tests for client streaming
   - Mock gRPC client stream
   - Test writing multiple requests
   - Test stream completion
   - Test error scenarios
   - _Time: 1.5 hours_
   - _Requirements: 2.2_
-  - _Files: packages/generator/tests/unit/adapters/NativeGrpcAdapter.client-stream.test.ts (new)_
+  - _Files: packages/generator/tests/unit/adapters/NativeGrpcAdapter.clientStream.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-28 (530 lines, 23 tests)_
 
-- [ ] 16. Implement bidirectional streaming
-- [ ] 16.1 Create BidiStreamHandler class
+- [x] 16. Implement bidirectional streaming
+- [x] 16.1 Create BidiStreamHandler class
   - Create class to manage bidirectional streaming calls
   - Implement `write()`, `end()`, `responses()`, and `cancel()` methods
   - Handle concurrent read/write operations
   - Implement proper cleanup
   - _Time: 2.5 hours_
   - _Requirements: 2.2_
-  - _Files: packages/generator/src/adapters/streaming/BidiStreamHandler.ts (new)_
+  - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts (implemented inline)_
+  - _Status: ✅ Completed 2025-10-28 (implemented as bidiStream method in NativeGrpcAdapter)_
 
-- [ ] 16.2 Implement bidiStream method in NativeGrpcAdapter
+- [x] 16.2 Implement bidiStream method in NativeGrpcAdapter
   - Implement `bidiStream<TRequest, TResponse>()` method
   - Use `@grpc/grpc-js` duplex stream
   - Return `BidiStreamingCall` interface
@@ -596,52 +601,58 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2.5 hours_
   - _Requirements: 2.2_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28 (277 lines, full implementation with Observable)_
 
-- [ ] 16.3 Write unit tests for bidirectional streaming
+- [x] 16.3 Write unit tests for bidirectional streaming
   - Mock gRPC duplex stream
   - Test concurrent read/write
   - Test stream completion
   - Test error scenarios
   - _Time: 1.5 hours_
   - _Requirements: 2.2_
-  - _Files: packages/generator/tests/unit/adapters/NativeGrpcAdapter.bidi-stream.test.ts (new)_
+  - _Files: packages/generator/tests/unit/adapters/NativeGrpcAdapter.bidiStream.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-28 (620 lines, 26 tests)_
 
 ### Streaming Integration Tests
 
-- [ ] 17. Create comprehensive streaming integration tests
-- [ ] 17.1 Implement test server streaming methods
+- [x] 17. Create comprehensive streaming integration tests
+- [x] 17.1 Implement test server streaming methods
   - Add server streaming method to test server
   - Add client streaming method to test server
   - Add bidirectional streaming method to test server
   - _Time: 1.5 hours_
   - _Requirements: 2.2, 3.1_
-  - _Files: packages/test-server/src/services/StreamingTestService.ts (new)_
+  - _Files: packages/test-server/src/native-grpc/NativeGrpcTestServer.ts_
+  - _Status: ✅ Completed 2025-10-28 (added CreateUsers and Chat methods)_
 
-- [ ] 17.2 Write integration tests for client streaming
+- [x] 17.2 Write integration tests for client streaming
   - Test successful client streaming end-to-end
   - Test writing many requests and receiving single response
   - Test stream errors
   - _Time: 1.5 hours_
   - _Requirements: 2.2, 3.1_
-  - _Files: packages/generator/tests/integration/client-streaming.test.ts (new)_
+  - _Files: packages/generator/tests/integration/NativeGrpcAdapter.clientStream.integration.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-28 (340 lines, 17 integration tests)_
 
-- [ ] 17.3 Write integration tests for bidirectional streaming
+- [x] 17.3 Write integration tests for bidirectional streaming
   - Test successful bidirectional streaming end-to-end
   - Test concurrent read/write operations
   - Test stream cancellation from client
   - Test stream completion from server
   - _Time: 2 hours_
   - _Requirements: 2.2, 3.1_
-  - _Files: packages/generator/tests/integration/bidi-streaming.test.ts (new)_
+  - _Files: packages/generator/tests/integration/NativeGrpcAdapter.bidiStream.integration.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-28 (500 lines, 21 integration tests)_
 
-- [ ] 17.4 Document server behavior and edge cases
+- [x] 17.4 Document server behavior and edge cases
   - Document expected server responses for edge cases (invalid pageSize, etc.)
   - Document trailer access patterns from `packages/generator/tests/integration/grpc-web-integration.test.ts:459, 473`
   - Document differences between gRPC-web and native gRPC behavior
   - Update test assertions based on documented behavior
   - _Time: 1 hour_
   - _Requirements: 3.2_
-  - _Files: .claude/specs/project-enhancements/server-behavior.md (new)_
+  - _Files: packages/test-server/README.md (updated with comprehensive documentation)_
+  - _Status: ✅ Completed 2025-10-28 (230+ lines of streaming documentation)_
 
 ---
 
