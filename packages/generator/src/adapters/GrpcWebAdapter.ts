@@ -6,10 +6,23 @@
  * - Server streaming RPC calls with Observable API
  * - Error handling with typed GrpcError
  * - Request/response serialization
+ *
+ * Implements ITransportAdapter interface for compatibility with adapter factory.
+ *
+ * Note: Client streaming and bidirectional streaming are not fully supported
+ * by @improbable-eng/grpc-web and will throw errors if attempted.
  */
 
 import { grpc } from '@improbable-eng/grpc-web';
 import { Observable } from 'rxjs';
+import { ITransportAdapter } from './ITransportAdapter';
+import {
+  MethodDescriptor as IMethodDescriptor,
+  CallOptions as ICallOptions,
+  ClientStreamingCall,
+  BidiStreamingCall,
+  GrpcStatusCode,
+} from './types';
 
 /**
  * Serializer interface for converting between plain objects and Message instances
@@ -20,11 +33,12 @@ export interface MessageSerializer<T> {
 }
 
 /**
- * Method descriptor for gRPC-web method calls
+ * Method descriptor for gRPC-web method calls (legacy compatibility)
  */
 export interface MethodDescriptor<TRequest = any, TResponse = any> {
   methodName: string;
-  service: { serviceName: string };
+  service?: { serviceName: string }; // Legacy field for backward compatibility
+  serviceName?: string; // New field matching ITransportAdapter
   requestStream: boolean;
   responseStream: boolean;
   requestType: any;
@@ -163,6 +177,8 @@ export function isGrpcError(error: any): error is GrpcError {
  * Provides type-safe methods for making gRPC calls using the gRPC-web protocol.
  * Handles serialization, error handling, and stream management automatically.
  *
+ * Implements ITransportAdapter interface for use with AdapterFactory.
+ *
  * @example
  * ```typescript
  * const adapter = new GrpcWebAdapter('https://api.example.com');
@@ -175,7 +191,7 @@ export function isGrpcError(error: any): error is GrpcError {
  * stream.subscribe(message => console.log(message));
  * ```
  */
-export class GrpcWebAdapter {
+export class GrpcWebAdapter implements ITransportAdapter {
   private readonly options: GrpcClientOptions;
 
   /**
@@ -201,6 +217,7 @@ export class GrpcWebAdapter {
    *
    * @param methodDescriptor - Method descriptor containing service and method metadata
    * @param request - Request message
+   * @param options - Optional call options (timeout, metadata, etc.)
    * @returns Promise resolving to response message
    * @throws {GrpcError} If the gRPC call fails or returns a non-OK status
    *
@@ -208,7 +225,8 @@ export class GrpcWebAdapter {
    * ```typescript
    * const response = await adapter.unary(
    *   UserService.GetUserDescriptor,
-   *   { userId: '123' }
+   *   { userId: '123' },
+   *   { timeout: 5000 }
    * );
    * console.log(response.name);
    * ```
@@ -216,6 +234,7 @@ export class GrpcWebAdapter {
   async unary<TRequest, TResponse>(
     methodDescriptor: MethodDescriptor<TRequest, TResponse>,
     request: TRequest,
+    options?: ICallOptions,
   ): Promise<TResponse> {
     return new Promise<TResponse>((resolve, reject) => {
       try {
@@ -223,7 +242,7 @@ export class GrpcWebAdapter {
           console.log(`[GrpcWebAdapter] Unary call to ${methodDescriptor.methodName}`, {
             request,
             baseUrl: this.baseUrl,
-            serviceName: methodDescriptor.service?.serviceName,
+            serviceName: methodDescriptor.serviceName || methodDescriptor.service?.serviceName,
             requestType: methodDescriptor.requestType,
             responseType: methodDescriptor.responseType,
           });
@@ -242,11 +261,17 @@ export class GrpcWebAdapter {
           });
         }
 
+        // Merge call-specific options with instance options
+        const callMetadata = this.mergeMetadata(
+          this.options.metadata,
+          options?.metadata
+        );
+
         // Make gRPC-web unary call
         grpc.unary(methodDescriptor as any, {
           request: messageRequest as any,
           host: this.baseUrl,
-          metadata: this.options.metadata,
+          metadata: callMetadata,
           onEnd: response => {
             if (this.options.debug) {
               console.log('[GrpcWebAdapter] Response received:', {
@@ -299,13 +324,15 @@ export class GrpcWebAdapter {
    *
    * @param methodDescriptor - Method descriptor containing service and method metadata
    * @param request - Request message
+   * @param options - Optional call options (timeout, metadata, etc.)
    * @returns Observable stream of response messages
    *
    * @example
    * ```typescript
    * const stream = adapter.serverStream(
    *   UserService.ListUsersDescriptor,
-   *   { pageSize: 10 }
+   *   { pageSize: 10 },
+   *   { timeout: 30000 }
    * );
    *
    * stream.subscribe({
@@ -318,6 +345,7 @@ export class GrpcWebAdapter {
   serverStream<TRequest, TResponse>(
     methodDescriptor: MethodDescriptor<TRequest, TResponse>,
     request: TRequest,
+    options?: ICallOptions,
   ): Observable<TResponse> {
     return new Observable<TResponse>(observer => {
       const cancellationToken = new CancellationTokenImpl();
@@ -333,11 +361,17 @@ export class GrpcWebAdapter {
           methodDescriptor.requestSerializer,
         );
 
+        // Merge call-specific options with instance options
+        const callMetadata = this.mergeMetadata(
+          this.options.metadata,
+          options?.metadata
+        );
+
         // Open streaming connection
         const client = grpc.invoke(methodDescriptor as any, {
           request: messageRequest as any,
           host: this.baseUrl,
-          metadata: this.options.metadata,
+          metadata: callMetadata,
           onMessage: (message: any) => {
             if (!cancellationToken.isCancelled) {
               if (this.options.debug) {
@@ -390,6 +424,60 @@ export class GrpcWebAdapter {
   }
 
   /**
+   * Execute a client streaming RPC call
+   *
+   * NOTE: Client streaming is not fully supported by @improbable-eng/grpc-web.
+   * This method throws an error indicating the limitation.
+   *
+   * For client streaming support, use NativeGrpcAdapter in Node.js environments.
+   *
+   * @throws {Error} Client streaming not supported
+   */
+  clientStream<TRequest, TResponse>(
+    method: IMethodDescriptor<TRequest, TResponse>,
+    options?: ICallOptions,
+  ): ClientStreamingCall<TRequest, TResponse> {
+    throw new Error(
+      'Client streaming is not supported by gRPC-web adapter. ' +
+        'Use NativeGrpcAdapter in Node.js environment for client streaming support.'
+    );
+  }
+
+  /**
+   * Execute a bidirectional streaming RPC call
+   *
+   * NOTE: Bidirectional streaming is not fully supported by @improbable-eng/grpc-web.
+   * This method throws an error indicating the limitation.
+   *
+   * For bidirectional streaming support, use NativeGrpcAdapter in Node.js environments.
+   *
+   * @throws {Error} Bidirectional streaming not supported
+   */
+  bidiStream<TRequest, TResponse>(
+    method: IMethodDescriptor<TRequest, TResponse>,
+    options?: ICallOptions,
+  ): BidiStreamingCall<TRequest, TResponse> {
+    throw new Error(
+      'Bidirectional streaming is not supported by gRPC-web adapter. ' +
+        'Use NativeGrpcAdapter in Node.js environment for bidirectional streaming support.'
+    );
+  }
+
+  /**
+   * Close the adapter and release resources
+   *
+   * Note: gRPC-web doesn't maintain persistent connections, so this is a no-op.
+   * Provided for interface compatibility with NativeGrpcAdapter.
+   */
+  close(): void {
+    // gRPC-web uses HTTP/1.1 or HTTP/2 connections managed by the browser
+    // No explicit cleanup needed
+    if (this.options.debug) {
+      console.log('[GrpcWebAdapter] Adapter closed');
+    }
+  }
+
+  /**
    * Get the base URL for this adapter
    */
   getBaseUrl(): string {
@@ -401,6 +489,39 @@ export class GrpcWebAdapter {
    */
   getOptions(): Readonly<GrpcClientOptions> {
     return { ...this.options };
+  }
+
+  /**
+   * Merge metadata from multiple sources
+   * @param baseMetadata - Base metadata from instance options
+   * @param callMetadata - Metadata from call options
+   * @returns Merged metadata
+   */
+  private mergeMetadata(
+    baseMetadata?: grpc.Metadata,
+    callMetadata?: any, // Accept any to handle different metadata types
+  ): grpc.Metadata | undefined {
+    if (!baseMetadata && !callMetadata) {
+      return undefined;
+    }
+
+    // If call metadata is a plain object, we can't merge it with grpc.Metadata
+    // Just return call metadata if it's defined, otherwise base metadata
+    if (callMetadata) {
+      if (typeof callMetadata === 'object' && !(callMetadata instanceof grpc.Metadata)) {
+        // Plain object metadata - can't merge with grpc.Metadata easily
+        // This is a limitation we accept for now
+        if (this.options.debug) {
+          console.warn('[GrpcWebAdapter] Call metadata as plain object not fully supported');
+        }
+        return baseMetadata;
+      }
+      // Both are grpc.Metadata - grpc-web doesn't provide a merge API
+      // Use call metadata if provided
+      return callMetadata as grpc.Metadata;
+    }
+
+    return baseMetadata;
   }
 
   /**

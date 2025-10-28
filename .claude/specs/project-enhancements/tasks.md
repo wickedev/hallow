@@ -214,8 +214,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Research & Adapter Foundation
 
-- [ ] 7. Spike and research native gRPC integration
-- [ ] 7.1 Install @grpc/grpc-js and RxJS dependencies
+- [x] 7. Spike and research native gRPC integration
+- [x] 7.1 Install @grpc/grpc-js and RxJS dependencies
   - Add `@grpc/grpc-js` as dependency to generator package
   - Add `rxjs` as dependency for Observable-based streaming
   - Update package.json and install dependencies
@@ -223,8 +223,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 0.5 hours_
   - _Requirements: 2.1_
   - _Files: packages/generator/package.json_
+  - _Status: ✅ Completed 2025-10-27_
 
-- [ ] 7.2 Create spike implementation for unary RPC
+- [x] 7.2 Create spike implementation for unary RPC
   - Create proof-of-concept unary RPC call using `@grpc/grpc-js`
   - Test serialization/deserialization with `google-protobuf`
   - Validate metadata and error handling patterns
@@ -232,8 +233,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2 hours_
   - _Requirements: 2.1_
   - _Files: .claude/specs/project-enhancements/spike-native-grpc.md (new), packages/generator/spike/native-grpc-poc.ts (new)_
+  - _Status: ✅ Completed 2025-10-27_
 
-- [ ] 7.3 Create spike implementation for server streaming
+- [x] 7.3 Create spike implementation for server streaming
   - Create proof-of-concept server streaming using `@grpc/grpc-js`
   - Test Observable wrapper for stream events
   - Validate cancellation and cleanup patterns
@@ -241,11 +243,12 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1.5 hours_
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/spike/streaming-poc.ts (new)_
+  - _Status: ✅ Completed 2025-10-27_
 
 ### Adapter Interface & Factory
 
-- [ ] 8. Design and implement adapter abstraction layer
-- [ ] 8.1 Create ITransportAdapter interface
+- [x] 8. Design and implement adapter abstraction layer
+- [x] 8.1 Create ITransportAdapter interface
   - Define interface with methods for all RPC patterns (unary, serverStream, clientStream, bidiStream, close)
   - Define supporting interfaces: `MethodDescriptor`, `MessageType`, `CallOptions`
   - Define streaming interfaces: `ClientStreamingCall`, `BidiStreamingCall`
@@ -253,8 +256,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1 hour_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/ITransportAdapter.ts (new), packages/generator/src/adapters/types.ts (new)_
+  - _Status: ✅ Completed 2025-10-27_
 
-- [ ] 8.2 Implement AdapterFactory
+- [x] 8.2 Implement AdapterFactory
   - Create `AdapterFactory` class with static `create()` method
   - Implement environment detection (Node.js vs Browser)
   - Implement adapter selection logic (auto, native, grpc-web)
@@ -262,9 +266,10 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - Write unit tests for adapter selection logic
   - _Time: 2 hours_
   - _Requirements: 2.1_
-  - _Files: packages/generator/src/adapters/AdapterFactory.ts (new)_
+  - _Files: packages/generator/src/adapters/AdapterFactory.ts (new), packages/generator/tests/unit/adapters/AdapterFactory.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-27_
 
-- [ ] 8.3 Refactor existing GrpcWebAdapter to implement interface
+- [x] 8.3 Refactor existing GrpcWebAdapter to implement interface
   - Update `GrpcWebAdapter` to implement `ITransportAdapter`
   - Ensure method signatures match interface
   - Maintain existing functionality
@@ -272,6 +277,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1 hour_
   - _Requirements: 2.1_
   - _Files: packages/generator/src/adapters/GrpcWebAdapter.ts_
+  - _Status: ✅ Completed 2025-10-27_
 
 ### Native gRPC Adapter - Unary RPC
 
