@@ -337,8 +337,8 @@ This document provides a comprehensive implementation plan for enhancing the Hal
 
 ### Native gRPC Adapter - Server Streaming
 
-- [ ] 10. Implement server streaming support
-- [ ] 10.1 Implement serverStream method with Observable wrapper
+- [x] 10. Implement server streaming support
+- [x] 10.1 Implement serverStream method with Observable wrapper
   - Implement `serverStream<TRequest, TResponse>()` method
   - Wrap gRPC stream in RxJS Observable
   - Handle data events and emit to subscribers
@@ -347,8 +347,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 3 hours_
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 10.2 Add stream cancellation support
+- [x] 10.2 Add stream cancellation support
   - Implement cancellation when Observable is unsubscribed
   - Call `stream.cancel()` on gRPC stream
   - Clean up resources properly
@@ -356,8 +357,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1.5 hours_
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 10.3 Add stream metadata and trailer support
+- [x] 10.3 Add stream metadata and trailer support
   - Extract initial metadata after stream starts
   - Extract trailers after stream completes
   - Provide methods to access metadata and trailers
@@ -365,8 +367,9 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 1.5 hours_
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/src/adapters/NativeGrpcAdapter.ts_
+  - _Status: ✅ Completed 2025-10-28_
 
-- [ ] 10.4 Write unit tests for server streaming
+- [x] 10.4 Write unit tests for server streaming
   - Mock gRPC server stream
   - Test successful streaming with multiple responses
   - Test stream errors
@@ -375,6 +378,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Time: 2 hours_
   - _Requirements: 2.1, 2.2_
   - _Files: packages/generator/tests/unit/adapters/NativeGrpcAdapter.streaming.test.ts (new)_
+  - _Status: ✅ Completed 2025-10-28_
 
 ### Error Handling & Status Codes
 

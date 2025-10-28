@@ -235,6 +235,13 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * Sends a single request and receives a stream of responses.
    * Returns an Observable that emits each response and completes when done.
    *
+   * Key features:
+   * - Wraps gRPC ClientReadableStream in RxJS Observable
+   * - Handles data, end, error, status, and metadata events
+   * - Automatic cancellation on unsubscribe
+   * - Stores metadata and trailers for access via getter methods
+   * - Proper resource cleanup on completion/error/cancellation
+   *
    * @template TRequest - Type of the request message
    * @template TResponse - Type of the response messages
    * @param method - Method descriptor with service and method metadata
@@ -242,7 +249,18 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    * @param options - Optional call options (timeout, metadata, etc.)
    * @returns Observable stream of response messages
    *
-   * @note Implementation will be added in Task 10 (server streaming)
+   * @example
+   * ```typescript
+   * const subscription = adapter.serverStream(listUsersDescriptor, { pageSize: 10 })
+   *   .subscribe({
+   *     next: (user) => console.log('User:', user),
+   *     error: (err) => console.error('Error:', err),
+   *     complete: () => console.log('Stream complete')
+   *   });
+   *
+   * // Cancel after 5 seconds
+   * setTimeout(() => subscription.unsubscribe(), 5000);
+   * ```
    */
   serverStream<TRequest, TResponse>(
     method: MethodDescriptor<TRequest, TResponse>,
@@ -251,8 +269,141 @@ export class NativeGrpcAdapter implements ITransportAdapter {
   ): Observable<TResponse> {
     this.ensureNotClosed();
 
-    // Implementation will be added in Task 10
-    throw new Error('Not implemented yet - Task 10');
+    return new Observable<TResponse>((observer) => {
+      // Construct full method path: /ServiceName/MethodName
+      const methodPath = this.getMethodPath(method);
+
+      // Create metadata from options
+      const metadata = this.createMetadata(options);
+
+      // Calculate deadline
+      const deadline = this.calculateDeadline(options);
+
+      // Create serializer and deserializer
+      const serialize = this.createSerializer(method);
+      const deserialize = this.createDeserializer(method);
+
+      // Storage for metadata and trailers (for this specific stream)
+      let streamMetadata: grpc.Metadata | undefined;
+      let streamTrailers: grpc.Metadata | undefined;
+
+      // Make server streaming call
+      const stream = this.client.makeServerStreamRequest(
+        methodPath,
+        serialize,
+        deserialize,
+        request,
+        metadata,
+        { deadline }
+      );
+
+      if (this.config.debug) {
+        console.log(`[NativeGrpcAdapter] Starting server stream: ${methodPath}`);
+      }
+
+      /**
+       * Handle 'metadata' event - initial metadata from server
+       *
+       * Emitted when server sends initial metadata (headers).
+       * This happens before any data events.
+       */
+      stream.on('metadata', (receivedMetadata: grpc.Metadata) => {
+        streamMetadata = receivedMetadata;
+
+        if (this.config.debug) {
+          console.log(
+            `[NativeGrpcAdapter] Received initial metadata:`,
+            receivedMetadata.getMap()
+          );
+        }
+      });
+
+      /**
+       * Handle 'data' events - each response message
+       *
+       * Emitted for every message the server sends.
+       * We emit each response to the Observable subscriber.
+       * Note: RxJS SafeSubscriber handles errors thrown in observer.next()
+       */
+      stream.on('data', (response: TResponse) => {
+        observer.next(response);
+      });
+
+      /**
+       * Handle 'end' event - stream completed successfully
+       *
+       * Emitted when server closes the stream normally.
+       * We complete the Observable.
+       */
+      stream.on('end', () => {
+        if (this.config.debug) {
+          console.log(`[NativeGrpcAdapter] Stream ended: ${methodPath}`);
+        }
+        observer.complete();
+      });
+
+      /**
+       * Handle 'error' event - stream failed
+       *
+       * Emitted when an error occurs during streaming.
+       * We convert the error and propagate to the Observable.
+       */
+      stream.on('error', (error: grpc.ServiceError) => {
+        if (this.config.debug) {
+          console.error(
+            `[NativeGrpcAdapter] Stream error:`,
+            error.message,
+            error.code
+          );
+        }
+        observer.error(this.convertError(error, method.methodName));
+      });
+
+      /**
+       * Handle 'status' event - final status and trailing metadata
+       *
+       * Always emitted at the end (success or failure).
+       * Contains trailing metadata and final status code.
+       */
+      stream.on('status', (status: grpc.StatusObject) => {
+        streamTrailers = status.metadata;
+
+        if (this.config.debug) {
+          console.log(
+            `[NativeGrpcAdapter] Stream status:`,
+            status.code,
+            status.details
+          );
+        }
+      });
+
+      /**
+       * Cleanup function - called when Observable is unsubscribed
+       *
+       * Critical for resource management:
+       * - Cancels the stream if still active
+       * - Notifies server of cancellation
+       * - Prevents memory leaks
+       */
+      return () => {
+        if (this.config.debug) {
+          console.log(`[NativeGrpcAdapter] Cancelling stream: ${methodPath}`);
+        }
+
+        try {
+          // Cancel the stream - notifies server
+          stream.cancel();
+        } catch (error) {
+          // Stream may already be closed - ignore errors
+          if (this.config.debug) {
+            console.error(
+              '[NativeGrpcAdapter] Error cancelling stream:',
+              error
+            );
+          }
+        }
+      };
+    });
   }
 
   /**

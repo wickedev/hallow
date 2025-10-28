@@ -20,6 +20,8 @@ export default {
     '@hallow/parser',
     'google-protobuf',
     '@improbable-eng/grpc-web',
+    '@grpc/grpc-js',
+    'rxjs',
     'path',
     'fs',
   ],

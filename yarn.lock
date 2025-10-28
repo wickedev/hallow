@@ -402,10 +402,12 @@
   version "0.1.0"
   resolved "file:packages/generator"
   dependencies:
+    "@grpc/grpc-js" "^1.9.0"
     "@hallow/parser" "*"
     "@improbable-eng/grpc-web" "^0.15.0"
     google-protobuf "^3.21.2"
     handlebars "^4.7.8"
+    rxjs "^7.8.1"
 
 "@hallow/parser@*", "@hallow/parser@file:/Users/krenginelryan.y/Workspace/hallow/packages/parser":
   version "0.1.0"
