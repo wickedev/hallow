@@ -179,6 +179,8 @@ export class MessageGenerator {
   private importManager: ImportManager;
   private optionProcessor: OptionProcessor;
   private options: MessageGeneratorOptions;
+  private enumRegistry: Set<string>;
+  private currentMessageEnums: Map<string, EnumDefinition>;
 
   constructor(templateEngine: TemplateEngine, options: MessageGeneratorOptions = {}) {
     this.templateEngine = templateEngine;
@@ -202,6 +204,8 @@ export class MessageGenerator {
     this.nameResolver = new NameResolver();
     this.importManager = new ImportManager();
     this.optionProcessor = new OptionProcessor(this.options.optionProcessing);
+    this.enumRegistry = new Set<string>();
+    this.currentMessageEnums = new Map<string, EnumDefinition>();
 
     // Load templates
     this.loadTemplates();
@@ -275,6 +279,10 @@ export class MessageGenerator {
   public generateMessages(protoFile: ProtoFile): string {
     const messages = protoFile.messages;
 
+    // Register enum types from the proto file before generating messages
+    // This populates the enum registry for proper enum field detection
+    this.registerEnumTypes(protoFile);
+
     // Generate import statements
     const imports = this.generateImports(protoFile);
 
@@ -296,6 +304,15 @@ export class MessageGenerator {
    */
   private createMessageContext(message: MessageDefinition, namespace?: string): MessageContext {
     const interfaceName = this.nameResolver.resolveTypeName(message.name, false);
+
+    // Register nested enums for this message
+    this.currentMessageEnums.clear();
+    message.nestedEnums.forEach(enumDef => {
+      const fullEnumName = `${message.name}.${enumDef.name}`;
+      this.enumRegistry.add(fullEnumName);
+      this.enumRegistry.add(enumDef.name); // Also register short name
+      this.currentMessageEnums.set(enumDef.name, enumDef);
+    });
 
     const fields = message.fields.map(field => this.createFieldContext(field, message));
 
@@ -342,7 +359,8 @@ export class MessageGenerator {
     const serializerMethod = this.getSerializerMethod(field);
     const deserializerMethod = this.getDeserializerMethod(field);
     const defaultValue = this.getDefaultValue(field);
-    const packed = field.repeated && this.isPackableType(field.type);
+    // Repeated enum fields should also use packed encoding (enums are serialized as int32)
+    const packed = field.repeated && (this.isPackableType(field.type) || this.isEnumField(field));
 
     // Process field-level options if enabled
     let fieldOptions: TemplateOptionMetadata | undefined;
@@ -618,25 +636,29 @@ export class MessageGenerator {
       lines.push(`    if (message.${field.camelCaseName} !== undefined) {`);
 
       if (field.repeated) {
-        // Check if it's a packed field
-        if (
-          this.typeMapper.isScalarType(field.type) &&
-          field.type !== 'string' &&
-          field.type !== 'bytes'
-        ) {
-          // Use packed write for numeric arrays
+        // Use the packed flag from field context (handles both scalar types and enums)
+        if (field.packed) {
+          // Use packed write for numeric arrays and repeated enums
           lines.push(
             `      writer.${field.serializerMethod}(${field.number}, message.${field.camelCaseName});`,
           );
-        } else if (!this.typeMapper.isScalarType(field.type)) {
-          // For message types, use writeMessage with encoder function
+        } else if (!this.typeMapper.isScalarType(field.type) && !this.isEnumField({
+          name: field.name,
+          number: field.number,
+          type: field.type,
+          repeated: field.repeated,
+          optional: field.optional || false,
+          map: field.map || false,
+          options: {}
+        })) {
+          // For message types (non-enum, non-scalar), use writeMessage with encoder function
           lines.push(`      for (const item of message.${field.camelCaseName}) {`);
           lines.push(
             `        writer.${field.serializerMethod}(${field.number}, item, ${field.type}.encode);`,
           );
           lines.push('      }');
         } else {
-          // Write each item individually for non-packed scalar fields
+          // Write each item individually for non-packed fields
           lines.push(`      for (const item of message.${field.camelCaseName}) {`);
           lines.push(`        writer.${field.serializerMethod}(${field.number}, item);`);
           lines.push('      }');
@@ -702,25 +724,29 @@ export class MessageGenerator {
       lines.push(`        case ${field.number}:`);
 
       if (field.repeated) {
-        // Check if it's a packed field
-        if (
-          this.typeMapper.isScalarType(field.type) &&
-          field.type !== 'string' &&
-          field.type !== 'bytes'
-        ) {
-          // Use packed read for numeric arrays
+        // Use the packed flag from field context (handles both scalar types and enums)
+        if (field.packed) {
+          // Use packed read for numeric arrays and repeated enums
           lines.push(
-            `          message.${field.camelCaseName} = reader.${field.deserializerMethod}();`,
+            `          message.${field.camelCaseName} = reader.${field.deserializerMethod}() || [];`,
           );
-        } else if (!this.typeMapper.isScalarType(field.type)) {
-          // For message types, use readMessage with callback to get bytes and decode
+        } else if (!this.typeMapper.isScalarType(field.type) && !this.isEnumField({
+          name: field.name,
+          number: field.number,
+          type: field.type,
+          repeated: field.repeated,
+          optional: field.optional || false,
+          map: field.map || false,
+          options: {}
+        })) {
+          // For message types (non-enum, non-scalar), use readMessage with callback to get bytes and decode
           lines.push(`          if (!message.${field.camelCaseName}) {`);
           lines.push(`            message.${field.camelCaseName} = [];`);
           lines.push('          }');
           lines.push(`          const bytes = reader.readBytes();`);
           lines.push(`          message.${field.camelCaseName}.push(${field.type}.decode(bytes));`);
         } else {
-          // Read individual items for non-packed scalar fields
+          // Read individual items for non-packed fields
           lines.push(`          if (!message.${field.camelCaseName}) {`);
           lines.push(`            message.${field.camelCaseName} = [];`);
           lines.push('          }');
@@ -918,6 +944,18 @@ export class MessageGenerator {
       return packedMethods[field.type] || methods[field.type] || 'writeMessage';
     }
 
+    // Check for repeated enum fields - they should use packed int32
+    if (field.repeated && !this.typeMapper.isScalarType(field.type) && this.isEnumField(field)) {
+      return 'writePackedInt32';
+    }
+
+    // Check if field is an enum type - enums use writeInt32 (int32 wire format)
+    if (!this.typeMapper.isScalarType(field.type)) {
+      // Could be enum or message
+      // Enums serialize as int32, messages use writeMessage
+      return this.isEnumField(field) ? 'writeInt32' : 'writeMessage';
+    }
+
     return methods[field.type] || 'writeMessage';
   }
 
@@ -970,6 +1008,18 @@ export class MessageGenerator {
         bool: 'readPackedBool',
       };
       return packedMethods[field.type] || methods[field.type] || 'readMessage';
+    }
+
+    // Check for repeated enum fields - they should use packed int32
+    if (field.repeated && !this.typeMapper.isScalarType(field.type) && this.isEnumField(field)) {
+      return 'readPackedInt32';
+    }
+
+    // Check if field is an enum type - enums use readInt32 (int32 wire format)
+    if (!this.typeMapper.isScalarType(field.type)) {
+      // Could be enum or message
+      // Enums deserialize from int32, messages use readMessage
+      return this.isEnumField(field) ? 'readInt32' : 'readMessage';
     }
 
     return methods[field.type] || 'readMessage';
@@ -1088,6 +1138,52 @@ export class MessageGenerator {
   }
 
   /**
+   * Check if a field is an enum type
+   * Uses the enum registry to determine if a field references an enum type.
+   */
+  private isEnumField(field: FieldDefinition): boolean {
+    // Scalar types are never enums
+    if (this.typeMapper.isScalarType(field.type)) {
+      return false;
+    }
+
+    // Check if the field type is in the enum registry
+    // This includes both top-level enums and nested enums
+    return this.enumRegistry.has(field.type);
+  }
+
+  /**
+   * Register enum types from a proto file
+   * Should be called before generating messages to populate the enum registry
+   */
+  public registerEnumTypes(protoFile: ProtoFile): void {
+    // Register top-level enums
+    protoFile.enums.forEach(enumDef => {
+      this.enumRegistry.add(enumDef.name);
+      if (protoFile.package) {
+        this.enumRegistry.add(`${protoFile.package}.${enumDef.name}`);
+      }
+    });
+
+    // Register nested enums within messages
+    const registerNestedEnums = (messages: MessageDefinition[], prefix: string = '') => {
+      messages.forEach(message => {
+        const messagePrefix = prefix ? `${prefix}.${message.name}` : message.name;
+        message.nestedEnums.forEach(enumDef => {
+          this.enumRegistry.add(`${messagePrefix}.${enumDef.name}`);
+          this.enumRegistry.add(enumDef.name); // Also register short name for convenience
+        });
+        // Recursively register enums in nested messages
+        if (message.nestedMessages.length > 0) {
+          registerNestedEnums(message.nestedMessages, messagePrefix);
+        }
+      });
+    };
+
+    registerNestedEnums(protoFile.messages);
+  }
+
+  /**
    * Get default value for field
    */
   private getDefaultValue(field: FieldDefinition): string {
@@ -1120,6 +1216,17 @@ export class MessageGenerator {
       string: '""',
       bytes: 'new Uint8Array()',
     };
+
+    // For enum types, default to 0 (Proto3 semantics)
+    // Enums are not scalar types, so they would fall through to the default case
+    if (!this.typeMapper.isScalarType(field.type)) {
+      // Could be enum or message
+      // For enums, default is 0 (first value)
+      // For messages, default is empty object
+      // Since we can't definitively tell without a type registry,
+      // we use the conservative approach: {} for messages, which also works for enums as number
+      return this.isEnumField(field) ? '0' : '{}';
+    }
 
     return defaults[field.type] || '{}';
   }

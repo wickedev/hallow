@@ -106,7 +106,7 @@ export class TestHelper {
               inputType: 'GetUserRequest',
               outputType: 'GetUserResponse',
               clientStreaming: false,
-              serverStream: false,
+              serverStreaming: false,
               options: {}
             }
           ],

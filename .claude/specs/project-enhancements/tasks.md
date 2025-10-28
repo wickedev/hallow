@@ -199,14 +199,15 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Requirements: 2.4_
   - _Files: packages/generator/src/core/generator.ts_
 
-- [ ] 6.4 Add enum serialization/deserialization support
+- [x] 6.4 Add enum serialization/deserialization support
   - Update message serialization to handle enum fields correctly
   - Convert between proto enum integers and TypeScript enum values
   - Add runtime validation for enum values
   - Write integration tests for enum usage in messages
-  - _Time: 1 hour_
+  - _Time: 1.5 hours_
   - _Requirements: 2.4_
-  - _Files: packages/generator/templates/message.hbs, packages/generator/src/generators/MessageGenerator.ts_
+  - _Files: packages/generator/src/generators/MessageGenerator.ts, packages/generator/tests/integration/enum-serialization.test.ts_
+  - _Status: ✅ Completed 2025-10-29_
 
 ---
 

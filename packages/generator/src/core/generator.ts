@@ -313,6 +313,31 @@ export class Generator {
         }
       }
 
+      // Generate standalone message types (if no services or when explicitly generating messages)
+      if (protoFile.messages.length > 0 && protoFile.services.length === 0) {
+        if (this.performanceMonitor) {
+          this.performanceMonitor.startOperation('standalone_message_generation');
+        }
+
+        const messageCode = this.messageGenerator.generateMessages(protoFile);
+        const messageFileName = `${protoFile.fileName.replace(/\.proto$/, '')}.ts`;
+
+        files.push({
+          path: messageFileName,
+          content: messageCode,
+        });
+
+        if (this.performanceMonitor) {
+          this.performanceMonitor.recordFileGeneration({
+            fileName: messageFileName,
+            fileSize: messageCode.length,
+            generationTime: 0,
+            linesOfCode: messageCode.split('\n').length,
+          });
+          this.performanceMonitor.endOperation();
+        }
+      }
+
       // Generate top-level enum types
       if (protoFile.enums && protoFile.enums.length > 0) {
         if (this.performanceMonitor) {
