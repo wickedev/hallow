@@ -1,6 +1,6 @@
 # Architecture
 
-- Unplugin을 사용하여 Vite, Webpack, ESBuild 와 같이 다양한 빌드 시스템에 통합 가능합니다.
+- [Unplugin](https://unplugin.unjs.io)을 사용하여 Vite, Webpack, ESBuild 와 같이 다양한 빌드 시스템에 통합 가능합니다.
 - `import { GreetingStub } from './greeting.proto'` 와 같은 모듈 import를 typescript 모듈처럼 간주하기 위해 `greeting.proto` 파일을 읽고 generator에 내용을 전달해 타입 세이프한 typescript 코드 생성 및 반환합니다.
 
 # Components
