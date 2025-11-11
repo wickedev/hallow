@@ -34,8 +34,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { AdapterFactory } from '@hallow/generator/adapters/factory/AdapterFactory';
-import { ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
+import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
 import { HookAdapterConfig, UseGrpcResult } from '../types';
 
 /**

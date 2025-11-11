@@ -39,9 +39,8 @@
  * ```
  */
 
-import { useEffect, useRef, use } from 'react';
-import { AdapterFactory } from '@hallow/generator/adapters/factory/AdapterFactory';
-import { ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
+import { useEffect, useRef } from 'react';
+import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
 import { HookAdapterConfig } from '../types';
 
 /**
@@ -287,8 +286,14 @@ export function useSuspenseGrpc<TRequest = any, TResponse = any, TStub = any>(
     };
   }, []);
 
-  // Suspend rendering
-  throw status.promise;
+  // Suspend rendering - status is always 'pending' when first created
+  if (status.status === 'pending') {
+    throw status.promise;
+  }
+  if (status.status === 'rejected') {
+    throw status.error;
+  }
+  return status.data;
 }
 
 /**
