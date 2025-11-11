@@ -212,13 +212,13 @@ export class Service {
   method() {
     return 'result';
   }
-}`.repeat(100), // Large unminified file
+}`.repeat(200), // Large unminified file (>10KB to trigger suggestion)
         },
       ];
-      
+
       const metrics = analyzer.analyzeBundle(files);
-      
-      expect(metrics.suggestions.some(s => 
+
+      expect(metrics.suggestions.some(s =>
         s.message.includes('minification')
       )).toBe(true);
     });
@@ -319,8 +319,8 @@ export class UserService {
     });
     
     it('should format sizes correctly', () => {
-      const analyzer = new BundleAnalyzer();
-      
+      const analyzer = new BundleAnalyzer({ detailed: true }); // Enable detailed metrics to show file breakdown
+
       const files: GeneratedFile[] = [
         {
           path: 'small.ts',
@@ -331,12 +331,12 @@ export class UserService {
           content: 'x'.repeat(5000), // ~5KB
         },
       ];
-      
+
       const metrics = analyzer.analyzeBundle(files);
       const report = analyzer.generateReport(metrics);
-      
+
       expect(report).toMatch(/\d+\.\d+ KB/); // Should show KB
-      expect(report).toMatch(/\d+ B/); // Should show bytes for small values
+      expect(report).toMatch(/\d+ B/); // Should show bytes for small values in file breakdown
     });
     
     it('should group suggestions by severity', () => {

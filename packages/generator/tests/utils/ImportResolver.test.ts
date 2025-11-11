@@ -249,7 +249,7 @@ describe('ImportResolver', () => {
                 inputType: 'common.SharedMessage',
                 outputType: 'ProcessResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {},
               },
             ],

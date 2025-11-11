@@ -469,8 +469,8 @@ describe('Enum Generation Integration Tests', () => {
         options: {},
       };
 
-      // Should not crash
-      await expect(testHelper.generateFromProtoFile(protoFile)).resolves.toBeDefined();
+      // Should reject empty enum (proto3 requires at least one value)
+      await expect(testHelper.generateFromProtoFile(protoFile)).rejects.toThrow('EMPTY_ENUM');
     });
 
     it('should handle proto file with no enums', async () => {

@@ -130,9 +130,15 @@ describe('ServiceGenerator', () => {
       expect(result).toBeDefined();
       expect(result.path).toBe('test.service.ts');
       expect(result.content).toContain('export class TestServiceStub');
-      expect(result.content).toContain('async getUser(request: GetUserRequest): Promise<GetUserResponse>');
+      // Check getUser method signature (formatted across multiple lines)
+      expect(result.content).toContain('public async getUser(');
+      expect(result.content).toContain('request: GetUserRequest');
+      expect(result.content).toContain('options?: CallOptions');
+      expect(result.content).toContain('): Promise<GetUserResponse>');
       // ListUsers is a server streaming method, so it should return Observable
-      expect(result.content).toContain('listUsers(request: ListUsersRequest): Observable<ListUsersResponse>');
+      expect(result.content).toContain('public listUsers(');
+      expect(result.content).toContain('request: ListUsersRequest');
+      expect(result.content).toContain('): Observable<ListUsersResponse>');
     });
     
     it('should include React hooks when option is enabled', async () => {
@@ -265,21 +271,19 @@ describe('ServiceGenerator', () => {
       expect(result.content).toContain('import { Observable }');
       expect(result.content).toContain('from \'rxjs\'');
 
-      // Cancellation token is now handled internally by GrpcWebAdapter
-      // No need to generate it in every service file
-      
-      // Check client streaming method signature
-      expect(result.content).toContain('public clientStream(): {');
-      expect(result.content).toContain('send: (request: Request) => void');
-      expect(result.content).toContain('complete: () => Promise<Response>');
-      expect(result.content).toContain('cancel: () => void');
-      
-      // Check server streaming method signature  
-      expect(result.content).toContain('public serverStream(request: Request): Observable<Response>');
-      
-      // Check bidirectional streaming method signature
-      expect(result.content).toContain('public bidiStream(): {');
-      expect(result.content).toContain('responses: Observable<Response>');
+      // Check client streaming method signature - now returns ClientStreamingCall
+      expect(result.content).toContain('public clientStream(options?: CallOptions): ClientStreamingCall<Request, Response>');
+      expect(result.content).toContain('this.adapter.clientStream');
+
+      // Check server streaming method signature
+      expect(result.content).toContain('public serverStream(');
+      expect(result.content).toContain('request: Request');
+      expect(result.content).toContain('): Observable<Response>');
+      expect(result.content).toContain('this.adapter.serverStream');
+
+      // Check bidirectional streaming method signature - now returns BidiStreamingCall
+      expect(result.content).toContain('public bidiStream(options?: CallOptions): BidiStreamingCall<Request, Response>');
+      expect(result.content).toContain('this.adapter.bidiStream');
     });
     
     it('should include streaming-specific error handling', () => {
@@ -373,10 +377,14 @@ describe('ServiceGenerator', () => {
       expect(result.content).toContain('import { Observable }');
       
       // Check unary method signature
-      expect(result.content).toContain('public async unaryCall(request: UnaryRequest): Promise<UnaryResponse>');
+      expect(result.content).toContain('public async unaryCall(');
+      expect(result.content).toContain('request: UnaryRequest');
+      expect(result.content).toContain('): Promise<UnaryResponse>');
 
       // Check streaming method signature
-      expect(result.content).toContain('public streamingCall(request: StreamRequest): Observable<StreamResponse>');
+      expect(result.content).toContain('public streamingCall(');
+      expect(result.content).toContain('request: StreamRequest');
+      expect(result.content).toContain('): Observable<StreamResponse>');
     });
 
     describe('Client and Bidirectional Streaming Templates (Task 2.3)', () => {
@@ -401,11 +409,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(clientStreamingService, protoFile);
 
-          // Verify method signature structure
-          expect(result.content).toContain('public uploadFile(): {');
-          expect(result.content).toContain('send: (request: FileChunk) => void');
-          expect(result.content).toContain('complete: () => Promise<UploadResult>');
-          expect(result.content).toContain('cancel: () => void');
+          // Verify method signature structure - now returns ClientStreamingCall
+          expect(result.content).toContain('public uploadFile(options?: CallOptions): ClientStreamingCall<FileChunk, UploadResult>');
+          expect(result.content).toContain('this.adapter.clientStream');
         });
 
         it('should include HTTP/1.1 limitation error message', () => {
@@ -427,9 +433,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(clientStreamingService, protoFile);
 
-          // Verify error message
-          expect(result.content).toContain('Client streaming RPC "UploadFile" is not supported over HTTP/1.1');
-          expect(result.content).toContain('gRPC-web requires WebSocket transport or HTTP/2 for client streaming');
+          // Verify JSDoc mentions HTTP/1.1 limitation
+          expect(result.content).toContain('Client streaming requires HTTP/2 transport');
+          expect(result.content).toContain('gRPC-web adapter: ✗ Not supported (HTTP/1.1 limitation)');
           expect(result.content).toContain('https://github.com/grpc/grpc-web#streaming-support');
         });
 
@@ -454,10 +460,10 @@ describe('ServiceGenerator', () => {
 
           // Verify JSDoc elements
           expect(result.content).toContain('/**');
-          expect(result.content).toContain('* @returns Object with send(), complete(), and cancel() methods');
-          expect(result.content).toContain('* @throws {Error} Client streaming not supported over HTTP/1.1');
-          expect(result.content).toContain('* @see https://github.com/grpc/grpc-web#streaming-support');
-          expect(result.content).toContain('* **IMPORTANT:**');
+          expect(result.content).toContain('@returns Client streaming call with send/complete capabilities');
+          expect(result.content).toContain('@throws {Error} If using gRPC-web adapter');
+          expect(result.content).toContain('@see https://github.com/grpc/grpc-web#streaming-support');
+          expect(result.content).toContain('**IMPORTANT**:');
         });
 
         it('should throw descriptive error in method body', () => {
@@ -479,10 +485,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(clientStreamingService, protoFile);
 
-          // Verify throw statement
-          expect(result.content).toContain('throw new Error(');
-          expect(result.content).toContain('Please use unary or server streaming RPCs');
-          expect(result.content).toContain('or configure your server for WebSocket support');
+          // Verify method delegates to adapter (adapter will throw if using grpc-web)
+          expect(result.content).toContain('this.adapter.clientStream');
+          expect(result.content).toContain('UploadFileDescriptor');
         });
       });
 
@@ -507,12 +512,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(bidiStreamingService, protoFile);
 
-          // Verify method signature structure
-          expect(result.content).toContain('public chat(): {');
-          expect(result.content).toContain('send: (request: ChatMessage) => void');
-          expect(result.content).toContain('responses: Observable<ChatMessage>');
-          expect(result.content).toContain('complete: () => void');
-          expect(result.content).toContain('cancel: () => void');
+          // Verify method signature structure - now returns BidiStreamingCall
+          expect(result.content).toContain('public chat(options?: CallOptions): BidiStreamingCall<ChatMessage, ChatMessage>');
+          expect(result.content).toContain('this.adapter.bidiStream');
         });
 
         it('should include HTTP/1.1 limitation error message', () => {
@@ -534,9 +536,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(bidiStreamingService, protoFile);
 
-          // Verify error message
-          expect(result.content).toContain('Bidirectional streaming RPC "Chat" is not supported over HTTP/1.1');
-          expect(result.content).toContain('gRPC-web requires WebSocket transport or HTTP/2 for bidirectional streaming');
+          // Verify JSDoc mentions HTTP/1.1 limitation
+          expect(result.content).toContain('Bidirectional streaming requires HTTP/2 transport');
+          expect(result.content).toContain('gRPC-web adapter: ✗ Not supported (HTTP/1.1 limitation)');
           expect(result.content).toContain('https://github.com/grpc/grpc-web#streaming-support');
         });
 
@@ -561,10 +563,10 @@ describe('ServiceGenerator', () => {
 
           // Verify JSDoc elements
           expect(result.content).toContain('/**');
-          expect(result.content).toContain('* @returns Object with send(), responses, complete(), and cancel() methods');
-          expect(result.content).toContain('* @throws {Error} Bidirectional streaming not supported over HTTP/1.1');
-          expect(result.content).toContain('* @see https://github.com/grpc/grpc-web#streaming-support');
-          expect(result.content).toContain('* **IMPORTANT:**');
+          expect(result.content).toContain('@returns Bidirectional streaming call with send/receive capabilities');
+          expect(result.content).toContain('@throws {Error} If using gRPC-web adapter');
+          expect(result.content).toContain('@see https://github.com/grpc/grpc-web#streaming-support');
+          expect(result.content).toContain('**IMPORTANT**:');
         });
 
         it('should throw descriptive error in method body', () => {
@@ -586,10 +588,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(bidiStreamingService, protoFile);
 
-          // Verify throw statement
-          expect(result.content).toContain('throw new Error(');
-          expect(result.content).toContain('Please use unary or server streaming RPCs');
-          expect(result.content).toContain('or configure your server for WebSocket support');
+          // Verify method delegates to adapter (adapter will throw if using grpc-web)
+          expect(result.content).toContain('this.adapter.bidiStream');
+          expect(result.content).toContain('ChatDescriptor');
         });
 
         it('should include Observable type for responses property', () => {
@@ -611,9 +612,9 @@ describe('ServiceGenerator', () => {
 
           const result = generator.generateStub(bidiStreamingService, protoFile);
 
-          // Verify Observable import and usage
+          // Verify Observable import and BidiStreamingCall type usage
           expect(result.content).toContain('import { Observable }');
-          expect(result.content).toContain('responses: Observable<ChatMessage>');
+          expect(result.content).toContain('BidiStreamingCall<ChatMessage, ChatMessage>');
         });
       });
 
@@ -663,20 +664,26 @@ describe('ServiceGenerator', () => {
           const result = generator.generateStub(mixedService, protoFile);
 
           // Verify unary method (functional)
-          expect(result.content).toContain('public async unary(request: Request): Promise<Response>');
+          expect(result.content).toContain('public async unary(');
+          expect(result.content).toContain('request: Request');
+          expect(result.content).toContain('options?: CallOptions');
+          expect(result.content).toContain('): Promise<Response>');
           expect(result.content).toContain('this.adapter.unary');
 
           // Verify server streaming method (functional)
-          expect(result.content).toContain('public serverStream(request: Request): Observable<Response>');
+          expect(result.content).toContain('public serverStream(');
+          expect(result.content).toContain('): Observable<Response>');
           expect(result.content).toContain('this.adapter.serverStream');
 
-          // Verify client streaming method (error with documentation)
-          expect(result.content).toContain('public clientStream(): {');
-          expect(result.content).toContain('Client streaming RPC "ClientStream" is not supported');
+          // Verify client streaming method (now functional)
+          expect(result.content).toContain('public clientStream(');
+          expect(result.content).toContain('): ClientStreamingCall<Request, Response>');
+          expect(result.content).toContain('this.adapter.clientStream');
 
-          // Verify bidirectional streaming method (error with documentation)
-          expect(result.content).toContain('public bidiStream(): {');
-          expect(result.content).toContain('Bidirectional streaming RPC "BidiStream" is not supported');
+          // Verify bidirectional streaming method (now functional)
+          expect(result.content).toContain('public bidiStream(');
+          expect(result.content).toContain('): BidiStreamingCall<Request, Response>');
+          expect(result.content).toContain('this.adapter.bidiStream');
 
           // Verify Observable import is included (for server and bidi streaming)
           expect(result.content).toContain('import { Observable }');

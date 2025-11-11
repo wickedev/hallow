@@ -682,7 +682,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Files: packages/generator/src/performance/MemoryEfficientGenerator.ts_
   - _Completed: 2025-10-28_
 
-- [x] 18.3 Implement cross-chunk dependency resolution
+- [ ] 18.3 Implement cross-chunk dependency resolution
   - Create dependency graph builder for messages
   - Track dependencies across chunk boundaries
   - Resolve import statements after all chunks processed
@@ -692,7 +692,7 @@ This document provides a comprehensive implementation plan for enhancing the Hal
   - _Files: packages/generator/src/performance/MemoryEfficientGenerator.ts, packages/generator/src/utils/DependencyResolver.ts (new)_
   - _Completed: 2025-10-28_
 
-- [x] 18.4 Add dynamic chunk size adjustment
+- [ ] 18.4 Add dynamic chunk size adjustment
   - Monitor heap usage during generation
   - Reduce chunk size if memory usage exceeds threshold
   - Increase chunk size if memory is underutilized

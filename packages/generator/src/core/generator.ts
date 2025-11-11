@@ -164,7 +164,7 @@ export class Generator {
       // Initialize memory-efficient generator for large files
       this.memoryEfficientGenerator = createMemoryEfficientGenerator({
         chunkSize: 20,
-        memoryLimit: 400 * 1024 * 1024, // 400MB
+        memoryLimit: 1024 * 1024 * 1024, // 1GB - increased for large proto files
         useStreaming: true,
         gcInterval: 50,
         cacheStrategy: 'lru',
@@ -646,7 +646,7 @@ export class Generator {
 
         this.memoryEfficientGenerator = createMemoryEfficientGenerator({
           chunkSize: 20,
-          memoryLimit: 400 * 1024 * 1024,
+          memoryLimit: 1024 * 1024 * 1024, // 1GB - increased for large proto files
           useStreaming: true,
           gcInterval: 50,
           cacheStrategy: 'lru',

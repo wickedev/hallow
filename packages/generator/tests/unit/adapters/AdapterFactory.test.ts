@@ -11,6 +11,7 @@
 import { AdapterFactory } from '../../../src/adapters/AdapterFactory';
 import { ITransportAdapter } from '../../../src/adapters/ITransportAdapter';
 import { GrpcWebAdapter } from '../../../src/adapters/GrpcWebAdapter';
+import { NativeGrpcAdapter } from '../../../src/adapters/NativeGrpcAdapter';
 
 describe('AdapterFactory', () => {
   describe('Environment Detection', () => {
@@ -93,23 +94,35 @@ describe('AdapterFactory', () => {
   });
 
   describe('Adapter Creation - native', () => {
-    it('should attempt to create native adapter when explicitly requested', () => {
-      // NOTE: This will throw until Task 9 is complete (NativeGrpcAdapter implementation)
-      expect(() => {
-        AdapterFactory.create({
-          serverUrl: 'localhost:50051',
-          adapterType: 'native',
-        });
-      }).toThrow('NativeGrpcAdapter not yet implemented');
+    it('should create native adapter when explicitly requested', () => {
+      const adapter = AdapterFactory.create({
+        serverUrl: 'localhost:50051',
+        adapterType: 'native',
+      });
+
+      expect(adapter).toBeInstanceOf(NativeGrpcAdapter);
+      expect(adapter).toBeDefined();
+      expect(typeof adapter.unary).toBe('function');
+      expect(typeof adapter.serverStream).toBe('function');
+      expect(typeof adapter.clientStream).toBe('function');
+      expect(typeof adapter.bidiStream).toBe('function');
+
+      adapter.close();
     });
 
-    it('should provide helpful error message when native adapter not available', () => {
-      expect(() => {
-        AdapterFactory.create({
-          serverUrl: 'localhost:50051',
-          adapterType: 'native',
-        });
-      }).toThrow(/NativeGrpcAdapter not yet implemented/);
+    it('should create NativeGrpcAdapter with custom options', () => {
+      const adapter = AdapterFactory.create({
+        serverUrl: 'localhost:50051',
+        adapterType: 'native',
+        secure: false,
+        debug: true,
+        defaultCallOptions: {
+          timeout: 5000,
+        },
+      });
+
+      expect(adapter).toBeInstanceOf(NativeGrpcAdapter);
+      adapter.close();
     });
   });
 
@@ -120,9 +133,8 @@ describe('AdapterFactory', () => {
         adapterType: 'auto',
       });
 
-      // In Node.js with @grpc/grpc-js, should attempt native
-      // But will fall back to grpc-web since NativeGrpcAdapter not implemented yet
-      expect(adapter).toBeInstanceOf(GrpcWebAdapter);
+      // In Node.js with @grpc/grpc-js, should select NativeGrpcAdapter
+      expect(adapter).toBeInstanceOf(NativeGrpcAdapter);
 
       adapter.close();
     });
@@ -139,14 +151,14 @@ describe('AdapterFactory', () => {
       adapter.close();
     });
 
-    it('should fall back to grpc-web if native creation fails', () => {
+    it('should use grpc-web when native is explicitly disabled', () => {
       const adapter = AdapterFactory.create({
         serverUrl: 'https://api.example.com',
         adapterType: 'auto',
-        enableNativeGrpc: true,
+        enableNativeGrpc: false,
       });
 
-      // Should fall back to grpc-web since native not implemented
+      // Should use grpc-web when native is disabled
       expect(adapter).toBeInstanceOf(GrpcWebAdapter);
 
       adapter.close();

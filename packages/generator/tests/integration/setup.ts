@@ -5,7 +5,7 @@
  * Automatically starts and stops test server and Envoy proxy before/after tests.
  */
 
-import { TestGrpcServer } from '../../../../test-server/src/TestGrpcServer';
+import { TestGrpcServer } from '../../../test-server/src/TestGrpcServer';
 
 /**
  * Global test server instance

@@ -49,6 +49,7 @@ describe('Generator', () => {
     it('should generate empty result for valid proto file', async () => {
       const protoFile: ProtoFile = {
         fileName: 'test.proto',
+        package: 'test',
         syntax: 'proto3',
         imports: [],
         services: [],

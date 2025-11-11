@@ -37,7 +37,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'GetUserRequest',
                 outputType: 'User',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   '(requires_auth)': true,
                   '(permission)': 'user:read',
@@ -49,7 +49,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'CreateUserRequest',
                 outputType: 'User',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   '(requires_auth)': true,
                   '(permission)': 'user:create',
@@ -61,7 +61,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'ListUsersRequest',
                 outputType: 'ListUsersResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   '(requires_auth)': false,
                 },
@@ -127,7 +127,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'SimpleRequest',
                 outputType: 'SimpleResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   deprecated: false,
                 },
@@ -176,7 +176,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'GetUserRequest',
                 outputType: 'User',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   '(requires_auth)': true,
                   deprecated: true,
@@ -385,7 +385,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'ComplexRequest',
                 outputType: 'ComplexResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   '(requires_auth)': true,
                   '(complex_config)': {
@@ -524,7 +524,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'TestRequest',
                 outputType: 'TestResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   deprecated: true,
                   '(custom_option)': 'test_value',
@@ -574,7 +574,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'TestRequest',
                 outputType: 'TestResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {
                   // Various edge case values
                   null_option: null,
@@ -627,7 +627,7 @@ describe('OptionProcessor Integration', () => {
                 inputType: 'EmptyRequest',
                 outputType: 'EmptyResponse',
                 clientStreaming: false,
-                serverStream: false,
+                serverStreaming: false,
                 options: {}, // Empty options
               },
             ],

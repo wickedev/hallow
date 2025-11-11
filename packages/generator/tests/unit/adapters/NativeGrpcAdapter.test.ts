@@ -200,11 +200,11 @@ describe('NativeGrpcAdapter', () => {
     it('should throw error for invalid server URL', () => {
       expect(() => {
         new NativeGrpcAdapter({ serverUrl: '' });
-      }).toThrow('Invalid server address: empty');
+      }).toThrow('serverUrl is required');
 
       expect(() => {
         new NativeGrpcAdapter({ serverUrl: '   ' });
-      }).toThrow('Invalid server address: empty');
+      }).toThrow('serverUrl is required');
     });
 
     it('should throw error when serverUrl is missing', () => {
@@ -290,8 +290,16 @@ describe('NativeGrpcAdapter', () => {
       const request = new MockRequest('123');
       const expectedResponse = new MockResponse('123', 'Test User');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           // Simulate successful response
           setImmediate(() => {
             callback(null, expectedResponse);
@@ -317,8 +325,16 @@ describe('NativeGrpcAdapter', () => {
     it('should handle NOT_FOUND error', async () => {
       const request = new MockRequest('nonexistent');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           const error: grpc.ServiceError = {
             name: 'NOT_FOUND',
             message: 'User not found',
@@ -348,8 +364,16 @@ describe('NativeGrpcAdapter', () => {
     it('should handle INVALID_ARGUMENT error', async () => {
       const request = new MockRequest('');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           const error: grpc.ServiceError = {
             name: 'INVALID_ARGUMENT',
             message: 'Invalid user ID',
@@ -377,8 +401,16 @@ describe('NativeGrpcAdapter', () => {
     it('should handle INTERNAL error', async () => {
       const request = new MockRequest('123');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           const error: grpc.ServiceError = {
             name: 'INTERNAL',
             message: 'Internal server error',
@@ -406,8 +438,16 @@ describe('NativeGrpcAdapter', () => {
     it('should handle DEADLINE_EXCEEDED error', async () => {
       const request = new MockRequest('123');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           const error: grpc.ServiceError = {
             name: 'DEADLINE_EXCEEDED',
             message: 'Deadline exceeded',
@@ -435,8 +475,16 @@ describe('NativeGrpcAdapter', () => {
     it('should handle UNAVAILABLE error', async () => {
       const request = new MockRequest('123');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           const error: grpc.ServiceError = {
             name: 'UNAVAILABLE',
             message: 'Service unavailable',
@@ -464,8 +512,16 @@ describe('NativeGrpcAdapter', () => {
     it('should handle error with no response', async () => {
       const request = new MockRequest('123');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           // Simulate success but no response (edge case)
           setImmediate(() => callback(null, undefined));
           return {} as any;
@@ -492,8 +548,16 @@ describe('NativeGrpcAdapter', () => {
         'request-id': 'uuid-456',
       };
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, meta, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          meta: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           // Verify metadata was attached
           expect(meta.get('authorization')).toEqual(['Bearer token123']);
           expect(meta.get('request-id')).toEqual(['uuid-456']);
@@ -510,8 +574,16 @@ describe('NativeGrpcAdapter', () => {
       const timeout = 5000;
       const startTime = Date.now();
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           // Verify deadline is set correctly (approximately)
           expect(options.deadline).toBeDefined();
           expect(options.deadline).toBeGreaterThanOrEqual(startTime + timeout);
@@ -530,8 +602,16 @@ describe('NativeGrpcAdapter', () => {
       const request = new MockRequest('123');
       const deadline = Date.now() + 10000;
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           expect(options.deadline).toBe(deadline);
           callback(null, new MockResponse('123', 'Test User'));
           return {} as any;
@@ -550,8 +630,16 @@ describe('NativeGrpcAdapter', () => {
       const request = new MockRequest('123');
       const startTime = Date.now();
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           expect(options.deadline).toBeDefined();
           expect(options.deadline).toBeGreaterThanOrEqual(startTime + 3000);
           callback(null, new MockResponse('123', 'Test User'));
@@ -567,8 +655,16 @@ describe('NativeGrpcAdapter', () => {
     it('should serialize request correctly', async () => {
       const request = new MockRequest('123');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           // Test serialization
           const serialized = serialize(req);
           expect(serialized).toBeInstanceOf(Buffer);
@@ -591,8 +687,16 @@ describe('NativeGrpcAdapter', () => {
       const request = new MockRequest('123');
       const responseData = new MockResponse('123', 'Test User');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           // Test deserialization
           const serialized = Buffer.from(responseData.serializeBinary());
           const deserialized = deserialize(serialized);
@@ -615,8 +719,16 @@ describe('NativeGrpcAdapter', () => {
       errorMetadata.set('error-code', 'USER_NOT_FOUND');
       errorMetadata.set('retry-after', '60');
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           const error: grpc.ServiceError = {
             name: 'NOT_FOUND',
             message: 'User not found',
@@ -659,8 +771,16 @@ describe('NativeGrpcAdapter', () => {
       const largeUserId = 'x'.repeat(10000);
       const request = new MockRequest(largeUserId);
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           callback(null, new MockResponse(largeUserId, 'Test User'));
           return {} as any;
         }
@@ -674,8 +794,16 @@ describe('NativeGrpcAdapter', () => {
       const request = new MockRequest('123');
       const largeName = 'x'.repeat(10000);
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           callback(null, new MockResponse('123', largeName));
           return {} as any;
         }
@@ -690,8 +818,16 @@ describe('NativeGrpcAdapter', () => {
         new MockRequest(`user-${i}`)
       );
 
-      mockClient.makeUnaryRequest.mockImplementation(
-        (path, serialize, deserialize, req, metadata, options, callback) => {
+      (mockClient.makeUnaryRequest as any).mockImplementation(
+        (
+          path: string,
+          serialize: (value: any) => Buffer,
+          deserialize: (value: Buffer) => any,
+          req: any,
+          metadata: grpc.Metadata,
+          options: grpc.CallOptions,
+          callback: grpc.requestCallback<any>
+        ) => {
           setImmediate(() => {
             callback(null, new MockResponse(req.userId, `User ${req.userId}`));
           });

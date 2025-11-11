@@ -163,7 +163,7 @@ export class TestGrpcServer {
         return false;
       }
 
-      const health = await response.json();
+      const health = await response.json() as { status: string };
       return health.status === 'healthy';
     } catch (error) {
       return false;

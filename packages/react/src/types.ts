@@ -13,7 +13,14 @@ import {
  * Configuration for adapter used by hooks
  * Extends AdapterConfig with adapter type selection
  */
-export interface HookAdapterConfig extends AdapterConfig {
+export interface HookAdapterConfig extends Omit<AdapterConfig, 'serverUrl'> {
+  /**
+   * Server URL or address
+   * For gRPC-web: Full HTTP(S) URL (e.g., "https://api.example.com")
+   * For native gRPC: Host:port (e.g., "localhost:50051")
+   */
+  serverUrl: string;
+
   /**
    * Preferred adapter type
    * - 'grpc-web': Always use grpc-web adapter

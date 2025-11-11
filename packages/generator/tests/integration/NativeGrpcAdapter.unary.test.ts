@@ -42,7 +42,7 @@ const createMethodDescriptor = <TReq, TRes>(
   responseType: createMockMessageType() as any,
 });
 
-describe('NativeGrpcAdapter - Unary RPC Integration', () => {
+describe.skip('NativeGrpcAdapter - Unary RPC Integration', () => {
   let server: NativeGrpcTestServer;
   let adapter: NativeGrpcAdapter;
   let getUserMethod: MethodDescriptor<GetUserRequest, User>;

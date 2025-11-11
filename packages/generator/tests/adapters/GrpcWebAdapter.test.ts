@@ -353,7 +353,13 @@ describe('GrpcWebAdapter - Unary RPC', () => {
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[GrpcWebAdapter] Unary call to GetUser'),
-        mockRequest
+        expect.objectContaining({
+          baseUrl: expect.any(String),
+          serviceName: expect.any(String),
+          requestType: expect.any(String),
+          responseType: expect.any(String),
+          request: mockRequest
+        })
       );
     });
 

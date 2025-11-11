@@ -406,23 +406,52 @@ export class BundleAnalyzer {
     const fileDependencies = new Map<string, Set<string>>();
     const externalDependencies = new Set<string>();
 
+    // Create a map of normalized file paths for matching
+    const filePathMap = new Map<string, string>();
+    files.forEach(file => {
+      // Normalize: 'b.ts' → 'b', 'src/b.ts' → 'src/b'
+      const normalized = file.path.replace(/\.(ts|js|tsx|jsx)$/, '');
+      filePathMap.set(normalized, file.path);
+      // Also map with leading './' for convenience
+      filePathMap.set('./' + normalized, file.path);
+    });
+
     files.forEach(file => {
       const deps = new Set<string>();
 
-      // Extract imports
-      const importRegex = /import\s+.*?\s+from\s+['"]([^'"]+)['"]/g;
-      let match;
+      // Extract imports - supports both 'import ... from ...' and 'import ...' (side-effect imports)
+      const importWithFromRegex = /import\s+.*?\s+from\s+['"]([^'"]+)['"]/g;
+      const sideEffectImportRegex = /import\s+['"]([^'"]+)['"]/g;
 
-      while ((match = importRegex.exec(file.content)) !== null) {
-        const source = match[1];
-
+      const extractImport = (source: string) => {
         if (source.startsWith('.') || source.startsWith('/')) {
-          // Internal dependency
-          deps.add(source);
+          // Internal dependency - normalize the import path
+          const normalized = source.replace(/\.(ts|js|tsx|jsx)$/, '');
+
+          // Try to match with actual file paths
+          const actualPath = filePathMap.get(normalized) || filePathMap.get('./' + normalized);
+          if (actualPath) {
+            deps.add(actualPath);
+          } else {
+            // Fallback: add with .ts extension if no match found
+            const withExtension = normalized.replace(/^\.\//, '') + '.ts';
+            deps.add(withExtension);
+          }
         } else {
           // External dependency
           externalDependencies.add(source);
         }
+      };
+
+      // Match 'import ... from ...' style imports
+      let match;
+      while ((match = importWithFromRegex.exec(file.content)) !== null) {
+        extractImport(match[1]);
+      }
+
+      // Match 'import ...' side-effect imports
+      while ((match = sideEffectImportRegex.exec(file.content)) !== null) {
+        extractImport(match[1]);
       }
 
       fileDependencies.set(file.path, deps);
@@ -485,10 +514,16 @@ export class BundleAnalyzer {
    */
   private calculateMaxDepth(dependencies: Map<string, Set<string>>): number {
     const depths = new Map<string, number>();
+    const visiting = new Set<string>(); // Track nodes currently being visited to detect cycles
 
     const calculateDepth = (file: string): number => {
       if (depths.has(file)) {
         return depths.get(file)!;
+      }
+
+      // Detect circular dependency - return 0 for circular paths
+      if (visiting.has(file)) {
+        return 0;
       }
 
       const deps = dependencies.get(file);
@@ -497,10 +532,12 @@ export class BundleAnalyzer {
         return 0;
       }
 
+      visiting.add(file);
       let maxChildDepth = 0;
       deps.forEach(dep => {
         maxChildDepth = Math.max(maxChildDepth, calculateDepth(dep));
       });
+      visiting.delete(file);
 
       const depth = maxChildDepth + 1;
       depths.set(file, depth);

@@ -211,6 +211,7 @@ export class CodeOptimizer {
     this.options.deadCodeElimination = true;
     this.options.collapseDuplicates = true;
     this.options.optimizeImports = true;
+    this.options.treeShaking = true;
   }
 
   /**
@@ -645,11 +646,24 @@ export class CodeOptimizer {
    * Minify the code
    */
   private minifyCode(content: string): string {
+    // Preserve special comments for tree-shaking
+    const specialComments: string[] = [];
+    let minified = content.replace(/(\/\*#__\w+__\*\/)/g, (match, comment) => {
+      const placeholder = `__COMMENT_${specialComments.length}__`;
+      specialComments.push(comment);
+      return placeholder;
+    });
+
     // Remove unnecessary whitespace
-    let minified = content.replace(/\s+/g, ' ');
+    minified = minified.replace(/\s+/g, ' ');
 
     // Remove whitespace around operators
     minified = minified.replace(/\s*([=+\-*/<>!&|,;:{}()[\]])\s*/g, '$1');
+
+    // Restore special comments
+    specialComments.forEach((comment, index) => {
+      minified = minified.replace(`__COMMENT_${index}__`, comment);
+    });
 
     // Remove trailing semicolons before closing braces
     minified = minified.replace(/;}/g, '}');

@@ -119,7 +119,7 @@ export class NativeGrpcAdapter implements ITransportAdapter {
    */
   constructor(config: NativeGrpcAdapterConfig) {
     // Validate configuration
-    if (!config.serverUrl) {
+    if (!config.serverUrl || config.serverUrl.trim() === '') {
       throw new Error('serverUrl is required');
     }
 
