@@ -6,6 +6,7 @@ node_modules/
 # Testing
 coverage/
 .nyc_output/
+.test-cache/
 
 # Production builds
 dist/
@@ -86,3 +87,4 @@ pids
 .history/
 .vscode-test/
 *.vsix
+.test-cache

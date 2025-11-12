@@ -1,3 +1,19 @@
+// High-level Parser API
+export { Parser, ParseError } from './Parser';
+export { ProtoFileBuilder } from './ProtoFileBuilder';
+
+// Type definitions
+export type {
+  ProtoFile,
+  ServiceDefinition,
+  MessageDefinition,
+  EnumDefinition,
+  MethodDefinition,
+  FieldDefinition,
+  EnumValueDefinition,
+  OneofDefinition,
+} from './types';
+
 // Generated ANTLR Parser Components
 export { Protobuf3Lexer } from './generated/grammar/Protobuf3Lexer';
 export { Protobuf3Parser } from './generated/grammar/Protobuf3Parser';

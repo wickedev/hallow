@@ -1,0 +1,338 @@
+/**
+ * Integration tests for glob pattern filtering in transform hook.
+ *
+ * Tests Task 23.2: Integration of GlobFilter with transformInclude hook.
+ * Verifies that files are correctly filtered based on include/exclude patterns
+ * before being processed by the transform pipeline.
+ */
+
+import { createHallowPlugin } from '../../src/plugin';
+import * as path from 'path';
+
+describe('Glob Filtering Integration (Task 23.2)', () => {
+  describe('transformInclude hook with default patterns', () => {
+    it('should accept .proto files by default', () => {
+      const factory: any = createHallowPlugin({}, { framework: 'vite' } as any);
+      const plugin = factory.vite();
+
+      expect(plugin.transformInclude).toBeDefined();
+
+      if (plugin.transformInclude) {
+        expect(plugin.transformInclude('/project/src/service.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/api/v1/service.proto')).toBe(true);
+      }
+    });
+
+    it('should reject non-.proto files', () => {
+      const factory: any = createHallowPlugin({}, { framework: 'vite' } as any);
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        expect(plugin.transformInclude('/project/src/service.ts')).toBe(false);
+        expect(plugin.transformInclude('/project/api/service.js')).toBe(false);
+        expect(plugin.transformInclude('/project/README.md')).toBe(false);
+      }
+    });
+
+    it('should exclude node_modules by default', () => {
+      const factory: any = createHallowPlugin({}, { framework: 'vite' } as any);
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        expect(plugin.transformInclude('/project/node_modules/package/test.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/nested/node_modules/test.proto')).toBe(false);
+      }
+    });
+  });
+
+  describe('transformInclude hook with custom include patterns', () => {
+    it('should only accept files matching include patterns', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto', 'api/**/*.proto'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Should match include patterns
+        expect(plugin.transformInclude('/project/src/service.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/src/v1/api.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/api/service.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/api/v2/service.proto')).toBe(true);
+
+        // Should not match (not in include patterns)
+        expect(plugin.transformInclude('/project/lib/service.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/test/service.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/proto/service.proto')).toBe(false);
+      }
+    });
+
+    it('should support single directory include', () => {
+      const factory: any = createHallowPlugin({
+        include: ['protos/*.proto'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Should match direct children only
+        expect(plugin.transformInclude('/project/protos/service.proto')).toBe(true);
+
+        // Should not match nested
+        expect(plugin.transformInclude('/project/protos/v1/service.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/src/service.proto')).toBe(false);
+      }
+    });
+
+    it('should support multiple include patterns with OR logic', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/grpc/**/*.proto', 'api/proto/**/*.proto', 'schemas/*.proto'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Matches first pattern
+        expect(plugin.transformInclude('/project/src/grpc/service.proto')).toBe(true);
+
+        // Matches second pattern
+        expect(plugin.transformInclude('/project/api/proto/types.proto')).toBe(true);
+
+        // Matches third pattern
+        expect(plugin.transformInclude('/project/schemas/user.proto')).toBe(true);
+
+        // Matches none
+        expect(plugin.transformInclude('/project/lib/service.proto')).toBe(false);
+      }
+    });
+  });
+
+  describe('transformInclude hook with custom exclude patterns', () => {
+    it('should exclude files matching exclude patterns', () => {
+      const factory: any = createHallowPlugin({
+        include: ['**/*.proto'],
+        exclude: ['**/*.test.proto', '**/*.spec.proto'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Should accept normal proto files
+        expect(plugin.transformInclude('/project/src/service.proto')).toBe(true);
+
+        // Should reject test files
+        expect(plugin.transformInclude('/project/src/service.test.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/api/service.spec.proto')).toBe(false);
+      }
+    });
+
+    it('should support multiple exclude patterns', () => {
+      const factory: any = createHallowPlugin({
+        include: ['**/*.proto'],
+        exclude: [
+          'node_modules/**',
+          'dist/**',
+          'build/**',
+          '**/*.generated.proto',
+        ],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Should accept clean proto files
+        expect(plugin.transformInclude('/project/src/service.proto')).toBe(true);
+
+        // Should reject based on exclude patterns
+        expect(plugin.transformInclude('/project/node_modules/test.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/dist/output.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/build/gen.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/src/types.generated.proto')).toBe(false);
+      }
+    });
+
+    it('should apply exclude even when file matches include', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto'],
+        exclude: ['src/internal/**'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Matches include and not excluded
+        expect(plugin.transformInclude('/project/src/api/service.proto')).toBe(true);
+
+        // Matches include but excluded
+        expect(plugin.transformInclude('/project/src/internal/private.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/src/internal/v1/old.proto')).toBe(false);
+      }
+    });
+  });
+
+  describe('transformInclude hook with combined patterns', () => {
+    it('should apply both include and exclude patterns correctly', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto', 'api/**/*.proto'],
+        exclude: ['**/*.test.proto', 'node_modules/**', '**/deprecated/**'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Valid files
+        expect(plugin.transformInclude('/project/src/service.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/src/v1/api.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/api/grpc/service.proto')).toBe(true);
+
+        // Excluded by pattern
+        expect(plugin.transformInclude('/project/src/service.test.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/api/service.test.proto')).toBe(false);
+        expect(plugin.transformInclude('/project/src/deprecated/old.proto')).toBe(false);
+
+        // Not in include
+        expect(plugin.transformInclude('/project/lib/service.proto')).toBe(false);
+
+        // In node_modules
+        expect(plugin.transformInclude('/project/node_modules/src/test.proto')).toBe(false);
+      }
+    });
+
+    it('should handle real-world enterprise scenario', () => {
+      const factory: any = createHallowPlugin({
+        include: [
+          'proto/api/**/*.proto',
+          'proto/models/**/*.proto',
+          'services/**/proto/*.proto',
+        ],
+        exclude: [
+          'node_modules/**',
+          '**/*.test.proto',
+          '**/*.spec.proto',
+          '**/generated/**',
+          '**/deprecated/**',
+          '**/.backup/**',
+        ],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Valid production proto files
+        expect(plugin.transformInclude('/project/proto/api/v1/user.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/proto/models/common.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/services/auth/proto/service.proto')).toBe(true);
+
+        // Test files
+        expect(plugin.transformInclude('/project/proto/api/v1/user.test.proto')).toBe(false);
+
+        // Generated files
+        expect(plugin.transformInclude('/project/proto/generated/types.proto')).toBe(false);
+
+        // Deprecated
+        expect(plugin.transformInclude('/project/proto/deprecated/old.proto')).toBe(false);
+
+        // Backups
+        expect(plugin.transformInclude('/project/proto/.backup/service.proto')).toBe(false);
+
+        // Not in include
+        expect(plugin.transformInclude('/project/lib/service.proto')).toBe(false);
+      }
+    });
+  });
+
+  describe('transformInclude hook edge cases', () => {
+    it('should work before state is initialized', () => {
+      const factory: any = createHallowPlugin({}, { framework: 'vite' } as any);
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // Before transform is called, state may not be initialized
+        // Should still accept .proto files
+        expect(plugin.transformInclude('/project/service.proto')).toBe(true);
+        expect(plugin.transformInclude('/project/service.ts')).toBe(false);
+      }
+    });
+
+    it('should handle empty include patterns', () => {
+      const factory: any = createHallowPlugin({
+        include: [],
+        exclude: [],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        // With empty include, no files should match
+        expect(plugin.transformInclude('/project/service.proto')).toBe(false);
+      }
+    });
+
+    it('should handle absolute paths correctly', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto'],
+        exclude: ['node_modules/**'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        const absPath = path.resolve(process.cwd(), 'src/service.proto');
+        expect(plugin.transformInclude(absPath)).toBe(true);
+
+        const absExcluded = path.resolve(process.cwd(), 'node_modules/test.proto');
+        expect(plugin.transformInclude(absExcluded)).toBe(false);
+      }
+    });
+
+    it('should handle relative paths with ./', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        expect(plugin.transformInclude('./src/service.proto')).toBe(true);
+        expect(plugin.transformInclude('src/service.proto')).toBe(true);
+      }
+    });
+  });
+
+  describe('Performance with filtering', () => {
+    it('should efficiently filter many files', () => {
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto'],
+        exclude: ['**/*.test.proto', 'node_modules/**'],
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        const start = Date.now();
+
+        // Simulate checking many files
+        for (let i = 0; i < 1000; i++) {
+          plugin.transformInclude(`/project/src/service${i}.proto`);
+          plugin.transformInclude(`/project/src/service${i}.test.proto`);
+          plugin.transformInclude(`/project/node_modules/pkg${i}/test.proto`);
+        }
+
+        const duration = Date.now() - start;
+
+        // Should complete 3000 checks in reasonable time (<200ms)
+        expect(duration).toBeLessThan(200);
+      }
+    });
+  });
+
+  describe('Debugging support', () => {
+    it('should log filtered files in debug mode', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      const factory: any = createHallowPlugin({
+        include: ['src/**/*.proto'],
+        exclude: ['**/*.test.proto'],
+        debug: true,
+      });
+      const plugin = factory.vite();
+
+      if (plugin.transformInclude) {
+        plugin.transformInclude('/project/src/service.test.proto');
+
+        // Note: The actual logging happens via the logger utility
+        // This test verifies the integration exists
+      }
+
+      consoleSpy.mockRestore();
+    });
+  });
+});
