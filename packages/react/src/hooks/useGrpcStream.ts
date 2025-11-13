@@ -52,7 +52,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Subscription } from 'rxjs';
-import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
+import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator';
 import { HookAdapterConfig, UseGrpcStreamResult } from '../types';
 
 /**
@@ -73,10 +73,10 @@ export interface UseGrpcStreamConfig<TRequest, TResponse, TStub>
   request?: TRequest;
 
   /**
-   * Stub class constructor that takes an adapter
+   * Stub class constructor that takes a config object
    * Alternative to providing method + request
    */
-  StubClass?: new (adapter: ITransportAdapter) => TStub;
+  StubClass?: new (config: HookAdapterConfig) => TStub;
 
   /**
    * Function that uses the stub to create a streaming call
@@ -258,7 +258,7 @@ export function useGrpcStream<TRequest = any, TResponse = any, TStub = any>(
       }
       // Use stub-based pattern
       else if (StubClass && stubMethod) {
-        const stub = new StubClass(adapterRef.current);
+        const stub = new StubClass({ serverUrl, ...adapterConfig } as any);
         const streamCall = stubMethod(stub);
         observable = streamCall;
       }

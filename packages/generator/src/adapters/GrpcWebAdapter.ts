@@ -211,6 +211,35 @@ export class GrpcWebAdapter implements ITransportAdapter {
   }
 
   /**
+   * Convert IMethodDescriptor to grpc-web compatible MethodDescriptor
+   *
+   * The @improbable-eng/grpc-web library expects methodDefinition.service.serviceName,
+   * but our IMethodDescriptor has serviceName at the root level.
+   * This method transforms the descriptor to the expected format.
+   *
+   * @param descriptor - The IMethodDescriptor from our adapter interface
+   * @returns A grpc-web compatible MethodDescriptor with nested service object
+   */
+  private toGrpcWebDescriptor<TRequest, TResponse>(
+    descriptor: MethodDescriptor<TRequest, TResponse>
+  ): MethodDescriptor<TRequest, TResponse> {
+    // Extract serviceName from either the nested service object or root level
+    const serviceName = descriptor.service?.serviceName || descriptor.serviceName || '';
+
+    return {
+      methodName: descriptor.methodName,
+      service: {
+        serviceName,
+      },
+      serviceName, // Keep for backward compatibility
+      requestStream: descriptor.requestStream,
+      responseStream: descriptor.responseStream,
+      requestType: descriptor.requestType,
+      responseType: descriptor.responseType,
+    };
+  }
+
+  /**
    * Make a unary RPC call
    *
    * Sends a single request and receives a single response.
@@ -249,10 +278,8 @@ export class GrpcWebAdapter implements ITransportAdapter {
         }
 
         // Convert plain object to Message-like object with serializeBinary method
-        const messageRequest = this.createMessageWrapper(
-          request,
-          methodDescriptor.requestSerializer,
-        );
+        // Use requestType.serializeBinary from the descriptor
+        const messageRequest = this.createProtoMessage(request, methodDescriptor.requestType);
 
         if (this.options.debug) {
           console.log('[GrpcWebAdapter] Message wrapper created:', {
@@ -267,8 +294,11 @@ export class GrpcWebAdapter implements ITransportAdapter {
           options?.metadata
         );
 
+        // Convert to grpc-web compatible descriptor format
+        const grpcWebDescriptor = this.toGrpcWebDescriptor(methodDescriptor);
+
         // Make gRPC-web unary call
-        grpc.unary(methodDescriptor as any, {
+        grpc.unary(grpcWebDescriptor as any, {
           request: messageRequest as any,
           host: this.baseUrl,
           metadata: callMetadata,
@@ -295,6 +325,12 @@ export class GrpcWebAdapter implements ITransportAdapter {
                 console.error(`[GrpcWebAdapter] Unary call failed:`, error);
               }
 
+              reject(error);
+              return;
+            }
+
+            if (!response.message) {
+              const error = new Error('No message in response');
               reject(error);
               return;
             }
@@ -356,10 +392,7 @@ export class GrpcWebAdapter implements ITransportAdapter {
         }
 
         // Convert plain object to Message-like object with serializeBinary method
-        const messageRequest = this.createMessageWrapper(
-          request,
-          methodDescriptor.requestSerializer,
-        );
+        const messageRequest = this.createProtoMessage(request, methodDescriptor.requestType);
 
         // Merge call-specific options with instance options
         const callMetadata = this.mergeMetadata(
@@ -367,8 +400,11 @@ export class GrpcWebAdapter implements ITransportAdapter {
           options?.metadata
         );
 
+        // Convert to grpc-web compatible descriptor format
+        const grpcWebDescriptor = this.toGrpcWebDescriptor(methodDescriptor);
+
         // Open streaming connection
-        const client = grpc.invoke(methodDescriptor as any, {
+        const client = grpc.invoke(grpcWebDescriptor as any, {
           request: messageRequest as any,
           host: this.baseUrl,
           metadata: callMetadata,
@@ -528,6 +564,63 @@ export class GrpcWebAdapter implements ITransportAdapter {
    * Create a Message-like wrapper object with serializeBinary method
    * This allows plain objects to work with grpc-web which expects Message instances
    */
+  /**
+   * Create a protobuf message wrapper with serializeBinary method
+   *
+   * The grpc-web library expects request messages to have a serializeBinary() method.
+   * This wraps a plain JavaScript object with the serialization method from the descriptor's requestType.
+   *
+   * @param data - Plain JavaScript object containing the message data
+   * @param messageType - MessageType from the method descriptor containing serialize/deserialize functions
+   * @returns Message wrapper with serializeBinary() method
+   */
+  private createProtoMessage<T>(data: T, messageType: any): any {
+    // If data already has serializeBinary, use it directly
+    if ((data as any).serializeBinary && typeof (data as any).serializeBinary === 'function') {
+      if (this.options.debug) {
+        console.log('[GrpcWebAdapter] Data already has serializeBinary, using as-is');
+      }
+      return data;
+    }
+
+    // Check if messageType has the serialize method
+    if (!messageType || !messageType.serializeBinary) {
+      if (this.options.debug) {
+        console.warn('[GrpcWebAdapter] No serializeBinary found in messageType, returning data as-is');
+      }
+      return data;
+    }
+
+    // Create a wrapper object that includes the data and serializeBinary method
+    const wrapper = Object.assign({}, data, {
+      serializeBinary: () => {
+        try {
+          // Call the messageType's serializeBinary with the data
+          const serialized = messageType.serializeBinary(data);
+          if (this.options?.debug) {
+            console.log('[GrpcWebAdapter] Serialized message:', {
+              originalData: data,
+              serializedLength: serialized?.length,
+            });
+          }
+          return serialized;
+        } catch (error) {
+          console.error('[GrpcWebAdapter] Serialization error:', error);
+          throw error;
+        }
+      }
+    });
+
+    if (this.options.debug) {
+      console.log('[GrpcWebAdapter] Created proto message wrapper:', {
+        hasSerializeBinary: typeof wrapper.serializeBinary === 'function',
+        dataKeys: Object.keys(data as any),
+      });
+    }
+
+    return wrapper;
+  }
+
   private createMessageWrapper<T>(data: T, serializer?: MessageSerializer<T>): any {
     // If no serializer provided or data already has serializeBinary, return as-is
     if (!serializer || (data as any).serializeBinary) {

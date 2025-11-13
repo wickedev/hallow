@@ -51,34 +51,9 @@
  */
 
 // Export hooks
-export { useGrpc, type UseGrpcConfig } from './hooks/useGrpc';
-export {
-  useSuspenseGrpc,
-  clearSuspenseCache,
-  preloadGrpc,
-  type UseSuspenseGrpcConfig,
-} from './hooks/useSuspenseGrpc';
-export { useGrpcStream, type UseGrpcStreamConfig } from './hooks/useGrpcStream';
+export { useGrpc } from './hooks/useGrpc';
+export { useSuspenseGrpc, clearSuspenseCache, preloadGrpc } from './hooks/useSuspenseGrpc';
+export { useGrpcStream } from './hooks/useGrpcStream';
 
 // Export types
-export type {
-  HookAdapterConfig,
-  UseGrpcResult,
-  UseGrpcStreamResult,
-  StubFactory,
-  StubMethod,
-  StreamingStubMethod,
-  StreamObserver,
-} from './types';
-
-// Re-export adapter types for convenience
-export type {
-  ITransportAdapter,
-  MethodDescriptor,
-  CallOptions,
-  Metadata,
-  ClientStreamingCall,
-  BidiStreamingCall,
-  GrpcError,
-  GrpcStatusCode,
-} from '@hallow/generator/adapters';
+export * from './types';

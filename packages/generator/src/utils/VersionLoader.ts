@@ -52,8 +52,9 @@ export function loadVersion(options: VersionLoaderOptions = {}): string {
   }
 
   // Determine package.json path
+  // Note: When bundled, __dirname points to dist/ so we need ../package.json
   const packageJsonPath =
-    options.packageJsonPath || path.join(__dirname, '../../package.json');
+    options.packageJsonPath || path.join(__dirname, '../package.json');
 
   // Check if file exists
   if (!fs.existsSync(packageJsonPath)) {

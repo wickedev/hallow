@@ -1,0 +1,407 @@
+/* CSS Custom Properties */
+:root {
+  --color-primary: #4299e1;
+  --color-primary-dark: #2b6cb0;
+  --color-success: #48bb78;
+  --color-error: #f56565;
+  --color-warning: #ed8936;
+  --color-bg: #f7fafc;
+  --color-surface: #ffffff;
+  --color-text: #2d3748;
+  --color-text-muted: #718096;
+  --color-border: #e2e8f0;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --border-radius: 0.5rem;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+/* App Container */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
+.app-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.app-subtitle {
+  margin: var(--spacing-sm) 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* Navigation Styles */
+.navigation {
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-border);
+  padding: 0 var(--spacing-lg);
+}
+
+.nav-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.nav-tab {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.nav-tab:hover {
+  background-color: var(--color-bg);
+}
+
+.nav-tab:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.nav-tab.active {
+  border-bottom-color: var(--color-primary);
+  background-color: var(--color-bg);
+}
+
+.nav-tab-label {
+  display: block;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.nav-tab-description {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-xs);
+}
+
+/* Main Content */
+.app-main {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+/* Example Container */
+.example-container {
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.example-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.example-header h2 {
+  margin: 0 0 var(--spacing-sm);
+  color: var(--color-text);
+  font-size: 1.5rem;
+}
+
+.example-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+/* Example Controls */
+.example-controls {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.example-input {
+  flex: 1;
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.example-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.example-input:disabled {
+  background-color: var(--color-bg);
+  cursor: not-allowed;
+}
+
+.example-button {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.example-button:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.example-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading State */
+.loading {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Error Display */
+.error-display {
+  padding: var(--spacing-md);
+  background-color: #fff5f5;
+  border: 2px solid var(--color-error);
+  border-radius: var(--border-radius);
+  color: #c53030;
+  margin: var(--spacing-md) 0;
+}
+
+.error-display strong {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Result Display */
+.result {
+  padding: var(--spacing-lg);
+  background-color: #f0fff4;
+  border: 2px solid var(--color-success);
+  border-radius: var(--border-radius);
+  margin: var(--spacing-md) 0;
+}
+
+.result h3 {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text);
+}
+
+.greeting-reply {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-success);
+  margin: 0 0 var(--spacing-md);
+}
+
+.metadata {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-md);
+}
+
+.metadata p {
+  margin: var(--spacing-xs) 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Code Example */
+.code-example {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 2px solid var(--color-border);
+}
+
+.code-example h3 {
+  margin: 0 0 var(--spacing-md);
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.code-example pre {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Error Boundary */
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: var(--spacing-xl);
+}
+
+.error-boundary-content {
+  background: var(--color-surface);
+  border: 2px solid var(--color-error);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-xl);
+  max-width: 600px;
+  text-align: center;
+}
+
+.error-boundary-content h2 {
+  color: var(--color-error);
+  margin: 0 0 var(--spacing-md);
+}
+
+.error-message {
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-lg);
+  font-size: 1.125rem;
+}
+
+.error-details {
+  background-color: var(--color-bg);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  text-align: left;
+}
+
+.error-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+}
+
+.error-details pre {
+  margin: var(--spacing-md) 0 0;
+  padding: var(--spacing-md);
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.retry-button {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: var(--spacing-md);
+}
+
+.retry-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Footer */
+.app-footer {
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.app-footer a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .nav-tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .nav-tab {
+    border-bottom: 1px solid var(--color-border);
+    border-left: 3px solid transparent;
+  }
+
+  .nav-tab.active {
+    border-bottom-color: var(--color-border);
+    border-left-color: var(--color-primary);
+  }
+
+  .example-controls {
+    flex-direction: column;
+  }
+
+  .app-main {
+    padding: var(--spacing-md);
+  }
+
+  .example-container {
+    padding: var(--spacing-md);
+  }
+}

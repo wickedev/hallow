@@ -1,14 +1,15 @@
-const typescript = require('@rollup/plugin-typescript');
-const resolve = require('@rollup/plugin-node-resolve');
-const commonjs = require('@rollup/plugin-commonjs');
+import typescript from '@rollup/plugin-typescript';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
-module.exports = {
+export default {
   input: 'src/index.ts',
   output: [
     {
       file: 'dist/index.js',
       format: 'cjs',
-      sourcemap: true
+      sourcemap: true,
+      exports: 'named'
     },
     {
       file: 'dist/index.esm.js',
@@ -16,24 +17,21 @@ module.exports = {
       sourcemap: true
     }
   ],
-  external: [
-    'fs',
-    'path',
-    'antlr4ts',
-    'antlr4ts/tree/ParseTree',
-    'antlr4ts/tree/AbstractParseTreeVisitor',
-    'antlr4ts/tree/ParseTreeWalker',
-    'antlr4ts/tree/TerminalNode',
-    'antlr4ts/tree/RuleNode'
-  ],
+  external: (id) => {
+    // Keep all Node.js built-ins and antlr4ts modules external
+    return id.startsWith('antlr4ts') || ['fs', 'path', 'assert', 'util'].includes(id);
+  },
   plugins: [
-    resolve({
-      preferBuiltins: true
-    }),
-    commonjs(),
     typescript({
       tsconfig: './tsconfig.json',
-      exclude: ['tests/**/*']
-    })
+      exclude: ['tests/**/*'],
+      compilerOptions: {
+        rootDir: './src'
+      }
+    }),
+    nodeResolve({
+      preferBuiltins: true
+    }),
+    commonjs()
   ]
 };

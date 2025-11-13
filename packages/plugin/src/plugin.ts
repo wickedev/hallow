@@ -11,6 +11,7 @@
  */
 
 import type { UnpluginFactory, UnpluginContextMeta } from 'unplugin';
+import * as ts from 'typescript';
 import { Parser } from '@hallow/parser';
 import { Generator, GenerationError } from '@hallow/generator';
 import { ConfigValidator } from './config';
@@ -679,11 +680,29 @@ export const createHallowPlugin: UnpluginFactory<PluginOptions | undefined> = (
           }
 
           // Combine import statements with generated code
+          let generatedTypeScript: string;
           if (importStatements.length > 0) {
-            generatedCode = importStatements.join('\n') + '\n\n' + baseCode;
+            generatedTypeScript = importStatements.join('\n') + '\n\n' + baseCode;
           } else {
-            generatedCode = baseCode;
+            generatedTypeScript = baseCode;
           }
+
+          // Transpile TypeScript to JavaScript for webpack compatibility
+          // Webpack needs JavaScript output, not TypeScript
+          const transpileResult = ts.transpileModule(generatedTypeScript, {
+            compilerOptions: {
+              target: ts.ScriptTarget.ES2020,
+              module: ts.ModuleKind.ESNext,
+              jsx: ts.JsxEmit.React,
+              esModuleInterop: true,
+              skipLibCheck: true,
+              strict: false,
+              declaration: false,
+              sourceMap: config.sourceMaps,
+            },
+          });
+
+          generatedCode = transpileResult.outputText;
 
           // Task 21.1: Log code generation completion
           logger.info(

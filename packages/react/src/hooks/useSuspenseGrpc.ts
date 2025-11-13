@@ -40,7 +40,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
+import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator';
 import { HookAdapterConfig } from '../types';
 
 /**
@@ -61,10 +61,10 @@ export interface UseSuspenseGrpcConfig<TRequest, TResponse, TStub>
   request?: TRequest;
 
   /**
-   * Stub class constructor that takes an adapter
+   * Stub class constructor that takes a config object
    * Alternative to providing method + request
    */
-  StubClass?: new (adapter: ITransportAdapter) => TStub;
+  StubClass?: new (config: HookAdapterConfig) => TStub;
 
   /**
    * Function that uses the stub to make a call
@@ -255,7 +255,7 @@ export function useSuspenseGrpc<TRequest = any, TResponse = any, TStub = any>(
       }
       // Use stub-based pattern
       else if (StubClass && stubMethod) {
-        const stub = new StubClass(adapterRef.current);
+        const stub = new StubClass({ serverUrl, ...adapterConfig } as any);
         result = await stubMethod(stub);
       }
       else {
@@ -351,7 +351,14 @@ export function preloadGrpc<TRequest = any, TResponse = any, TStub = any>(
           config.callOptions
         );
       } else if (config.StubClass && config.stubMethod) {
-        const stub = new config.StubClass(adapter);
+        const stub = new config.StubClass({
+          serverUrl: config.serverUrl,
+          adapterType: config.adapterType,
+          enableNativeGrpc: config.enableNativeGrpc,
+          secure: config.secure,
+          debug: config.debug,
+          defaultCallOptions: config.defaultCallOptions,
+        } as any);
         result = await config.stubMethod(stub);
       } else {
         throw new Error('Invalid configuration');

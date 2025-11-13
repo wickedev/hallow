@@ -65,12 +65,12 @@ const {{pascalName}}Descriptor: MethodDescriptor<{{inputType}}, {{outputType}}> 
   requestStream: {{clientStreaming}},
   responseStream: {{serverStreaming}},
   requestType: {
-    serializeBinary: (msg: {{inputType}}) => {{inputType}}.toBinary(msg),
-    deserializeBinary: (bytes: Uint8Array) => {{inputType}}.fromBinary(bytes),
+    serializeBinary: (msg: {{inputType}}) => {{inputType}}.encode(msg),
+    deserializeBinary: (bytes: Uint8Array) => {{inputType}}.decode(bytes),
   } as MessageType<{{inputType}}>,
   responseType: {
-    serializeBinary: (msg: {{outputType}}) => {{outputType}}.toBinary(msg),
-    deserializeBinary: (bytes: Uint8Array) => {{outputType}}.fromBinary(bytes),
+    serializeBinary: (msg: {{outputType}}) => {{outputType}}.encode(msg),
+    deserializeBinary: (bytes: Uint8Array) => {{outputType}}.decode(bytes),
   } as MessageType<{{outputType}}>,
 };
 
@@ -187,6 +187,20 @@ export class {{pascalName}}Stub {
     await this.adapter.close();
   }
 
+  /**
+   * Get all service methods
+   *
+   * Provides access to all RPC methods through a single property.
+   * This allows for a consistent API pattern: `stub.methods.methodName()`
+   */
+  public get methods() {
+    return {
+      {{#each methods}}
+      {{camelName}}: this.{{camelName}}.bind(this),
+      {{/each}}
+    };
+  }
+
   {{#each methods}}
   {{#if serverStreaming}}
   {{#if clientStreaming}}
@@ -224,7 +238,7 @@ export class {{pascalName}}Stub {
    */
   public {{camelName}}(options?: CallOptions): BidiStreamingCall<{{inputType}}, {{outputType}}> {
     return this.adapter.bidiStream<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Descriptor,
+      {{pascalName}}Descriptor,
       options
     );
   }
@@ -263,7 +277,7 @@ export class {{pascalName}}Stub {
     options?: CallOptions
   ): Observable<{{outputType}}> {
     return this.adapter.serverStream<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Descriptor,
+      {{pascalName}}Descriptor,
       request,
       options
     );
@@ -302,7 +316,7 @@ export class {{pascalName}}Stub {
    */
   public {{camelName}}(options?: CallOptions): ClientStreamingCall<{{inputType}}, {{outputType}}> {
     return this.adapter.clientStream<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Descriptor,
+      {{pascalName}}Descriptor,
       options
     );
   }
@@ -335,7 +349,7 @@ export class {{pascalName}}Stub {
     options?: CallOptions
   ): Promise<{{outputType}}> {
     return this.adapter.unary<{{inputType}}, {{outputType}}>(
-      {{../pascalName}}Descriptor,
+      {{pascalName}}Descriptor,
       request,
       options
     );

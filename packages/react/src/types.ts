@@ -7,7 +7,7 @@ import {
   MethodDescriptor,
   CallOptions,
   AdapterConfig,
-} from '@hallow/generator/adapters';
+} from '@hallow/generator';
 
 /**
  * Configuration for adapter used by hooks

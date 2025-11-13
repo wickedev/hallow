@@ -9,7 +9,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "yarn build:types && yarn build:js",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "rollup -c",
     "test": "jest",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
@@ -27,9 +29,13 @@
     "react": "^18.0.0"
   },
   "dependencies": {
+    "@hallow/generator": "*",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
     "@testing-library/react": "^14.0.0",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/jest": "^29.5.5",

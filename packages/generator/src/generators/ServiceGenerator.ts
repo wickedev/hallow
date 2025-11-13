@@ -464,7 +464,8 @@ export class ServiceGenerator {
 
     try {
       // Determine template directory
-      const templateDir = this.options.templateDir || path.join(__dirname, '../templates');
+      // When bundled by Rollup, __dirname points to dist/, so templates are in dist/templates
+      const templateDir = this.options.templateDir || path.join(__dirname, 'templates');
       const templatePath = path.join(templateDir, 'service.hbs');
 
       // Check if template file exists

@@ -17,7 +17,7 @@
     }
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && mkdir -p dist/templates && cp src/templates/*.hbs dist/templates/",
     "test": "jest",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",

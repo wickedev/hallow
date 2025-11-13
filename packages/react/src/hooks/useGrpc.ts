@@ -34,7 +34,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator/adapters';
+import { AdapterFactory, ITransportAdapter, MethodDescriptor, CallOptions } from '@hallow/generator';
 import { HookAdapterConfig, UseGrpcResult } from '../types';
 
 /**
@@ -54,10 +54,10 @@ export interface UseGrpcConfig<TRequest, TResponse, TStub> extends HookAdapterCo
   request?: TRequest;
 
   /**
-   * Stub class constructor that takes an adapter
+   * Stub class constructor that takes a config object
    * Alternative to providing method + request
    */
-  StubClass?: new (adapter: ITransportAdapter) => TStub;
+  StubClass?: new (config: HookAdapterConfig) => TStub;
 
   /**
    * Function that uses the stub to make a call
@@ -122,8 +122,21 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
     onSuccess,
     onError,
     deps = [],
-    ...adapterConfig
+    adapterType,
+    enableNativeGrpc,
+    secure,
+    debug,
+    defaultCallOptions,
   } = config;
+
+  // Construct adapter config
+  const adapterConfig = {
+    adapterType,
+    enableNativeGrpc,
+    secure,
+    debug,
+    defaultCallOptions,
+  };
 
   // State management
   const [data, setData] = useState<TResponse | undefined>(undefined);
@@ -134,6 +147,16 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
   const adapterRef = useRef<ITransportAdapter | null>(null);
   const mountedRef = useRef<boolean>(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const stubMethodRef = useRef(stubMethod);
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+
+  // Update refs on each render
+  useEffect(() => {
+    stubMethodRef.current = stubMethod;
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+  });
 
   // Validate configuration
   useEffect(() => {
@@ -143,7 +166,7 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
 
     // Validate usage pattern
     const hasMethodPattern = method && request !== undefined;
-    const hasStubPattern = StubClass && stubMethod;
+    const hasStubPattern = StubClass && stubMethodRef.current;
 
     if (!hasMethodPattern && !hasStubPattern) {
       throw new Error(
@@ -156,7 +179,7 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
         'useGrpc: Both patterns provided. Using method + request pattern.'
       );
     }
-  }, [serverUrl, method, request, StubClass, stubMethod]);
+  }, [serverUrl, method, request, StubClass]);
 
   // Create adapter on mount
   useEffect(() => {
@@ -175,13 +198,20 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
     }
 
     return () => {
-      mountedRef.current = false;
       if (adapterRef.current) {
         adapterRef.current.close();
         adapterRef.current = null;
       }
     };
-  }, [serverUrl, JSON.stringify(adapterConfig)]);
+  }, [serverUrl, adapterType, enableNativeGrpc, secure, debug]);
+
+  // Track component mount/unmount
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Execute the RPC call
   const execute = useCallback(async () => {
@@ -217,9 +247,9 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
         );
       }
       // Use stub-based pattern
-      else if (StubClass && stubMethod) {
-        const stub = new StubClass(adapterRef.current);
-        result = await stubMethod(stub);
+      else if (StubClass && stubMethodRef.current) {
+        const stub = new StubClass({ serverUrl, ...adapterConfig } as any);
+        result = await stubMethodRef.current(stub);
       }
       else {
         throw new Error('Invalid configuration');
@@ -228,8 +258,8 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
       if (mountedRef.current) {
         setData(result);
         setLoading(false);
-        if (onSuccess) {
-          onSuccess(result);
+        if (onSuccessRef.current) {
+          onSuccessRef.current(result);
         }
       }
     } catch (err) {
@@ -243,8 +273,8 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
       if (mountedRef.current) {
         setError(error);
         setLoading(false);
-        if (onError) {
-          onError(error);
+        if (onErrorRef.current) {
+          onErrorRef.current(error);
         }
       }
     }
@@ -252,10 +282,7 @@ export function useGrpc<TRequest = any, TResponse = any, TStub = any>(
     method,
     request,
     StubClass,
-    stubMethod,
     callOptions,
-    onSuccess,
-    onError,
     ...deps,
   ]);
 

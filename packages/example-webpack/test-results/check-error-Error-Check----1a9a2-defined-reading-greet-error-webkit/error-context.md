@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - heading "🌟 Hallow gRPC + Webpack Example" [level=1] [ref=e5]
+    - paragraph [ref=e6]: Demonstrating seamless gRPC-web integration with React 18 and TypeScript
+  - navigation [ref=e7]:
+    - generic [ref=e8]:
+      - button "Promise API" [pressed] [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Promise API
+        - generic [ref=e11]: Imperative data fetching with async/await
+      - button "Hook API" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Hook API
+        - generic [ref=e14]: Declarative data fetching with useGrpc
+      - button "Suspense API" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16]: Suspense API
+        - generic [ref=e17]: Concurrent rendering with useSuspenseGrpc
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - heading "Promise API Example" [level=2] [ref=e21]
+        - paragraph [ref=e22]: Imperative data fetching using async/await pattern
+      - generic [ref=e23]:
+        - textbox "Enter your name" [ref=e24]: TestUser
+        - button "Send Greeting" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - strong [ref=e27]: "Error:"
+        - text: Response closed without headers
+      - generic [ref=e28]:
+        - heading "Code Example:" [level=3] [ref=e29]
+        - generic [ref=e30]: "import { GreetingServiceStub } from './greeting.proto'; const stub = new GreetingServiceStub({ serverUrl }); const response = await stub.methods.greet({ name: 'World', language: 'en', options: { style: 1 } }); console.log(response.reply);"
+  - contentinfo [ref=e31]:
+    - paragraph [ref=e32]:
+      - text: Built with
+      - link "Hallow gRPC" [ref=e33]:
+        - /url: https://github.com/your-org/hallow
+      - text: •
+      - link "View Source" [ref=e34]:
+        - /url: https://github.com/your-org/hallow/tree/main/packages/example-webpack
+```

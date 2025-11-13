@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package greeting;
+
+// GreetingService demonstrates various RPC patterns
+service GreetingService {
+  // Unary RPC: Single request, single response
+  rpc Greet(GreetRequest) returns (GreetResponse);
+
+  // Server streaming RPC: Single request, stream of responses
+  rpc StreamGreetings(StreamGreetingsRequest) returns (stream GreetResponse);
+
+  // Client streaming RPC: Stream of requests, single response
+  rpc AccumulateGreetings(stream GreetRequest) returns (AccumulatedResponse);
+
+  // Bidirectional streaming RPC: Stream of requests and responses
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+// Greeting style enum
+enum GreetingStyle {
+  UNSPECIFIED = 0;
+  CASUAL = 1;
+  FORMAL = 2;
+  FRIENDLY = 3;
+}
+
+// Request message for Greet method
+message GreetRequest {
+  string name = 1;
+  string language = 2; // Language code: 'en', 'es', 'fr'
+  GreetingOptions options = 3;
+}
+
+// Options for greeting customization
+message GreetingOptions {
+  GreetingStyle style = 1;
+  bool include_timestamp = 2;
+  map<string, string> metadata = 3;
+}
+
+// Response message for Greet method
+message GreetResponse {
+  string reply = 1;
+  int64 timestamp = 2;
+  ResponseMetadata metadata = 3;
+}
+
+// Metadata included in responses
+message ResponseMetadata {
+  string server_version = 1;
+  string request_id = 2;
+  repeated string tags = 3;
+}
+
+// Request for streaming greetings
+message StreamGreetingsRequest {
+  string name = 1;
+  int32 count = 2; // Number of greetings to stream
+  int32 delay_ms = 3; // Delay between messages in milliseconds
+}
+
+// Response for accumulated greetings
+message AccumulatedResponse {
+  int32 total_count = 1;
+  repeated string names = 2;
+  string summary = 3;
+}
+
+// Chat message for bidirectional streaming
+message ChatMessage {
+  string sender = 1;
+  string message = 2;
+  int64 timestamp = 3;
+}

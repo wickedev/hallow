@@ -75,25 +75,44 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
   }
 
   /**
-   * Visit syntax declaration
+   * Visit syntax declaration using ANTLR accessors
+   * Grammar: SYNTAX EQ (PROTO3_LIT_SINGLE | PROTO3_LIT_DOBULE) SEMI
    */
   visitSyntax(ctx: SyntaxContext): any {
-    const syntaxText = ctx.text;
-    const match = syntaxText.match(/syntax\s*=\s*["']([^"']+)["']/);
-    if (match) {
-      this.protoFile.syntax = match[1];
+    try {
+      // PROTO3_LIT_SINGLE is "proto3" and PROTO3_LIT_DOBULE is 'proto3'
+      // Both are defined as literals in the grammar, so just extract "proto3"
+      const proto3Single = ctx.PROTO3_LIT_SINGLE();
+      const proto3Double = ctx.PROTO3_LIT_DOBULE();
+
+      if (proto3Single || proto3Double) {
+        this.protoFile.syntax = 'proto3';
+      }
+    } catch (error) {
+      // Syntax extraction failed, leave as undefined
     }
     return this.visitChildren(ctx);
   }
 
   /**
-   * Visit import statement
+   * Visit import statement using ANTLR accessors
+   * Grammar: IMPORT (WEAK | PUBLIC)? strLit SEMI
    */
   visitImportStatement(ctx: ImportStatementContext): any {
-    const importText = ctx.text;
-    const match = importText.match(/import\s+(?:public\s+|weak\s+)?["']([^"']+)["']/);
-    if (match) {
-      this.protoFile.imports.push(match[1]);
+    try {
+      const strLitCtx = ctx.strLit();
+      if (strLitCtx) {
+        // strLit includes quotes, need to strip them
+        let importPath = strLitCtx.text;
+        // Remove surrounding quotes (single or double)
+        if ((importPath.startsWith('"') && importPath.endsWith('"')) ||
+            (importPath.startsWith("'") && importPath.endsWith("'"))) {
+          importPath = importPath.slice(1, -1);
+        }
+        this.protoFile.imports.push(importPath);
+      }
+    } catch (error) {
+      // Import extraction failed, skip this import
     }
     return this.visitChildren(ctx);
   }
@@ -102,16 +121,19 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
    * Visit package statement
    */
   visitPackageStatement(ctx: PackageStatementContext): any {
-    const packageText = ctx.text;
-    const match = packageText.match(/package\s+([^;]+);/);
-    if (match) {
-      this.protoFile.package = match[1].trim();
+    try {
+      const fullIdentCtx = ctx.fullIdent();
+      if (fullIdentCtx) {
+        this.protoFile.package = fullIdentCtx.text;
+      }
+    } catch (error) {
+      // Package extraction failed, leave as undefined
     }
     return this.visitChildren(ctx);
   }
 
   /**
-   * Visit service definition
+   * Visit service definition using ANTLR accessors
    */
   visitServiceDef(ctx: ServiceDefContext): any {
     const serviceName = this.extractServiceName(ctx);
@@ -122,13 +144,17 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
       options: {},
     };
 
-    // Extract methods
-    for (let i = 0; i < ctx.childCount; i++) {
-      const child = ctx.getChild(i);
-      if (child instanceof RpcContext) {
-        const method = this.extractMethod(child);
-        if (method) {
-          service.methods.push(method);
+    // Extract methods using proper ANTLR accessor
+    // ServiceDef contains ServiceElement children, not direct RPC children
+    const serviceElements = ctx.serviceElement();
+    if (serviceElements) {
+      for (const serviceElement of serviceElements) {
+        const rpcCtx = serviceElement.rpc();
+        if (rpcCtx) {
+          const method = this.extractMethod(rpcCtx);
+          if (method) {
+            service.methods.push(method);
+          }
         }
       }
     }
@@ -161,33 +187,76 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
   }
 
   /**
-   * Extract service name from context
+   * Extract service name from context using ANTLR accessors
    */
   private extractServiceName(ctx: ServiceDefContext): string {
-    const text = ctx.text;
-    const match = text.match(/service\s+(\w+)/);
-    return match ? match[1] : 'UnknownService';
+    try {
+      const serviceNameCtx = ctx.serviceName();
+      if (!serviceNameCtx) {
+        return 'UnknownService';
+      }
+      const identCtx = serviceNameCtx.ident();
+      if (!identCtx) {
+        return 'UnknownService';
+      }
+      return identCtx.text;
+    } catch (error) {
+      return 'UnknownService';
+    }
   }
 
   /**
-   * Extract method from RPC context
+   * Extract method from RPC context using ANTLR accessors
    */
   private extractMethod(ctx: RpcContext): MethodDefinition | null {
     try {
-      const text = ctx.text;
-      // Match: rpc MethodName (stream? InputType) returns (stream? OutputType)
-      const match = text.match(/rpc\s+(\w+)\s*\((\s*stream\s+)?([^)]+)\)\s*returns\s*\((\s*stream\s+)?([^)]+)\)/);
+      // Get method name
+      const rpcNameCtx = ctx.rpcName();
+      if (!rpcNameCtx) {
+        return null;
+      }
+      const identCtx = rpcNameCtx.ident();
+      if (!identCtx) {
+        return null;
+      }
+      const name = identCtx.text;
 
-      if (!match) {
+      // Get input and output message types
+      const messageTypes = ctx.messageType();
+      if (!messageTypes || messageTypes.length !== 2) {
         return null;
       }
 
+      const inputType = messageTypes[0].text.trim();
+      const outputType = messageTypes[1].text.trim();
+
+      // Check for streaming - STREAM tokens can appear before input and/or output types
+      const streamTokens = ctx.STREAM();
+      let clientStreaming = false;
+      let serverStreaming = false;
+
+      // If we have stream tokens, we need to determine which apply to input vs output
+      // by checking their position in the parse tree
+      if (streamTokens && streamTokens.length > 0) {
+        const returnsToken = ctx.RETURNS();
+        const returnsIndex = returnsToken?.symbol.tokenIndex ?? -1;
+
+        for (let i = 0; i < streamTokens.length; i++) {
+          const streamIndex = streamTokens[i].symbol.tokenIndex;
+          if (returnsIndex > 0 && streamIndex < returnsIndex) {
+            clientStreaming = true;
+          } else {
+            serverStreaming = true;
+          }
+        }
+      }
+
       return {
-        name: match[1],
-        inputType: match[3].trim(),
-        outputType: match[5].trim(),
-        clientStreaming: !!match[2],
-        serverStreaming: !!match[4],
+        name,
+        inputType,
+        outputType,
+        clientStreaming,
+        serverStreaming,
         options: {},
       };
     } catch (error) {
@@ -196,13 +265,20 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
   }
 
   /**
-   * Extract message definition
+   * Extract message definition using ANTLR accessors
    */
   private extractMessage(ctx: MessageDefContext): MessageDefinition | null {
     try {
-      const text = ctx.text;
-      const match = text.match(/message\s+(\w+)/);
-      const name = match ? match[1] : 'UnknownMessage';
+      // Get message name using proper accessor
+      const messageNameCtx = ctx.messageName();
+      if (!messageNameCtx) {
+        return null;
+      }
+      const identCtx = messageNameCtx.ident();
+      if (!identCtx) {
+        return null;
+      }
+      const name = identCtx.text;
 
       const message: MessageDefinition = {
         name,
@@ -213,23 +289,38 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
         options: {},
       };
 
-      // Extract fields
-      for (let i = 0; i < ctx.childCount; i++) {
-        const child = ctx.getChild(i);
-        if (child instanceof FieldContext) {
-          const field = this.extractField(child);
-          if (field) {
-            message.fields.push(field);
-          }
-        } else if (child instanceof MessageDefContext) {
-          const nested = this.extractMessage(child);
-          if (nested) {
-            message.nestedMessages.push(nested);
-          }
-        } else if (child instanceof EnumDefContext) {
-          const nested = this.extractEnum(child);
-          if (nested) {
-            message.nestedEnums.push(nested);
+      // Extract fields and nested definitions using proper accessors
+      const messageBody = ctx.messageBody();
+      if (messageBody) {
+        const messageElements = messageBody.messageElement();
+        if (messageElements) {
+          for (const messageElement of messageElements) {
+            // Check for field
+            const fieldCtx = messageElement.field();
+            if (fieldCtx) {
+              const field = this.extractField(fieldCtx);
+              if (field) {
+                message.fields.push(field);
+              }
+            }
+
+            // Check for nested message
+            const nestedMsgCtx = messageElement.messageDef();
+            if (nestedMsgCtx) {
+              const nested = this.extractMessage(nestedMsgCtx);
+              if (nested) {
+                message.nestedMessages.push(nested);
+              }
+            }
+
+            // Check for nested enum
+            const nestedEnumCtx = messageElement.enumDef();
+            if (nestedEnumCtx) {
+              const nested = this.extractEnum(nestedEnumCtx);
+              if (nested) {
+                message.nestedEnums.push(nested);
+              }
+            }
           }
         }
       }
@@ -241,24 +332,59 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
   }
 
   /**
-   * Extract field definition
+   * Extract field definition using ANTLR accessors
+   * Grammar: fieldLabel? type_ fieldName EQ fieldNumber (LB fieldOptions RB)? SEMI
    */
   private extractField(ctx: FieldContext): FieldDefinition | null {
     try {
-      const text = ctx.text;
-      // Match: (repeated)? type name = number
-      const match = text.match(/(repeated\s+)?(\w+)\s+(\w+)\s*=\s*(\d+)/);
-
-      if (!match) {
+      // Get field type
+      const typeCtx = ctx.type_();
+      if (!typeCtx) {
         return null;
+      }
+      const type = typeCtx.text;
+
+      // Get field name
+      const fieldNameCtx = ctx.fieldName();
+      if (!fieldNameCtx) {
+        return null;
+      }
+      const identCtx = fieldNameCtx.ident();
+      if (!identCtx) {
+        return null;
+      }
+      const name = identCtx.text;
+
+      // Get field number
+      const fieldNumberCtx = ctx.fieldNumber();
+      if (!fieldNumberCtx) {
+        return null;
+      }
+      const intLitCtx = fieldNumberCtx.intLit();
+      if (!intLitCtx) {
+        return null;
+      }
+      const number = parseInt(intLitCtx.text, 10);
+
+      // Check for field label (optional or repeated)
+      const fieldLabelCtx = ctx.fieldLabel();
+      let repeated = false;
+      let optional = false;
+
+      if (fieldLabelCtx) {
+        if (fieldLabelCtx.REPEATED()) {
+          repeated = true;
+        } else if (fieldLabelCtx.OPTIONAL()) {
+          optional = true;
+        }
       }
 
       return {
-        name: match[3],
-        number: parseInt(match[4], 10),
-        type: match[2],
-        repeated: !!match[1],
-        optional: false,
+        name,
+        number,
+        type,
+        repeated,
+        optional,
         map: false,
         options: {},
       };
@@ -268,13 +394,20 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
   }
 
   /**
-   * Extract enum definition
+   * Extract enum definition using ANTLR accessors
    */
   private extractEnum(ctx: EnumDefContext): EnumDefinition | null {
     try {
-      const text = ctx.text;
-      const match = text.match(/enum\s+(\w+)/);
-      const name = match ? match[1] : 'UnknownEnum';
+      // Get enum name using proper accessor
+      const enumNameCtx = ctx.enumName();
+      if (!enumNameCtx) {
+        return null;
+      }
+      const identCtx = enumNameCtx.ident();
+      if (!identCtx) {
+        return null;
+      }
+      const name = identCtx.text;
 
       const enumDef: EnumDefinition = {
         name,
@@ -282,13 +415,19 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
         options: {},
       };
 
-      // Extract enum values
-      for (let i = 0; i < ctx.childCount; i++) {
-        const child = ctx.getChild(i);
-        if (child instanceof EnumFieldContext) {
-          const value = this.extractEnumValue(child);
-          if (value) {
-            enumDef.values.push(value);
+      // Extract enum values using proper accessors
+      const enumBody = ctx.enumBody();
+      if (enumBody) {
+        const enumElements = enumBody.enumElement();
+        if (enumElements) {
+          for (const enumElement of enumElements) {
+            const enumFieldCtx = enumElement.enumField();
+            if (enumFieldCtx) {
+              const value = this.extractEnumValue(enumFieldCtx);
+              if (value) {
+                enumDef.values.push(value);
+              }
+            }
           }
         }
       }
@@ -300,21 +439,36 @@ export class ProtoFileBuilder extends AbstractParseTreeVisitor<any> implements P
   }
 
   /**
-   * Extract enum value definition
+   * Extract enum value definition using ANTLR accessors
+   * Grammar: ident EQ (MINUS)? intLit enumValueOptions? SEMI
    */
   private extractEnumValue(ctx: EnumFieldContext): EnumValueDefinition | null {
     try {
-      const text = ctx.text;
-      // Match: NAME = number
-      const match = text.match(/(\w+)\s*=\s*(-?\d+)/);
-
-      if (!match) {
+      // Get enum value name
+      const identCtx = ctx.ident();
+      if (!identCtx) {
         return null;
       }
+      const name = identCtx.text;
+
+      // Get enum value number
+      const intLitCtx = ctx.intLit();
+      if (!intLitCtx) {
+        return null;
+      }
+      let numberStr = intLitCtx.text;
+
+      // Check for MINUS token
+      const minusToken = ctx.MINUS();
+      if (minusToken) {
+        numberStr = '-' + numberStr;
+      }
+
+      const number = parseInt(numberStr, 10);
 
       return {
-        name: match[1],
-        number: parseInt(match[2], 10),
+        name,
+        number,
         options: {},
       };
     } catch (error) {
