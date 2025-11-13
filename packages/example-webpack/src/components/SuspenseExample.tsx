@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import { useSuspenseGrpc } from '@hallow/react';
+import { useSuspenseGrpc, clearSuspenseCache } from '@hallow/react';
 import { GreetingServiceStub } from '../../proto/greeting.proto';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -30,6 +30,8 @@ const SuspenseContent: React.FC<SuspenseContentProps> = ({ serverUrl, name }) =>
           metadata: {},
         },
       }),
+    // Provide explicit cache key that includes the name parameter
+    cacheKey: `${serverUrl}:greet:${name}`,
   });
 
   return (
@@ -78,11 +80,19 @@ const SuspenseContent: React.FC<SuspenseContentProps> = ({ serverUrl, name }) =>
 const SuspenseExample: React.FC<SuspenseExampleProps> = ({ serverUrl }) => {
   const [name, setName] = useState('');
   const [showResult, setShowResult] = useState(false);
+  const [refetchKey, setRefetchKey] = useState(0);
 
   const handleGreet = () => {
     if (name.trim()) {
       setShowResult(true);
     }
+  };
+
+  const handleRefetch = () => {
+    // Clear the Suspense cache to force refetch
+    clearSuspenseCache();
+    // Force remount by changing the key
+    setRefetchKey((prev) => prev + 1);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,11 +114,16 @@ const SuspenseExample: React.FC<SuspenseExampleProps> = ({ serverUrl }) => {
           onChange={handleInputChange}
           placeholder="Enter your name"
           className="example-input"
-          onKeyPress={(e) => e.key === 'Enter' && handleGreet()}
+          onKeyDown={(e) => e.key === 'Enter' && handleGreet()}
         />
         <button onClick={handleGreet} disabled={!name.trim()} className="example-button">
           Send Greeting
         </button>
+        {showResult && (
+          <button onClick={handleRefetch} className="example-button">
+            Refetch
+          </button>
+        )}
       </div>
 
       {showResult && (
@@ -123,7 +138,7 @@ const SuspenseExample: React.FC<SuspenseExampleProps> = ({ serverUrl }) => {
           )}
         >
           <Suspense fallback={<div className="loading">Loading data...</div>}>
-            <SuspenseContent serverUrl={serverUrl} name={name} />
+            <SuspenseContent key={`${name}-${refetchKey}`} serverUrl={serverUrl} name={name} />
           </Suspense>
         </ErrorBoundary>
       )}
