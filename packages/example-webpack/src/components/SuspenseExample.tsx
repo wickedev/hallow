@@ -146,17 +146,14 @@ const SuspenseExample: React.FC<SuspenseExampleProps> = ({ serverUrl }) => {
       <div className="code-example">
         <h3>Code Example:</h3>
         <pre>{`import { Suspense } from 'react';
-import { useSuspenseGrpc } from '@hallow/react';
 import { GreetingServiceStub } from './greeting.proto';
 
-function Content() {
-  const data = useSuspenseGrpc({
-    serverUrl: 'http://localhost:3000',
-    StubClass: GreetingServiceStub,
-    stubMethod: (stub) => stub.methods.greet({ name: 'World' })
-  });
+const stub = new GreetingServiceStub({ serverUrl });
 
-  return <div>{data.reply}</div>;
+function Content() {
+  const response = stub.use!Greet({ name: 'World' });
+
+  return <div>{response.reply}</div>;
 }
 
 function App() {

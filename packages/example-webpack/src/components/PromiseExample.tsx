@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { GreetingServiceStub } from '../../proto/greeting.proto';
 
 interface PromiseExampleProps {
@@ -13,6 +13,7 @@ const PromiseExample: React.FC<PromiseExampleProps> = ({ serverUrl }) => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<Error | null>(null);
+  const stub = useRef(new GreetingServiceStub({ serverUrl })).current;
 
   const handleGreet = async () => {
     if (!name.trim()) {
@@ -25,8 +26,7 @@ const PromiseExample: React.FC<PromiseExampleProps> = ({ serverUrl }) => {
     setData(null);
 
     try {
-      // Create stub instance
-      const stub = new GreetingServiceStub({ serverUrl });
+      
 
       // Call greet method
       const response = await stub.methods.greet({
@@ -101,7 +101,7 @@ const PromiseExample: React.FC<PromiseExampleProps> = ({ serverUrl }) => {
 
 const stub = new GreetingServiceStub({ serverUrl });
 
-const response = await stub.methods.greet({
+const response = await stub.greet({
   name: 'World',
   language: 'en',
   options: { style: 1 }

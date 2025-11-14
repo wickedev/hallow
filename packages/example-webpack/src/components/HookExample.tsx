@@ -34,8 +34,8 @@ const HookExample: React.FC<HookExampleProps> = ({ serverUrl }) => {
       console.log('Timestamp:', response.timestamp, typeof response.timestamp);
       console.log('Metadata:', response.metadata);
       console.log('Metadata keys:', response.metadata ? Object.keys(response.metadata) : 'N/A');
-      console.log('Server version:', response.metadata?.server_version);
-      console.log('Request ID:', response.metadata?.request_id);
+      console.log('Server version:', response.metadata?.serverVersion);
+      console.log('Request ID:', response.metadata?.requestId);
       console.log('All response keys:', Object.keys(response));
     },
   });
@@ -116,12 +116,7 @@ const HookExample: React.FC<HookExampleProps> = ({ serverUrl }) => {
         <pre>{`import { useGrpc } from '@hallow/react';
 import { GreetingServiceStub } from './greeting.proto';
 
-const { data, loading, error } = useGrpc({
-  serverUrl: 'http://localhost:3000',
-  StubClass: GreetingServiceStub,
-  stubMethod: (stub) => stub.methods.greet({ name: 'World' }),
-  deps: [name]
-});
+const { data, loading, error, refetch } = useGreet({ name: name }, [name]);
 
 if (loading) return <div>Loading...</div>;
 if (error) return <div>Error: {error.message}</div>;
