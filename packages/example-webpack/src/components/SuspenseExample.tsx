@@ -2,6 +2,7 @@ import React, { useState, Suspense } from 'react';
 import { useSuspenseGrpc, clearSuspenseCache } from '@hallow/react';
 import { GreetingServiceStub } from '../../proto/greeting.proto';
 import ErrorBoundary from './ErrorBoundary';
+import { Highlight, themes } from 'prism-react-renderer';
 
 interface SuspenseExampleProps {
   serverUrl: string;
@@ -145,15 +146,19 @@ const SuspenseExample: React.FC<SuspenseExampleProps> = ({ serverUrl }) => {
 
       <div className="code-example">
         <h3>Code Example:</h3>
-        <pre>{`import { Suspense } from 'react';
+        <Highlight
+          code={`import { Suspense } from 'react';
+import { useSuspenseGrpc } from '@hallow/react';
 import { GreetingServiceStub } from './greeting.proto';
 
-const stub = new GreetingServiceStub({ serverUrl });
-
 function Content() {
-  const response = stub.use!Greet({ name: 'World' });
+  const data = useSuspenseGrpc({
+    serverUrl: 'http://localhost:3000',
+    StubClass: GreetingServiceStub,
+    stubMethod: (stub) => stub.methods.greet({ name: 'World' })
+  });
 
-  return <div>{response.reply}</div>;
+  return <div>{data.reply}</div>;
 }
 
 function App() {
@@ -162,7 +167,22 @@ function App() {
       <Content />
     </Suspense>
   );
-}`}</pre>
+}`}
+          language="typescript"
+          theme={themes.vsDark}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={className} style={style}>
+              {tokens.map((line, i) => (
+                <div key={i} {...getLineProps({ line })}>
+                  {line.map((token, key) => (
+                    <span key={key} {...getTokenProps({ token })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGrpc } from '@hallow/react';
 import { GreetingServiceStub } from '../../proto/greeting.proto';
+import { Highlight, themes } from 'prism-react-renderer';
 
 interface HookExampleProps {
   serverUrl: string;
@@ -113,14 +114,35 @@ const HookExample: React.FC<HookExampleProps> = ({ serverUrl }) => {
 
       <div className="code-example">
         <h3>Code Example:</h3>
-        <pre>{`import { useGrpc } from '@hallow/react';
+        <Highlight
+          code={`import { useGrpc } from '@hallow/react';
 import { GreetingServiceStub } from './greeting.proto';
 
-const { data, loading, error, refetch } = useGreet({ name: name }, [name]);
+const { data, loading, error, refetch } = useGrpc({
+  serverUrl: 'http://localhost:3000',
+  StubClass: GreetingServiceStub,
+  stubMethod: (stub) => stub.methods.greet({ name: 'World' }),
+  deps: [name]
+});
 
 if (loading) return <div>Loading...</div>;
 if (error) return <div>Error: {error.message}</div>;
-return <div>{data.reply}</div>;`}</pre>
+return <div>{data.reply}</div>;`}
+          language="typescript"
+          theme={themes.vsDark}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={className} style={style}>
+              {tokens.map((line, i) => (
+                <div key={i} {...getLineProps({ line })}>
+                  {line.map((token, key) => (
+                    <span key={key} {...getTokenProps({ token })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
       </div>
     </div>
   );

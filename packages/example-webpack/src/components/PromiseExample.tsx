@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { GreetingServiceStub } from '../../proto/greeting.proto';
+import { Highlight, themes } from 'prism-react-renderer';
 
 interface PromiseExampleProps {
   serverUrl: string;
@@ -62,7 +63,7 @@ const PromiseExample: React.FC<PromiseExampleProps> = ({ serverUrl }) => {
           placeholder="Enter your name"
           disabled={loading}
           className="example-input"
-          onKeyPress={(e) => e.key === 'Enter' && handleGreet()}
+          onKeyDown={(e) => e.key === 'Enter' && handleGreet()}
         />
         <button onClick={handleGreet} disabled={loading} className="example-button">
           {loading ? 'Loading...' : 'Send Greeting'}
@@ -83,13 +84,34 @@ const PromiseExample: React.FC<PromiseExampleProps> = ({ serverUrl }) => {
           <p className="greeting-reply">{data.reply}</p>
           <div className="metadata">
             <p>
-              <strong>Timestamp:</strong> {new Date(Number(data.timestamp)).toLocaleString()}
+              <strong>Timestamp:</strong>{' '}
+              {data.timestamp
+                ? (() => {
+                    let ts: number;
+
+                    // Handle different timestamp formats
+                    if (typeof data.timestamp === 'string') {
+                      ts = parseInt(data.timestamp, 10);
+                    } else if (typeof data.timestamp === 'number') {
+                      ts = data.timestamp;
+                    } else if (data.timestamp && typeof data.timestamp === 'object' && 'toNumber' in data.timestamp) {
+                      // Handle Long object from protobuf
+                      ts = (data.timestamp as any).toNumber();
+                    } else {
+                      return String(data.timestamp);
+                    }
+
+                    // Check if it's in seconds (< 10000000000) or milliseconds
+                    const milliseconds = ts > 10000000000 ? ts : ts * 1000;
+                    return new Date(milliseconds).toLocaleString();
+                  })()
+                : 'N/A'}
             </p>
             <p>
-              <strong>Server Version:</strong> {data.metadata?.serverVersion || data.metadata?.server_version || 'N/A'}
+              <strong>Server Version:</strong> {data.metadata?.serverVersion || 'N/A'}
             </p>
             <p>
-              <strong>Request ID:</strong> {data.metadata?.requestId || data.metadata?.request_id || 'N/A'}
+              <strong>Request ID:</strong> {data.metadata?.requestId || 'N/A'}
             </p>
           </div>
         </div>
@@ -97,17 +119,37 @@ const PromiseExample: React.FC<PromiseExampleProps> = ({ serverUrl }) => {
 
       <div className="code-example">
         <h3>Code Example:</h3>
-        <pre>{`import { GreetingServiceStub } from './greeting.proto';
+        <Highlight
+          code={`import { GreetingServiceStub } from './greeting.proto';
 
-const stub = new GreetingServiceStub({ serverUrl });
+const stub = new GreetingServiceStub({ serverUrl: 'http://localhost:3000' });
 
-const response = await stub.greet({
+const response = await stub.methods.greet({
   name: 'World',
   language: 'en',
-  options: { style: 1 }
+  options: {
+    style: 1, // CASUAL
+    include_timestamp: true,
+    metadata: {}
+  }
 });
 
-console.log(response.reply);`}</pre>
+console.log(response.reply); // "Hey World!"`}
+          language="typescript"
+          theme={themes.vsDark}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={className} style={style}>
+              {tokens.map((line, i) => (
+                <div key={i} {...getLineProps({ line })}>
+                  {line.map((token, key) => (
+                    <span key={key} {...getTokenProps({ token })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
       </div>
     </div>
   );

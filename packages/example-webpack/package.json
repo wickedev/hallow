@@ -25,6 +25,7 @@
     "@grpc-web/proxy": "^0.1.0",
     "@hallow/grpc-web": "*",
     "@hallow/react": "*",
+    "prism-react-renderer": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
