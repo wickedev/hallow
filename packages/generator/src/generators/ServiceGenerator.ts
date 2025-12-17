@@ -296,6 +296,36 @@ export class ServiceGenerator {
       source: '@hallow/generator/adapters',
     });
 
+    // Add React hooks if enabled
+    if (this.options.generateReactHooks || this.options.generateSuspenseHooks) {
+      const reactImports = [];
+      const reactTypes = [];
+
+      if (this.options.generateReactHooks) {
+        reactImports.push('useGrpc');
+        // Check for streaming methods to include useGrpcStream
+        if (hasStreaming) {
+          reactImports.push('useGrpcStream');
+        }
+        reactTypes.push('type UseGrpcConfig', 'type UseGrpcResult');
+        if (hasStreaming) {
+          reactTypes.push('type UseGrpcStreamResult');
+        }
+      }
+
+      if (this.options.generateSuspenseHooks) {
+        reactImports.push('useSuspenseGrpc');
+        reactTypes.push('type UseSuspenseGrpcConfig');
+      }
+
+      if (reactImports.length > 0) {
+        imports.push({
+          imports: [...new Set([...reactImports, ...reactTypes])],
+          source: '@hallow/react',
+        });
+      }
+    }
+
     return {
       packageName: protoFile.package,
       imports,
@@ -465,7 +495,23 @@ export class ServiceGenerator {
     try {
       // Determine template directory
       // When bundled by Rollup, __dirname points to dist/, so templates are in dist/templates
-      const templateDir = this.options.templateDir || path.join(__dirname, 'templates');
+      // But in development (ts-node/jest) or if structure is preserved, it might be ../templates
+      let templateDir = this.options.templateDir;
+      if (!templateDir) {
+        // Try sibling 'templates' (dist root)
+        const siblingTemplates = path.join(__dirname, 'templates');
+        // Try parent 'templates' (src/generators -> src/templates)
+        const parentTemplates = path.join(__dirname, '../templates');
+
+        if (fs.existsSync(path.join(siblingTemplates, 'service.hbs'))) {
+          templateDir = siblingTemplates;
+        } else if (fs.existsSync(path.join(parentTemplates, 'service.hbs'))) {
+          templateDir = parentTemplates;
+        } else {
+          templateDir = siblingTemplates; // Default to sibling
+        }
+      }
+
       const templatePath = path.join(templateDir, 'service.hbs');
 
       // Check if template file exists
