@@ -121,22 +121,26 @@ message GetUserResponse {
       const protoPath = path.join(testDir, 'user-service.proto');
       await fs.writeFile(protoPath, protoContent);
 
-      // Mock generated hooks
+      // Mock generated hooks (integrated into Stub)
       const mockHookCode = `
 import { useGrpc, useSuspenseGrpc } from '@hallow/react';
 
-export function useGetUser(request: GetUserRequest) {
-  return useGrpc(UserServiceStub, client => client.methods.getUser(request));
-}
+export class UserServiceStub {
+  // ... constructor etc
 
-export function useGetUserSuspense(request: GetUserRequest) {
-  return useSuspenseGrpc(UserServiceStub, client => client.methods.getUser(request));
+  public useGetUser(request: GetUserRequest) {
+    return useGrpc({ /* config */ StubClass: UserServiceStub, stubMethod: s => s.getUser(request) });
+  }
+
+  public useGetUserSuspense(request: GetUserRequest) {
+    return useSuspenseGrpc({ /* config */ StubClass: UserServiceStub, stubMethod: s => s.getUser(request) });
+  }
 }
 `;
 
       expect(mockHookCode).toContain('import { useGrpc, useSuspenseGrpc }');
-      expect(mockHookCode).toContain('export function useGetUser');
-      expect(mockHookCode).toContain('export function useGetUserSuspense');
+      expect(mockHookCode).toContain('public useGetUser');
+      expect(mockHookCode).toContain('public useGetUserSuspense');
     });
   });
 

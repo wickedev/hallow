@@ -282,6 +282,41 @@ export class {{pascalName}}Stub {
       options
     );
   }
+
+  {{#if ../../includeReactHooks}}
+  /**
+   * React Hook for {{camelName}} server streaming method
+   *
+   * @param request - {{inputType}} request message
+   * @param options - Hook configuration
+   * @returns Stream hook result with accumulated messages and controls
+   */
+  public use{{pascalName}}(
+    request: {{inputType}},
+    options?: Omit<UseGrpcConfig<{{inputType}}, {{outputType}}, {{../pascalName}}Stub>, 'serverUrl' | 'StubClass' | 'stubMethod'> & {
+        onMessage?: (message: {{outputType}}) => void;
+        onComplete?: () => void;
+        onError?: (error: Error) => void;
+        maxMessages?: number;
+    }
+  ): UseGrpcStreamResult<{{outputType}}> {
+    return useGrpcStream<{{inputType}}, {{outputType}}>({
+      serverUrl: this.config.serverUrl,
+      adapterType: this.config.adapterType,
+      secure: this.config.secure,
+      debug: this.config.debug,
+      defaultCallOptions: this.config.defaultCallOptions,
+      StubClass: {{../pascalName}}Stub,
+      stubMethod: (stub: {{../pascalName}}Stub) => stub.{{camelName}}(request),
+      onMessage: options?.onMessage,
+      onComplete: options?.onComplete,
+      onError: options?.onError,
+      maxMessages: options?.maxMessages,
+      ...options
+    });
+  }
+  {{/if}}
+
   {{/if}}
   {{else if clientStreaming}}
   /**
@@ -354,110 +389,60 @@ export class {{pascalName}}Stub {
       options
     );
   }
-  {{/if}}
 
-  {{/each}}
-}
-
-{{#if ../includeReactHooks}}
-/**
- * React Hook stub for {{pascalName}} service
- * Provides React hooks with loading and error states
- */
-export class {{pascalName}}HookStub {
-  private readonly stub: {{pascalName}}Stub;
-
-  constructor(config: {{pascalName}}StubConfig) {
-    this.stub = new {{pascalName}}Stub(config);
-  }
-
-  {{#each methods}}
-  {{#if serverStreaming}}
+  {{#if ../../includeReactHooks}}
   /**
-   * React Hook for {{camelName}} streaming method
+   * React Hook for {{camelName}} unary method
+   *
    * @param request - {{inputType}} request message
-   * @returns Hook state with stream, loading, and error
+   * @param options - Hook configuration
+   * @returns Hook result with response data, loading state, and error
    */
-  public use{{pascalName}}(request: {{inputType}}): {
-    data: {{outputType}}[];
-    loading: boolean;
-    error?: Error;
-    subscription?: Subscription;
-  } {
-    // TODO: Implement React Hook for streaming with useState and useEffect
-    // 1. Set loading to true
-    // 2. Subscribe to stub.{{camelName}}(request)
-    // 3. Accumulate responses in data array
-    // 4. Update error on failure
-    // 5. Set loading to false when stream completes
-    // 6. Return subscription for manual cancellation
-
-    throw new Error('React Hook use{{pascalName}} not yet implemented for streaming');
-  }
-  {{else if clientStreaming}}
-  /**
-   * React Hook for {{camelName}} client streaming method
-   * @returns Hook state with send method and response data
-   */
-  public use{{pascalName}}(): {
-    send: (request: {{inputType}}) => void;
-    complete: () => Promise<{{outputType}}>;
-    data?: {{outputType}};
-    loading: boolean;
-    error?: Error;
-  } {
-    // TODO: Implement React Hook for client streaming
-    throw new Error('React Hook use{{pascalName}} not yet implemented for client streaming');
-  }
-  {{else}}
-  /**
-   * React Hook for {{camelName}} method
-   * @param request - {{inputType}} request message
-   * @returns Hook state with data, loading, and error
-   */
-  public use{{pascalName}}(request: {{inputType}}): {
-    data?: {{outputType}};
-    loading: boolean;
-    error?: Error;
-  } {
-    // TODO: Implement React Hook with useState and useEffect
-    // 1. Set loading to true
-    // 2. Call stub.{{camelName}}(request)
-    // 3. Update data on success or error on failure
-    // 4. Set loading to false
-
-    throw new Error('React Hook use{{pascalName}} not yet implemented');
+  public use{{pascalName}}(
+    request: {{inputType}},
+    options?: Omit<UseGrpcConfig<{{inputType}}, {{outputType}}, {{../pascalName}}Stub>, 'serverUrl' | 'StubClass' | 'stubMethod'>
+  ): UseGrpcResult<{{outputType}}> {
+    return useGrpc<{{inputType}}, {{outputType}}, {{../pascalName}}Stub>({
+      serverUrl: this.config.serverUrl,
+      adapterType: this.config.adapterType,
+      secure: this.config.secure,
+      debug: this.config.debug,
+      defaultCallOptions: this.config.defaultCallOptions,
+      StubClass: {{../pascalName}}Stub,
+      stubMethod: (stub: {{../pascalName}}Stub) => stub.{{camelName}}(request),
+      ...options
+    });
   }
   {{/if}}
 
-  {{/each}}
-}
-{{/if}}
-
-{{#if ../includeSuspenseHooks}}
-/**
- * Suspense Hook stub for {{pascalName}} service
- */
-export class {{pascalName}}SuspenseStub {
-  private readonly stub: {{pascalName}}Stub;
-
-  constructor(config: {{pascalName}}StubConfig) {
-    this.stub = new {{pascalName}}Stub(config);
-  }
-
-  {{#each methods}}
+  {{#if ../../includeSuspenseHooks}}
   /**
-   * Suspense Hook for {{camelName}} method
-   * @param request - Request message
+   * Suspense Hook for {{camelName}} unary method
+   *
+   * @param request - {{inputType}} request message
+   * @param options - Hook configuration
    * @returns Response data (throws promise during loading)
    */
-  use{{pascalName}}(request: {{inputType}}): {{outputType}} {
-    // TODO: Implement Suspense Hook using the Promise API
-    throw new Error('Suspense Hook not yet implemented');
+  public use{{pascalName}}Suspense(
+    request: {{inputType}},
+    options?: Omit<UseSuspenseGrpcConfig<{{inputType}}, {{outputType}}, {{../pascalName}}Stub>, 'serverUrl' | 'StubClass' | 'stubMethod'>
+  ): {{outputType}} {
+    return useSuspenseGrpc<{{inputType}}, {{outputType}}, {{../pascalName}}Stub>({
+      serverUrl: this.config.serverUrl,
+      adapterType: this.config.adapterType,
+      secure: this.config.secure,
+      debug: this.config.debug,
+      defaultCallOptions: this.config.defaultCallOptions,
+      StubClass: {{../pascalName}}Stub,
+      stubMethod: (stub: {{../pascalName}}Stub) => stub.{{camelName}}(request),
+      ...options
+    });
   }
+  {{/if}}
+
+  {{/if}}
 
   {{/each}}
 }
-{{/if}}
 
 {{/each}}

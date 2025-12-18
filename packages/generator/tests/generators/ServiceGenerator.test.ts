@@ -149,8 +149,13 @@ describe('ServiceGenerator', () => {
       
       const result = await generator.generateStub(service, protoFile);
       
-      expect(result.content).toContain('export class TestServiceHookStub');
-      expect(result.content).toContain('useGetUser(request: GetUserRequest)');
+      // Hooks should now be methods on the main Stub
+      expect(result.content).toContain('public useGetUser(');
+      expect(result.content).toContain('request: GetUserRequest');
+      // Should import useGrpc
+      expect(result.content).toContain('import {');
+      expect(result.content).toContain('useGrpc');
+      expect(result.content).toContain('} from \'@hallow/react\'');
     });
     
     it('should include Suspense hooks when option is enabled', async () => {
@@ -161,8 +166,14 @@ describe('ServiceGenerator', () => {
       
       const result = await generator.generateStub(service, protoFile);
       
-      expect(result.content).toContain('export class TestServiceSuspenseStub');
-      expect(result.content).toContain('useGetUser(request: GetUserRequest): GetUserResponse');
+      // Suspense hooks should be methods on the main Stub
+      expect(result.content).toContain('public useGetUserSuspense(');
+      expect(result.content).toContain('request: GetUserRequest');
+      expect(result.content).toContain('): GetUserResponse');
+      // Should import useSuspenseGrpc
+      expect(result.content).toContain('import {');
+      expect(result.content).toContain('useSuspenseGrpc');
+      expect(result.content).toContain('} from \'@hallow/react\'');
     });
     
     it('should throw error for service without name', () => {
@@ -339,10 +350,12 @@ describe('ServiceGenerator', () => {
       
       const result = generator.generateStub(streamingService, protoFile);
       
-      // Check for React Hook with streaming support
-      expect(result.content).toContain('export class HookStreamServiceHookStub');
-      expect(result.content).toContain('data: UpdateResponse[]');
-      expect(result.content).toContain('subscription?: Subscription');
+      // Check for React Hook with streaming support on the main stub
+      expect(result.content).toContain('public useStreamUpdates(');
+      expect(result.content).toContain('): UseGrpcStreamResult<UpdateResponse>');
+      expect(result.content).toContain('import {');
+      expect(result.content).toContain('useGrpcStream');
+      expect(result.content).toContain('} from \'@hallow/react\'');
     });
     
     it('should handle mixed streaming and unary methods in same service', () => {

@@ -18,22 +18,22 @@ interface SuspenseContentProps {
  */
 const SuspenseContent: React.FC<SuspenseContentProps> = ({ serverUrl, name }) => {
   // useSuspenseGrpc suspends rendering until data is ready
-  const data = useSuspenseGrpc({
-    serverUrl,
-    StubClass: GreetingServiceStub,
-    stubMethod: (stub) =>
-      stub.methods.greet({
-        name: name,
-        language: 'en',
-        options: {
-          style: 2, // FORMAL
-          include_timestamp: true,
-          metadata: {},
-        },
-      }),
-    // Provide explicit cache key that includes the name parameter
-    cacheKey: `${serverUrl}:greet:${name}`,
-  });
+  const stub = new GreetingServiceStub({ serverUrl });
+  const data = stub.useGreetSuspense(
+    {
+      name: name,
+      language: 'en',
+      options: {
+        style: 2, // FORMAL
+        include_timestamp: true,
+        metadata: {},
+      },
+    },
+    {
+      // Provide explicit cache key that includes the name parameter
+      cacheKey: `${serverUrl}:greet:${name}`,
+    }
+  );
 
   return (
     <div className="result">
@@ -148,15 +148,11 @@ const SuspenseExample: React.FC<SuspenseExampleProps> = ({ serverUrl }) => {
         <h3>Code Example:</h3>
         <Highlight
           code={`import { Suspense } from 'react';
-import { useSuspenseGrpc } from '@hallow/react';
 import { GreetingServiceStub } from './greeting.proto';
 
 function Content() {
-  const data = useSuspenseGrpc({
-    serverUrl: 'http://localhost:3000',
-    StubClass: GreetingServiceStub,
-    stubMethod: (stub) => stub.methods.greet({ name: 'World' })
-  });
+  const stub = new GreetingServiceStub({ serverUrl: 'http://localhost:3000' });
+  const data = stub.useGreetSuspense({ name: 'World' });
 
   return <div>{data.reply}</div>;
 }

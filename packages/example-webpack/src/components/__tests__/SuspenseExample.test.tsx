@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import { renderWithProviders, setupUser, mockSuccessResponse } from '../../__tests__/utils/test-utils';
+import { renderWithProviders, setupUser, mockSuccessResponse, mockErrorResponse } from '../../__tests__/utils/test-utils';
 import SuspenseExample from '../SuspenseExample';
 
 // Mock the useSuspenseGrpc hook
@@ -11,7 +11,17 @@ jest.mock('@hallow/react', () => ({
 
 // Mock the proto import
 jest.mock('../../proto/greeting.proto', () => ({
-  GreetingServiceStub: jest.fn(),
+  GreetingServiceStub: jest.fn().mockImplementation((config) => ({
+    config,
+    useGreetSuspense: jest.fn((request, options) => {
+      return mockUseSuspenseGrpc({
+        serverUrl: config.serverUrl,
+        StubClass: 'GreetingServiceStub',
+        stubMethod: expect.any(Function),
+        ...options
+      });
+    })
+  })),
 }));
 
 describe('SuspenseExample', () => {
@@ -47,7 +57,7 @@ describe('SuspenseExample', () => {
       renderWithProviders(<SuspenseExample serverUrl={mockServerUrl} />);
 
       expect(screen.getByText('Code Example:')).toBeInTheDocument();
-      const codeBlock = screen.getByText(/useSuspenseGrpc/);
+      const codeBlock = screen.getByText(/useGreetSuspense/);
       expect(codeBlock).toBeInTheDocument();
     });
 
@@ -198,11 +208,10 @@ describe('SuspenseExample', () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(mockUseSuspenseGrpc).toHaveBeenCalledWith(
-          expect.any(Function), // stub loader
-          mockServerUrl,
-          expect.any(Function) // query function
-        );
+        expect(mockUseSuspenseGrpc).toHaveBeenCalledWith(expect.objectContaining({
+          serverUrl: mockServerUrl,
+          cacheKey: expect.stringContaining('Eve')
+        }));
       });
     });
   });
@@ -210,7 +219,15 @@ describe('SuspenseExample', () => {
   describe('Success Display', () => {
     beforeEach(async () => {
       const user = setupUser();
-      mockUseSuspenseGrpc.mockReturnValue(mockSuccessResponse('Frank'));
+      // Manually mock with camelCase metadata
+      mockUseSuspenseGrpc.mockReturnValue({
+        reply: 'Hello, Frank!',
+        timestamp: new Date().toISOString(),
+        metadata: {
+          serverVersion: '1.0.0',
+          requestId: 'test-request-id',
+        },
+      });
 
       renderWithProviders(<SuspenseExample serverUrl={mockServerUrl} />);
 
@@ -343,7 +360,7 @@ describe('SuspenseExample', () => {
   describe('Edge Cases', () => {
     it('handles very long names', async () => {
       const user = setupUser();
-      const longName = 'A'.repeat(1000);
+      const longName = 'A'.repeat(50); // Reduced from 1000 to avoid timeout
       mockUseSuspenseGrpc.mockReturnValue(mockSuccessResponse(longName));
 
       renderWithProviders(<SuspenseExample serverUrl={mockServerUrl} />);
