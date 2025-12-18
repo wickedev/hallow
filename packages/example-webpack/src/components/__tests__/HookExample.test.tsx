@@ -11,7 +11,19 @@ jest.mock('@hallow/react', () => ({
 
 // Mock the proto import
 jest.mock('../../proto/greeting.proto', () => ({
-  GreetingServiceStub: jest.fn(),
+  GreetingServiceStub: jest.fn().mockImplementation((config) => ({
+    config,
+    useGreet: jest.fn((request, options) => {
+      // Call the mock hook to simulate behavior and tracking
+      // We pass combined config similar to what generated code does
+      return mockUseGrpc({
+        serverUrl: config.serverUrl,
+        StubClass: 'GreetingServiceStub', // Just a marker
+        stubMethod: expect.any(Function),
+        ...options
+      });
+    })
+  })),
 }));
 
 describe('HookExample', () => {
@@ -24,6 +36,7 @@ describe('HookExample', () => {
       data: null,
       loading: false,
       error: null,
+      refetch: jest.fn(),
     });
   });
 
@@ -53,21 +66,19 @@ describe('HookExample', () => {
       renderWithProviders(<HookExample serverUrl={mockServerUrl} />);
 
       expect(screen.getByText('Code Example:')).toBeInTheDocument();
-      const codeBlock = screen.getByText(/useGrpc/);
+      const codeBlock = screen.getByText(/useGreet/);
       expect(codeBlock).toBeInTheDocument();
     });
   });
 
   describe('useGrpc Hook Integration', () => {
-    it('calls useGrpc hook with correct parameters', () => {
+    it('calls useGrpc hook via stub.useGreet', () => {
       renderWithProviders(<HookExample serverUrl={mockServerUrl} />);
 
-      expect(mockUseGrpc).toHaveBeenCalledWith(
-        expect.any(Function), // stub loader
-        mockServerUrl,
-        expect.any(Function), // query function
-        ['World', 0] // dependencies
-      );
+      expect(mockUseGrpc).toHaveBeenCalledWith(expect.objectContaining({
+        serverUrl: mockServerUrl,
+        deps: ['World']
+      }));
     });
 
     it('passes updated dependencies when name changes', async () => {
@@ -79,40 +90,31 @@ describe('HookExample', () => {
       await user.type(input, 'Alice');
 
       await waitFor(() => {
-        expect(mockUseGrpc).toHaveBeenCalledWith(
-          expect.any(Function),
-          mockServerUrl,
-          expect.any(Function),
-          expect.arrayContaining(['Alice'])
-        );
+        expect(mockUseGrpc).toHaveBeenCalledWith(expect.objectContaining({
+          deps: expect.arrayContaining(['Alice'])
+        }));
       });
     });
 
-    it('increments trigger when refetch button is clicked', async () => {
+    it('calls refetch function when button is clicked', async () => {
       const user = setupUser();
+      // Mock refetch function
+      const mockRefetch = jest.fn();
+      mockUseGrpc.mockReturnValue({
+        data: null,
+        loading: false,
+        error: null,
+        refetch: mockRefetch,
+      });
+
       renderWithProviders(<HookExample serverUrl={mockServerUrl} />);
 
       const button = screen.getByRole('button', { name: /refetch/i });
 
-      // Initial call
-      expect(mockUseGrpc).toHaveBeenCalledWith(
-        expect.any(Function),
-        expect.any(String),
-        expect.any(Function),
-        ['World', 0]
-      );
-
       // Click refetch
       await user.click(button);
 
-      await waitFor(() => {
-        expect(mockUseGrpc).toHaveBeenCalledWith(
-          expect.any(Function),
-          expect.any(String),
-          expect.any(Function),
-          ['World', 1]
-        );
-      });
+      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
@@ -170,7 +172,15 @@ describe('HookExample', () => {
   });
 
   describe('Success State', () => {
-    const mockData = mockSuccessResponse('World');
+    // Manually constructing mock data with camelCase keys to match HookExample expectations
+    const mockData = {
+      reply: 'Hello, World!',
+      timestamp: new Date().toISOString(),
+      metadata: {
+        serverVersion: '1.0.0',
+        requestId: 'test-request-id',
+      },
+    };
 
     beforeEach(() => {
       mockUseGrpc.mockReturnValue({
@@ -290,22 +300,25 @@ describe('HookExample', () => {
       });
     });
 
-    it('refetch button increments trigger counter', async () => {
+    it('calls refetch function when button is clicked', async () => {
       const user = setupUser();
+      // Mock refetch function
+      const mockRefetch = jest.fn();
+      mockUseGrpc.mockReturnValue({
+        data: null,
+        loading: false,
+        error: null,
+        refetch: mockRefetch,
+      });
+
       renderWithProviders(<HookExample serverUrl={mockServerUrl} />);
 
       const button = screen.getByRole('button', { name: /refetch/i });
 
-      // Click multiple times
-      await user.click(button);
-      await user.click(button);
+      // Click refetch
       await user.click(button);
 
-      // Verify trigger incremented in dependencies
-      await waitFor(() => {
-        const lastCall = mockUseGrpc.mock.calls[mockUseGrpc.mock.calls.length - 1];
-        expect(lastCall[3]).toEqual(['World', 3]);
-      });
+      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
@@ -390,12 +403,9 @@ describe('HookExample', () => {
       await user.clear(input);
 
       await waitFor(() => {
-        expect(mockUseGrpc).toHaveBeenCalledWith(
-          expect.any(Function),
-          expect.any(String),
-          expect.any(Function),
-          ['', expect.any(Number)]
-        );
+        expect(mockUseGrpc).toHaveBeenCalledWith(expect.objectContaining({
+          deps: ['']
+        }));
       });
     });
 
@@ -408,12 +418,9 @@ describe('HookExample', () => {
       await user.type(input, "O'Brien <Test>");
 
       await waitFor(() => {
-        expect(mockUseGrpc).toHaveBeenCalledWith(
-          expect.any(Function),
-          expect.any(String),
-          expect.any(Function),
-          expect.arrayContaining(["O'Brien <Test>"])
-        );
+        expect(mockUseGrpc).toHaveBeenCalledWith(expect.objectContaining({
+          deps: ["O'Brien <Test>"]
+        }));
       });
     });
 
@@ -441,7 +448,7 @@ describe('HookExample', () => {
         data: {
           reply: longMessage,
           timestamp: new Date().toISOString(),
-          metadata: { server_version: '1.0.0', request_id: 'test' },
+          metadata: { serverVersion: '1.0.0', requestId: 'test' },
         },
         loading: false,
         error: null,

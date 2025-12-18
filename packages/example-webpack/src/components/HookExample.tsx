@@ -12,37 +12,36 @@ interface HookExampleProps {
  */
 const HookExample: React.FC<HookExampleProps> = ({ serverUrl }) => {
   const [name, setName] = useState('World');
-  const [triggerFetch, setTriggerFetch] = useState(0);
 
-  // Use the useGrpc hook for declarative data fetching
-  const { data, loading, error } = useGrpc({
-    serverUrl,
-    StubClass: GreetingServiceStub,
-    stubMethod: (stub) =>
-      stub.methods.greet({
-        name: name,
-        language: 'en',
-        options: {
-          style: 3, // FRIENDLY
-          include_timestamp: true,
-          metadata: {},
-        },
-      }),
-    deps: [name, triggerFetch],
-    onSuccess: (response) => {
-      console.log('=== Response Debug ===');
-      console.log('Full response:', response);
-      console.log('Timestamp:', response.timestamp, typeof response.timestamp);
-      console.log('Metadata:', response.metadata);
-      console.log('Metadata keys:', response.metadata ? Object.keys(response.metadata) : 'N/A');
-      console.log('Server version:', response.metadata?.serverVersion);
-      console.log('Request ID:', response.metadata?.requestId);
-      console.log('All response keys:', Object.keys(response));
+  // Use the useGrpc hook via stub method
+  const stub = new GreetingServiceStub({ serverUrl });
+  const { data, loading, error, refetch } = stub.useGreet(
+    {
+      name: name,
+      language: 'en',
+      options: {
+        style: 3, // FRIENDLY
+        include_timestamp: true,
+        metadata: {},
+      },
     },
-  });
+    {
+      deps: [name],
+      onSuccess: (response) => {
+        console.log('=== Response Debug ===');
+        console.log('Full response:', response);
+        console.log('Timestamp:', response.timestamp, typeof response.timestamp);
+        console.log('Metadata:', response.metadata);
+        console.log('Metadata keys:', response.metadata ? Object.keys(response.metadata) : 'N/A');
+        console.log('Server version:', response.metadata?.serverVersion);
+        console.log('Request ID:', response.metadata?.requestId);
+        console.log('All response keys:', Object.keys(response));
+      },
+    }
+  );
 
   const handleRefetch = () => {
-    setTriggerFetch((prev) => prev + 1);
+    refetch();
   };
 
   return (
@@ -115,15 +114,13 @@ const HookExample: React.FC<HookExampleProps> = ({ serverUrl }) => {
       <div className="code-example">
         <h3>Code Example:</h3>
         <Highlight
-          code={`import { useGrpc } from '@hallow/react';
-import { GreetingServiceStub } from './greeting.proto';
+          code={`import { GreetingServiceStub } from './greeting.proto';
 
-const { data, loading, error, refetch } = useGrpc({
-  serverUrl: 'http://localhost:3000',
-  StubClass: GreetingServiceStub,
-  stubMethod: (stub) => stub.methods.greet({ name: 'World' }),
-  deps: [name]
-});
+const stub = new GreetingServiceStub({ serverUrl: 'http://localhost:3000' });
+const { data, loading, error, refetch } = stub.useGreet(
+  { name: 'World' },
+  { deps: [name] }
+);
 
 if (loading) return <div>Loading...</div>;
 if (error) return <div>Error: {error.message}</div>;
