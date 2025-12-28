@@ -110,23 +110,28 @@ function parseMethods(serviceBody) {
  */
 function parseMessages(content) {
   const messages = [];
-  const messageRegex = /message\s+(\w+)\s*\{([^}]+)\}/g;
+  const messageRegex = /message\s+(\w+)\s*\{/g;
   let messageMatch;
 
   while ((messageMatch = messageRegex.exec(content)) !== null) {
     const messageName = messageMatch[1];
-    const messageBody = messageMatch[2];
+    const openBraceIndex = messageMatch.index + messageMatch[0].length - 1;
 
-    const message = {
-      name: messageName,
-      fields: parseFields(messageBody),
-      nestedMessages: [], // TODO: Handle nested messages
-      nestedEnums: [],    // TODO: Handle nested enums
-      oneofs: [],         // TODO: Handle oneofs
-      options: {}
-    };
+    const [messageBody, endIndex] = extractBalancedBody(content, openBraceIndex);
 
-    messages.push(message);
+    if (messageBody !== null) {
+      const message = {
+        name: messageName,
+        fields: parseFields(messageBody),
+        nestedMessages: [], // TODO: Handle nested messages
+        nestedEnums: [],    // TODO: Handle nested enums
+        oneofs: parseOneofs(messageBody),
+        options: {}
+      };
+
+      messages.push(message);
+      messageRegex.lastIndex = endIndex;
+    }
   }
 
   return messages;
@@ -213,3 +218,57 @@ function parseEnumValues(enumBody) {
 module.exports = {
   parseProtoFile
 };
+
+/**
+ * Parse oneof definitions from message body
+ */
+function parseOneofs(messageBody) {
+  const oneofs = [];
+  const oneofRegex = /oneof\s+(\w+)\s*\{/g;
+  let oneofMatch;
+
+  while ((oneofMatch = oneofRegex.exec(messageBody)) !== null) {
+    const oneofName = oneofMatch[1];
+    const openBraceIndex = oneofMatch.index + oneofMatch[0].length - 1;
+
+    const [oneofBody, endIndex] = extractBalancedBody(messageBody, openBraceIndex);
+
+    if (oneofBody !== null) {
+      const oneof = {
+        name: oneofName,
+        fields: parseFields(oneofBody)
+      };
+
+      oneofs.push(oneof);
+      oneofRegex.lastIndex = endIndex;
+    }
+  }
+
+  return oneofs;
+}
+
+/**
+ * Helper to extract content inside balanced braces
+ * @param {string} content - Full content
+ * @param {number} startIndex - Index of the opening brace
+ * @returns {[string|null, number]} - [extracted content, end index]
+ */
+function extractBalancedBody(content, startIndex) {
+  let depth = 1;
+  let i = startIndex + 1;
+
+  while (i < content.length && depth > 0) {
+    if (content[i] === '{') {
+      depth++;
+    } else if (content[i] === '}') {
+      depth--;
+    }
+    i++;
+  }
+
+  if (depth === 0) {
+    return [content.substring(startIndex + 1, i - 1), i];
+  }
+
+  return [null, i];
+}

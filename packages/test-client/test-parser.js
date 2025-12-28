@@ -46,6 +46,13 @@ protoFile.messages.forEach(message => {
     const typeStr = field.repeated ? `repeated ${field.type}` : field.type;
     console.log(`     • ${field.name}: ${typeStr} = ${field.number}`);
   });
+  console.log(`   - oneofs: ${message.oneofs.length}`);
+  message.oneofs.forEach(oneof => {
+    console.log(`     • Oneof: ${oneof.name}`);
+    oneof.fields.forEach(field => {
+       console.log(`       - ${field.name}: ${field.type} = ${field.number}`);
+    });
+  });
 });
 console.log();
 
@@ -111,6 +118,18 @@ if (protoFile.messages.length > 0) {
     } else {
       console.log(`   ❌ Field missing fields: ${missingFieldFields.join(', ')}`);
     }
+  }
+
+  // Check oneof structure
+  if (message.oneofs.length > 0) {
+     const oneof = message.oneofs[0];
+     const oneofFields = ['name', 'fields'];
+     const missingOneofFields = oneofFields.filter(f => !(f in oneof));
+     if (missingOneofFields.length === 0) {
+        console.log('   ✅ Oneof structure valid');
+     } else {
+        console.log(`   ❌ Oneof missing fields: ${missingOneofFields.join(', ')}`);
+     }
   }
 }
 
