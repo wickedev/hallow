@@ -47,3 +47,11 @@ service UserService {
   // Bidirectional streaming RPC
   rpc Chat(stream StreamMessage) returns (stream StreamMessage);
 }
+
+message OneofMessage {
+  string id = 1;
+  oneof test_oneof {
+    string name = 2;
+    int32 age = 3;
+  }
+}
